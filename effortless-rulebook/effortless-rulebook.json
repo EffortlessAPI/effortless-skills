@@ -1,0 +1,543 @@
+{
+  "$schema": "https://example.com/cmcc-schema/v1",
+  "Name": "Effortless Claude",
+  "Description": "Self-describing rulebook for the effortless-claude skill suite. The skills repo modeled with its own methodology \u2014 each skill is a row, each high-level attribute (category, scope gate, audience) is a parent table.",
+  "Audiences": {
+    "Description": "Intended consumer of a skill's behavior. customer = end users of the suite; general = applicable beyond marked Effortless projects.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased audience label.",
+        "formula": "=SUBSTITUTE(LOWER({{AudienceLabel}}), \" \", \"-\")"
+      },
+      {
+        "name": "AudienceLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Human label as written in SKILL.md frontmatter (audience: <label>)."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "What this audience designation means."
+      },
+      {
+        "name": "Skills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Skills tagged with this audience.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "CountOfSkills",
+        "datatype": "integer",
+        "type": "aggregation",
+        "nullable": false,
+        "Description": "How many skills declare this audience.",
+        "formula": "=COUNTIFS(Skills!{{Audience}}, Audiences!{{Name}})"
+      }
+    ],
+    "data": [
+      {
+        "AudienceLabel": "customer",
+        "Description": "Default \u2014 skill is for users of the effortless-claude suite working in (or about to work in) Effortless projects."
+      },
+      {
+        "AudienceLabel": "general",
+        "Description": "Skill applies beyond Effortless-marked projects (e.g. magic-link auth on any Postgres app)."
+      }
+    ]
+  },
+  "SkillCategories": {
+    "Description": "Functional grouping of skills as presented in the README. Categories are presentation/discovery groupings, not load-gate semantics (that's ScopeGateTypes).",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased category label.",
+        "formula": "=SUBSTITUTE(LOWER({{CategoryLabel}}), \" \", \"-\")"
+      },
+      {
+        "name": "CategoryLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Display label as used in the README section header."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "What unifies the skills in this category."
+      },
+      {
+        "name": "SortOrder",
+        "datatype": "integer",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Presentation order in the README."
+      },
+      {
+        "name": "Skills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Skills in this category.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "CountOfSkills",
+        "datatype": "integer",
+        "type": "aggregation",
+        "nullable": false,
+        "Description": "How many skills are in this category.",
+        "formula": "=COUNTIFS(Skills!{{Category}}, SkillCategories!{{Name}})"
+      }
+    ],
+    "data": [
+      {
+        "CategoryLabel": "Orchestration",
+        "Description": "Top-level mental model and routing across the suite.",
+        "SortOrder": 1
+      },
+      {
+        "CategoryLabel": "Project Lifecycle",
+        "Description": "Bootstrap, init, setup, iteration loop, and skill-set maintenance.",
+        "SortOrder": 2
+      },
+      {
+        "CategoryLabel": "CLI",
+        "Description": "Install, update, and use the effortless command-line tool.",
+        "SortOrder": 3
+      },
+      {
+        "CategoryLabel": "Schema and Conventions",
+        "Description": "Structure of effortless-rulebook.json, naming/DAG/FK rules, token-efficient queries.",
+        "SortOrder": 4
+      },
+      {
+        "CategoryLabel": "Workflow and Build",
+        "Description": "Path A vs Path B change discipline and the build pipeline internals.",
+        "SortOrder": 5
+      },
+      {
+        "CategoryLabel": "Airtable Interaction",
+        "Description": "API-first scalar/CRUD changes and the OMNI escape hatch for formula/lookup/rollup fields.",
+        "SortOrder": 6
+      },
+      {
+        "CategoryLabel": "Generated Code",
+        "Description": "Patterns for the generated SQL artifacts and where customizations belong.",
+        "SortOrder": 7
+      },
+      {
+        "CategoryLabel": "Auth and Deployment",
+        "Description": "Hosted-base flow and portable magic-link auth wiring.",
+        "SortOrder": 8
+      },
+      {
+        "CategoryLabel": "Diagnostics",
+        "Description": "DAG validation, broken-FK checks, JOIN anti-pattern detection, legacy-code migration helpers.",
+        "SortOrder": 9
+      },
+      {
+        "CategoryLabel": "Theory and Receipts",
+        "Description": "CMCC theory, runnable conformance proofs, skeptic-facing rationale, OSS ecosystem catalog.",
+        "SortOrder": 10
+      }
+    ]
+  },
+  "ScopeGateTypes": {
+    "Description": "When the harness loads a skill into context. The four patterns referenced in the skill-writing conventions (project-only / entry-point / tooling / theory).",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased gate label.",
+        "formula": "=SUBSTITUTE(LOWER({{GateLabel}}), \" \", \"-\")"
+      },
+      {
+        "name": "GateLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Short label for this load-gate pattern."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "When this gate fires \u2014 paraphrased from the skill description's Scope (load gate) clause."
+      },
+      {
+        "name": "RequiresMarker",
+        "datatype": "boolean",
+        "type": "raw",
+        "nullable": false,
+        "Description": "True iff the gate requires the project to be a marked Effortless project (effortless.json + ERB CLAUDE.md)."
+      },
+      {
+        "name": "LoadsOnExplicitRequest",
+        "datatype": "boolean",
+        "type": "raw",
+        "nullable": false,
+        "Description": "True iff the gate also fires when the user explicitly invokes the skill by phrase, regardless of project marker."
+      },
+      {
+        "name": "Skills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Skills using this gate pattern.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "CountOfSkills",
+        "datatype": "integer",
+        "type": "aggregation",
+        "nullable": false,
+        "Description": "How many skills use this gate pattern.",
+        "formula": "=COUNTIFS(Skills!{{ScopeGate}}, ScopeGateTypes!{{Name}})"
+      }
+    ],
+    "data": [
+      {
+        "GateLabel": "project-only",
+        "Description": "Loads ONLY in marked Effortless projects. Stays silent everywhere else even if the user asks by name.",
+        "RequiresMarker": true,
+        "LoadsOnExplicitRequest": false
+      },
+      {
+        "GateLabel": "project-or-explicit-request",
+        "Description": "Loads in marked Effortless projects, OR when the user explicitly asks to set up / install / bootstrap Effortless tooling. Entry-point pattern.",
+        "RequiresMarker": false,
+        "LoadsOnExplicitRequest": true
+      },
+      {
+        "GateLabel": "explicit-request-only",
+        "Description": "Loads only on explicit user request. Applies to any project (not just Effortless-marked). Used for tooling that's portable beyond ERB.",
+        "RequiresMarker": false,
+        "LoadsOnExplicitRequest": true
+      },
+      {
+        "GateLabel": "theory-no-marker",
+        "Description": "Loads when the user asks about the methodology, theory, ecosystem, or wants receipts. Does not require a marked Effortless project.",
+        "RequiresMarker": false,
+        "LoadsOnExplicitRequest": true
+      }
+    ]
+  },
+  "Skills": {
+    "Description": "One row per SKILL.md under skills/. The 23 currently live skills in the suite. Deprecation history is in DEPRECATED_SKILLS.md, not here.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 equals the kebab-cased Slug, which equals the directory name.",
+        "formula": "=SUBSTITUTE(LOWER({{Slug}}), \" \", \"-\")"
+      },
+      {
+        "name": "Slug",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Skill folder name under skills/ \u2014 also the value of the name: field in SKILL.md frontmatter."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Short pitch \u2014 one sentence on what the skill is for."
+      },
+      {
+        "name": "WhyItExists",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "The 'why' answer \u2014 what failure mode this skill prevents, paraphrased from the README."
+      },
+      {
+        "name": "Category",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "Functional grouping (Orchestration, Project Lifecycle, etc.).",
+        "RelatedTo": "SkillCategories"
+      },
+      {
+        "name": "ScopeGate",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "Load-gate pattern (when the harness pulls this skill into context).",
+        "RelatedTo": "ScopeGateTypes"
+      },
+      {
+        "name": "Audience",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "audience: value from SKILL.md frontmatter.",
+        "RelatedTo": "Audiences"
+      },
+      {
+        "name": "DirectoryPath",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Filesystem path to the skill directory, relative to repo root.",
+        "formula": "=\"skills/\" & {{Slug}} & \"/\""
+      },
+      {
+        "name": "CategoryLabel",
+        "datatype": "string",
+        "type": "lookup",
+        "nullable": false,
+        "Description": "Display label of the parent category.",
+        "formula": "=INDEX(SkillCategories!{{CategoryLabel}}, MATCH({{Category}}, SkillCategories!{{Name}}, 0))"
+      },
+      {
+        "name": "ScopeGateLabel",
+        "datatype": "string",
+        "type": "lookup",
+        "nullable": false,
+        "Description": "Display label of the parent scope-gate type.",
+        "formula": "=INDEX(ScopeGateTypes!{{GateLabel}}, MATCH({{ScopeGate}}, ScopeGateTypes!{{Name}}, 0))"
+      },
+      {
+        "name": "AudienceLabel",
+        "datatype": "string",
+        "type": "lookup",
+        "nullable": false,
+        "Description": "Display label of the parent audience.",
+        "formula": "=INDEX(Audiences!{{AudienceLabel}}, MATCH({{Audience}}, Audiences!{{AudienceLabel}}, 0))"
+      }
+    ],
+    "data": [
+      {
+        "Slug": "effortless-orchestrator",
+        "Description": "Top-level mental model and router. Defines what an Effortless project is, the load-bearing axioms, the schema-change decision tree, the Token Discipline rule, the no-migrations guardrail, and the routing table to every other skill.",
+        "WhyItExists": "Without a top-level frame, Claude improvises \u2014 and improvisation in ERB means editing generated SQL and reimplementing business logic in app code. The orchestrator keeps the model coherent across whatever sub-skill is loaded next.",
+        "Category": "orchestration",
+        "ScopeGate": "project-or-explicit-request",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-init",
+        "Description": "Turns any folder into an Effortless project: runs effortless -init, creates the standard layout, writes the project CLAUDE.md, and generates start.sh.",
+        "WhyItExists": "Without the CLAUDE.md marker, future Claude sessions can't recognize the project as Effortless and the rest of the suite won't load. This skill installs the gate that opens everything else.",
+        "Category": "project-lifecycle",
+        "ScopeGate": "project-or-explicit-request",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-bootstrap",
+        "Description": "The Shadle steps: raw text to vocabulary to glossary to narrative to mock data to schema to a populated effortless-rulebook.json (rulebook-first; Airtable/Excel mirror is optional and downstream).",
+        "WhyItExists": "Going from 'here's what we want to build' to 'we have a formal rulebook' is the fuzziest part of ERB. This skill is the structured pipeline for that translation, so you don't end up with a half-formal mess that can't be projected to a substrate.",
+        "Category": "project-lifecycle",
+        "ScopeGate": "project-or-explicit-request",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-setup-postgres",
+        "Description": "First-run setup for Postgres-targeted projects: preflight tool checks, install transpilers, get a rulebook in place (authored directly, or seeded from an optional Airtable/Excel surface), generate SQL, init the local DB. Sets up the regenerate-from-scratch shape (init-db.sh drops + recreates), not an incremental-migrations shape.",
+        "WhyItExists": "Gets you from 'I have a rulebook (or an upstream surface to seed it)' to 'I have a working local DB + generated views' without remembering the per-step cd discipline that makes the build work. This is the only step where commits without asking are appropriate (it's a known-good bootstrap sequence).",
+        "Category": "project-lifecycle",
+        "ScopeGate": "project-or-explicit-request",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-leopold-loop",
+        "Description": "The iterative ERB development cycle: CHANGE-RULE in Airtable, then effortless build, then CONSUME generated views in app code, repeat. Includes the migration anti-pattern (the #1 way the loop gets bypassed).",
+        "WhyItExists": "Without it you regress to 'naked Claude' \u2014 hand-maintaining schema in three places (DB migration, ORM model, API serializer) and breaking sync every time something changes. The loop is what makes ERB feel effortless instead of redundant.",
+        "Category": "project-lifecycle",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-claude-updates",
+        "Description": "Everything about the skill set itself: check whether your local clone is behind upstream, apply updates, add/edit/deprecate skills.",
+        "WhyItExists": "The skill set is its own moving target \u2014 new skills get added, old ones get merged, conventions drift. This skill is the maintenance interface for the suite (separate from the CLI binary, which is effortless-cli).",
+        "Category": "project-lifecycle",
+        "ScopeGate": "explicit-request-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-cli",
+        "Description": "Both installing/updating the effortless binary and using its commands. Covers prerequisites, install paths, login flow, -init, -setAccountAPIKey, transpiler installation, build flags.",
+        "WhyItExists": "Nothing in the rest of the suite works without the CLI being on PATH and pointing at the right Node version. This skill is also where the 'effortless: command not found' recovery flow lives.",
+        "Category": "cli",
+        "ScopeGate": "project-or-explicit-request",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-mcp",
+        "Description": "Install and use the always-on Effortless MCP server \u2014 the streamable-HTTP endpoint that exposes ~54 transpiler tools plus the effortless-claude skill set as MCP Resources to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.).",
+        "WhyItExists": "The CLI binary is not the only way to drive the catalog \u2014 MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally. Without this skill, Claude improvises wiring instructions and tells users to paste handcrafted JSON into the wrong config file.",
+        "Category": "cli",
+        "ScopeGate": "explicit-request-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-conventions",
+        "Description": "Naming rules (Name as PK, PascalCase plural tables, singular FKs, plural reverse FKs); DAG structure (1-to-many only, no cycles, no many-to-many); surrogate-key policy.",
+        "WhyItExists": "These rules look arbitrary until you realize they're what makes the substrate-equivalence guarantee hold. Read this before 'fixing' something the linter complains about, because the linter is usually right.",
+        "Category": "schema-and-conventions",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-schema",
+        "Description": "Reference for the structure of effortless-rulebook.json: top-level keys, table objects, field schema, the five field types, datatypes, formula syntax, the _meta section.",
+        "WhyItExists": "When you need to know 'what does a calculated field look like in JSON' or 'how is a relationship encoded', you want a 1-screen reference, not to grep through example rulebooks.",
+        "Category": "schema-and-conventions",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-query",
+        "Description": "Targeted, token-efficient one-liners against effortless-rulebook.json: list tables, extract schema for one table, find FK relationships, inspect calculated fields and formulas.",
+        "WhyItExists": "The rulebook can be megabytes once it has data. Reading it whole burns your context window for nothing \u2014 you only ever needed the schema fragment for one table. This skill keeps you in the lightweight-query habit.",
+        "Category": "schema-and-conventions",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-workflow",
+        "Description": "The input-spoke options for making changes, all writing to the same rulebook hub: rulebook-direct (best practice), an optional upstream grid (Airtable/Excel), and reverse-sync via build -id. Permission checkpoints. Carries the canonical NO-MIGRATIONS rule for local-dev (regenerate from scratch via init-db.sh; never write SQL migrations).",
+        "WhyItExists": "Most 'this didn't work' stories in ERB are someone editing a generated output (SQL, app code) instead of the rulebook hub, then effortless build overwriting their edits. This skill is the discipline that keeps every change landing on the hub.",
+        "Category": "workflow-and-build",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-pipeline",
+        "Description": "How effortless.json, ProjectTranspilers, and effortless build actually work: the catalog of transpilers, the -id flag, multi-substrate architecture, and the two deployment shapes (local-dev = regenerate via init-db.sh; bases = migrations via apply-migration.sh).",
+        "WhyItExists": "When the build does something surprising \u2014 a transpiler doesn't run, a generated file lands in the wrong directory, -id does something different than build \u2014 this skill is the 'how does the pipeline actually work' reference.",
+        "Category": "workflow-and-build",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-airtable",
+        "Description": "Canonical home for the Airtable-API mechanics, used only when the project opted into Airtable as an input spoke (one optional editing surface, sibling to Excel/Notion): scalar field add/modify/rename, table creation (without formulas), and all CRUD via the REST API. Other skills point here rather than repeating the key-resolution and -account airtable details.",
+        "WhyItExists": "When a project does use Airtable, about 80% of changes are scalar fields or CRUD \u2014 the API handles them in a few seconds, and falling back to OMNI (Playwright) for these is wasteful. Keeping the mechanics in one place lets the rest of the suite stay rulebook-first and just reference this skill.",
+        "Category": "airtable-interaction",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-airtable-omni",
+        "Description": "The escape hatch for what the API can't do: formula fields, lookup fields, rollup fields, and new-table creation. Includes the bundled Playwright script that drives a headed Chrome to OMNI.",
+        "WhyItExists": "Without this skill Claude either can't add a formula field at all, or wastes everyone's time generating OMNI prompts for you to copy-paste manually. With it, formula/lookup/rollup work happens automatically.",
+        "Category": "airtable-interaction",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-sql",
+        "Description": "Patterns for the generated SQL: read from vw_* views (never base tables), never edit 00\u201305 files, customize via *b-customize-*.sql and the ERBCustomizations table only when the rulebook can't express the rule. Local-dev has no migrations folder \u2014 init-db.sh regenerates from scratch.",
+        "WhyItExists": "This is where most 'fixes' go wrong: someone edits 02-create-functions.sql to 'patch' a behavior, the next build erases it, the bug comes back, and now there's a phantom commit history with no surviving code. This skill prevents that whole class of incident.",
+        "Category": "generated-code",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-bases",
+        "Description": "End-to-end 'create a base + magic-links tenant + RLS-secured app in 5 minutes' flow on bases.effortlessapi.com. The lone ERB deployment shape that uses migrations (via postgres/apply-migration.sh) because bases-hosted DBs can't be dropped.",
+        "WhyItExists": "When you want a hosted Postgres + auth without setting up a backend, this is the shortest path from zero to 'users can log in and only see their own data'. The skill encodes the gotchas that aren't in the docs.",
+        "Category": "auth-and-deployment",
+        "ScopeGate": "explicit-request-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-magic-links",
+        "Description": "Add passwordless email-code (magic-link) auth to any Postgres-backed app, not just bases.effortlessapi.com. Mints a tenant on magiclink.effortlessapi.com, wires Authorization: Bearer middleware, optionally installs app.jwt_*() SQL helpers for RLS.",
+        "WhyItExists": "Magic-links is a notary, not a referee \u2014 it just verifies 'we sent code C to email E, the holder returned it.' That clean separation means you can layer it onto any existing app without rewriting your user model. This skill encodes the wiring.",
+        "Category": "auth-and-deployment",
+        "ScopeGate": "explicit-request-only",
+        "Audience": "general"
+      },
+      {
+        "Slug": "effortless-diagnostics",
+        "Description": "DAG validation (find missing FK targets), broken-FK checks, JOIN anti-pattern detection in app code, legacy-code migration helpers (rewrite base-table reads to view reads).",
+        "WhyItExists": "ERB projects accumulate two kinds of debt: rulebook entries with broken references (deleted tables, renamed FKs), and app code that reads from base tables instead of views. Both compound silently. This skill surfaces them.",
+        "Category": "diagnostics",
+        "ScopeGate": "project-only",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-cmcc",
+        "Description": "The conceptual floor: SDLAF, the bitemporal ACID DAG, the 5 primitives, what the Conceptual Model Completeness Conjecture predicts and forbids.",
+        "WhyItExists": "When someone asks 'WHY is ERB structured this way? Isn't this overkill?' \u2014 improvising the answer makes it sound arbitrary. This skill grounds the answer in the conjecture, so the response is consistent across sessions.",
+        "Category": "theory-and-receipts",
+        "ScopeGate": "theory-no-marker",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-rulebooks",
+        "Description": "The empirical demonstration: 11+ substrates (including ARM64, COBOL, OWL/SHACL, English), the conformance suite, ExplainDAG, answer-key.json. Pointer into github.com/effortlessapi/effortless-rulebooks.",
+        "WhyItExists": "When the response to 'does this actually work?' needs to be 'yes, here's the runnable proof' \u2014 this skill is the catalog of runnable proofs.",
+        "Category": "theory-and-receipts",
+        "ScopeGate": "theory-no-marker",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-rationale",
+        "Description": "Skeptic-facing answers, strictly grounded in receipts (papers, repos, runnable demos). Common objections paired with cited responses.",
+        "WhyItExists": "When the methodology needs to be defended (to a skeptical reviewer, an architecture committee, a Hacker News thread), the responses should cite, not enthuse. This skill enforces that.",
+        "Category": "theory-and-receipts",
+        "ScopeGate": "theory-no-marker",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-ecosystem",
+        "Description": "The OSS catalog: every public repo in the SSoTme and effortlessapi GitHub orgs, with one-liner descriptions and install snippets.",
+        "WhyItExists": "'Where is the source for X?' / 'Is there a transpiler for Y?' come up constantly. Without this skill, Claude guesses; with it, the answer is cited.",
+        "Category": "theory-and-receipts",
+        "ScopeGate": "theory-no-marker",
+        "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-excel-export",
+        "Description": "Add Excel export to any Effortless Postgres project: populate a rulebook-export.json from live vw_* views, run rulebook-to-xlsx, and wire a download endpoint + link into the app.",
+        "WhyItExists": "Any ERB project can export its full current state — schema + live data + all calculated fields — as a multi-sheet Excel workbook. This skill makes it a single Leopold loop to add that capability.",
+        "Category": "data-and-export",
+        "ScopeGate": "project-or-explicit-request",
+        "Audience": "customer"
+      }
+    ]
+  },
+  "_meta": {
+    "_CMCC_Summary": "Self-describing rulebook for the effortless-claude skill suite. Hand-authored (no Airtable source). Models the 23 currently-live skills against their three high-level attributes (Category, ScopeGate, Audience). Deprecation history lives in DEPRECATED_SKILLS.md, not in the rulebook.",
+    "_conversion_metadata": {
+      "source": "hand-authored from skills/*/SKILL.md frontmatter and README.md",
+      "table_count": 4,
+      "row_counts": {
+        "Audiences": 2,
+        "SkillCategories": 10,
+        "ScopeGateTypes": 4,
+        "Skills": 23
+      },
+      "tool_version": "n/a (hand-authored)",
+      "export_mode": "manual",
+      "airtable_backed": false
+    }
+  }
+}

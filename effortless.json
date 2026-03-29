@@ -1,0 +1,16 @@
+{
+  "ShowHidden": false,
+  "ShowAllFiles": false,
+  "CurrentPath": "",
+  "SSoTmeProjectFiles": null,
+  "SSoTmeProjectId": "a9c4b6c2-d785-4841-afda-eb983aa000bb",
+  "Name": "effortless-claude",
+  "Description": "The effortless-claude skill suite — hand-authored rulebook, no Airtable source, no transpiler pipeline. The rulebook describes the 23 live skills and their high-level attributes (Category, ScopeGate, Audience).",
+  "ProjectSettings": [
+    {
+      "ProjectSettingId": "3876e03d-2a12-42e5-9c13-139b5835fdf6",
+      "Name": "project-name",
+      "Value": "effortless-claude"
+    }
+  ]
+}
