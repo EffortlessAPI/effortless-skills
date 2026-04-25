@@ -38,6 +38,14 @@ The **Leopold loop** is the user's name for the iterative ERB development cycle:
 
 **When the user mentions "the loop", "Leopold loop", "do a turn", "rebuild the rulebook", or any variant — load the `effortless-leopold-loop` skill.** That skill contains the full diagram, the trigger phrases, the step-by-step expectations, and the anti-patterns. Do not try to reason about the loop from this orchestrator alone.
 
+## 🚨 ORCHESTRATION RULE — `effortless-rulebook.json` LIVES IN `/effortless-rulebook/` 🚨
+
+The rulebook file path is **always** `/effortless-rulebook/effortless-rulebook.json`. It is NEVER at the project root.
+
+Before running ANY `effortless airtable-to-rulebook` or `effortless -install airtable-to-rulebook` command, you MUST `cd effortless-rulebook` first. Running it from the project root dumps the rulebook into the wrong place AND registers the transpiler with the wrong `RelativePath` in `effortless.json`, which then poisons every subsequent `effortless build`.
+
+If `effortless-rulebook.json` ever appears at the project root: that is a bug — delete it, fix `effortless.json` so the airtable-to-rulebook entry has `RelativePath: /effortless-rulebook`, then redo the install from inside `/effortless-rulebook/`. See `effortless-setup-postgres` for details.
+
 ## Critical Guardrails
 
 1. **Query the rulebook FIRST — NEVER read generated files** — The JSON has everything.
