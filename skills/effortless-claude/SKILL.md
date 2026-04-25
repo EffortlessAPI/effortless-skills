@@ -40,17 +40,44 @@ The **Leopold loop** is the user's name for the iterative ERB development cycle:
 
 ## Critical Guardrails
 
-1. **Query the rulebook FIRST, generated code SECOND** — The JSON has everything.
-   **Actuall QUERY** - like the root nodes will tend to be entity names with a "schema" and "data" sub-properties.  The schema has the fields/lookups/rollups/formulas (excel dialect).  
-   **Grep last** You don't need to grep for a sense of the system.  
-   **QUERY for TABLES first - then query for the fields from JUST those tables, rather than ever reading the full file.  The full file (with data) could be MB's.  QUERY IT!
+1. **Query the rulebook FIRST — NEVER read generated files** — The JSON has everything.
+   **Actually QUERY** — root nodes are entity names with "schema" and "data" sub-properties.
+   The schema has the fields/lookups/rollups/formulas (excel dialect).
+   **QUERY for TABLES first** — then query for the fields from JUST those tables, rather
+   than ever reading the full file. The full file (with data) could be MB's. QUERY IT!
+   **NEVER read generated SQL files (00-05)** — they are a projection of the rulebook.
+   If you need to know what columns a view has, query the rulebook schema or run
+   `psql -c "\d vw_tablename"`. Do NOT cat/read the SQL files into your context.
 2. **NEVER edit generated files** — Files `00`-`05` in `postgres/` are overwritten on every build.
    **ONLY** update `00b`-`05b` files AFTER the original airtable has been updated first.
-   **ONLY if OMNI can't fix the tool's default 02 functions (for example) - THEN we can override it with a fallback 02b function.  But ONLY after exausting the actual SSoT (airtable) first.
+   **ONLY if OMNI can't fix the tool's default 02 functions (for example) - THEN we can override it with a fallback 02b function.  But ONLY after exhausting the actual SSoT (airtable) first.
 3. **Always read from `vw_*` views**, never base tables.
    **Always WRITE to tables directly**
 4. **Always ask permission** before modifying the json rulebook directly.
-5. **Usually `effortless build` is the final step, except in the rare cases where we have modified the json rulebook directly, and are explicitly trying to move that dat FROM The rulebook INTO airtable.  IN that case, an effortless build would overwrite the currently HEAD, json.
+5. **Usually `effortless build` is the final step**, except in the rare cases where we have modified the json rulebook directly, and are explicitly trying to move that data FROM the rulebook INTO airtable. In that case, an effortless build would overwrite the currently HEAD json.
+
+## Token Discipline — Pipeline Operations Are Atomic
+
+**`effortless build` is a zero-context operation.** It does not produce output you need
+to read. It regenerates files deterministically from the rulebook. The correct pattern:
+
+```
+Determine something changed → `effortless build` → commit → DONE
+```
+
+Do NOT:
+- Read generated files after a build to "verify" or "understand" them
+- Load skills to interpret build output
+- Cat SQL files into your context window
+- Read the rulebook.json in full (it can be megabytes)
+
+After a build, you already know the schema because you queried it BEFORE the build.
+The generated files are just a mechanical projection — trust the pipeline.
+
+**Context-window rule:** If you need schema info, use lightweight targeted queries
+(see `effortless-query` skill) that extract ONLY the table/field metadata you need.
+Never load the full rulebook or full SQL files. A 5-line python one-liner that extracts
+table names + field names is worth 1000x more than reading the whole file.
 
 ## Initializing an Effortless Project
 

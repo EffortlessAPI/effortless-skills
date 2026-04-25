@@ -60,6 +60,28 @@ effortless build       # Runs all enabled transpilers in order (from project roo
 effortless build -id   # Runs ALL transpilers, INCLUDING disabled ones
 ```
 
+### Builds Are Atomic — Zero Context Cost
+
+**`effortless build` is a fire-and-forget operation.** It deterministically regenerates
+files from the rulebook. After running it:
+
+- Do NOT read the generated files to "verify" or "understand" them
+- Do NOT load skills to interpret build output
+- Do NOT cat SQL files into your context window
+- **Always commit immediately after the build** — `git add -A && git commit -m "effortless build: <reason>"`.
+  This captures the exact diff on `effortless-rulebook.json` and all generated files.
+  The diff from this commit (`git diff HEAD~1 -- effortless-rulebook/effortless-rulebook.json`)
+  is the highest-fidelity source of truth for what changed in the schema.
+- Then proceed to use the views in app code
+
+The correct mental model: `effortless build` is like `npm install` — you run it and
+trust that it worked. You don't read `node_modules/` afterwards.
+
+If you need schema information AFTER a build, query the rulebook with a targeted
+one-liner (see `effortless-query`) or run `psql -c "\d vw_tablename"`.
+
+---
+
 - **From project root**: `effortless build` reads `ssotme.json` and runs each enabled transpiler in its `RelativePath` directory. Disabled transpilers (`"IsDisabled": true`) are skipped.
 - **From a subfolder**: `effortless build` can also be run from any subfolder that contains its own `ssotme.json` or is referenced as a `RelativePath`. This is how you run a specific transpiler in isolation.
 - **The `-id` flag** (include disabled): Forces execution of all transpilers, even those marked `"IsDisabled": true`. This is essential for the reverse-sync workflow (Path B), where `rulebook-to-airtable` is intentionally disabled during normal builds but needs to run when pushing local changes back to Airtable.

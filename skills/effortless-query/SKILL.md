@@ -9,26 +9,40 @@ description: >
 
 # Querying the Effortless Rulebook
 
-## CRITICAL: Query the Rulebook First
+## CRITICAL: This Is Your ONLY Source of Schema Truth
 
-**Before reading code, SQL, or any generated files — ALWAYS query `effortless-rulebook.json` first.**
+**The rulebook is the single source of truth. NEVER read generated files (SQL, Go,
+Python, etc.) to understand the schema.** Those files are projections — the rulebook
+is the source. Query it with targeted one-liners that produce minimal output.
 
-The rulebook is the single source of truth. It contains everything: schema, relationships, formulas, descriptions, and data. Do NOT grep through Go/Python/SQL files to understand the domain. Instead:
+### Token Discipline
 
-1. **Find the rulebook**: Look for `effortless-rulebook/effortless-rulebook.json` or check `ssotme.json` transpiler inputs for the path
-2. **Extract schema only** (strip data to save tokens):
-   ```bash
-   cat effortless-rulebook/effortless-rulebook.json | \
-     python3 -c "import sys,json; d=json.load(sys.stdin); [d[k].__delitem__('data') for k in d if isinstance(d.get(k),dict) and 'data' in d.get(k,{})]; print(json.dumps(d,indent=2))"
-   ```
-3. **Query specific aspects** rather than loading everything.
+The rulebook JSON can be megabytes (it includes data rows). **NEVER read the full file.**
+Instead, use the targeted queries below that extract ONLY what you need:
 
-### Why This Matters
+- **List tables**: ~5 lines of output
+- **Show one table's schema**: ~10-30 lines
+- **Find relationships**: ~5-20 lines
 
-- The rulebook is typically 500-3000 lines, but the **schema alone is 10-20% of that**
-- Loading just schema saves enormous token budget
-- Every answer about "what fields exist" or "how are these related" is in the rulebook
-- You do NOT need to read generated SQL, Go, or Python to understand the domain
+These queries cost almost nothing. Reading the full file costs thousands of tokens
+that then pollute your context for the entire rest of the conversation.
+
+### The Pattern
+
+```
+Need schema info? → Run a one-liner query → Get 10-30 lines → Done
+```
+
+**NEVER:**
+- `cat effortless-rulebook.json` (full file into context)
+- `Read` the rulebook file directly
+- Read generated SQL/Go/Python to understand schema
+- Load the full JSON "to get a sense of things"
+
+**ALWAYS:**
+- Use the python one-liner queries below
+- Or `psql -c "\d vw_tablename"` if the database is running
+- Extract ONLY the specific table/field you need
 
 ## Common Queries
 

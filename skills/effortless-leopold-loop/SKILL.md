@@ -58,11 +58,21 @@ All of these mean: **propagate the current Airtable state through every downstre
 
 ## What "do a turn of the Leopold loop" actually entails
 
-1. **Run `effortless build`** from the project root to pull the current Airtable state through to all generated files. (Ask permission first if your project's CLAUDE.md requires it.)
-2. **Verify the generated artifacts** — spot-check that the new/changed views, functions, and base classes reflect the new rule. Use the `effortless-sql` and `effortless-diagnostics` skills if you need to dig deeper.
-3. **Update the app code only where it touches the schema surface** — column names that changed, new fields the UI now needs to display, removed tables to clean up references to. **Never reimplement** rule logic in the app; consume the calculated fields from the view as opaque truth.
-4. **Restart the app** — run `./start.sh` from the project root (check the project CLAUDE.md for project-specific startup).
-5. **Verify end-to-end** — the user usually expects the new behavior to be visible in the running app, not just in the generated SQL.
+1. **Run `effortless build`** from the project root. This is atomic — fire and forget.
+   Do NOT read the generated files afterwards. (Ask permission first if your project's CLAUDE.md requires it.)
+2. **Commit the build output immediately** — `git add -A && git commit -m "effortless build: <reason>"`.
+   This is **critical**: the commit captures the exact diff on `effortless-rulebook.json` and
+   all generated files. Future steps (and future phases) can reference `git diff HEAD~1 -- effortless-rulebook/effortless-rulebook.json`
+   to get a **100% accurate, high-fidelity** description of what changed in the schema.
+   This diff is the most trustworthy input for deciding what app code needs updating.
+3. **Run `init-db.sh`** if the project has a postgres target — this reloads the database.
+4. **Query the rulebook for schema changes** — use a lightweight one-liner to see what
+   tables/fields exist now (see `effortless-query`). Do NOT read generated SQL files.
+   Or use `psql -c "\d vw_tablename"` to see the current view columns.
+   Or — even better — use `git diff HEAD~1 -- effortless-rulebook/effortless-rulebook.json`
+   from the commit you just made. This is the highest-fidelity view of what changed.
+5. **Update the app code only where it touches the schema surface** — column names that changed, new fields the UI now needs to display, removed tables to clean up references to. **Never reimplement** rule logic in the app; consume the calculated fields from the view as opaque truth.
+6. **Restart the app** — run `./start.sh` from the project root.
 
 ## MANDATORY: Always Build After Airtable Changes
 

@@ -8,6 +8,25 @@ description: >
 
 # ERB Generated SQL Patterns
 
+## CRITICAL: Never Read Generated SQL Files Into Context
+
+**The generated SQL files (00-05) are a PROJECTION of the rulebook. You do not need
+to read them.** They exist for PostgreSQL to consume, not for you.
+
+If you need to know what a view contains:
+- **Best:** `psql -d <dbname> -c "\d vw_tablename"` (zero context tokens)
+- **OK:** Query the rulebook schema with a one-liner (see effortless-query)
+- **NEVER:** `cat postgres/03-create-views.sql` or reading any 00-05 file
+
+The pipeline is deterministic. The view `vw_<tablename>` will always contain:
+- All raw fields from the table (snake_case)
+- All calculated/lookup/aggregation fields as additional columns
+- FK lookup fields as `<fk_name>_<field>` (e.g., `customer_name`)
+
+Trust this. Don't verify by reading files.
+
+---
+
 ## CRITICAL: Always Read From Views, Never Base Tables
 
 **NEVER SELECT from base tables. ALWAYS use `vw_*` views for ALL read operations.**
