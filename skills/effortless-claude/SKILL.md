@@ -209,6 +209,13 @@ This orchestrator provides the big picture. For specifics, the following compani
 When making Airtable schema changes, follow this decision tree:
 
 ```
+Is this a NEW BUSINESS ENTITY (anything that looks like a domain "table" —
+users, roles, products, orders, profiles)?
+  YES → Airtable. Always. No exceptions for "just for auth" or "just a
+        small lookup table." New table needs OMNI (Name formula).
+        Then `effortless build`.
+  NO  → ↓ continue with the existing tree
+
 Is it a scalar field (text, number, select, checkbox, date, FK link, etc.)?
   YES → Use the Airtable REST API directly (effortless-airtable skill)
   NO  → Is it a formula, lookup, or rollup?

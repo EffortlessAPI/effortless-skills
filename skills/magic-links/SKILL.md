@@ -24,6 +24,22 @@ If a feature wants magic-links to know what an end-user does in your app,
 the feature belongs in your app — not in magic-links. See
 `magiclink.effortlessapi.com/UNIFICATION-PLAN.md` for the full contract.
 
+## "AppUsers" / "Roles" / "Profiles" tables belong in the consuming app, NOT in `app.*`
+
+Magic-links stores no users. Your app does. If the app is an ERB project,
+that means `AppUsers` (or whatever you call it) is an **Airtable entity**,
+regenerated as `public.app_users` + `vw_app_users`. The `app.jwt_role()`
+helper reads from `vw_app_users`.
+
+Do NOT create `app.app_users` (or `app.users`, `app.profiles`, etc.) by
+hand in `01b-customize-schema.sql`. That mirror will drift from the
+rulebook, never appear in views, and collide with the real entity once
+someone adds it the right way.
+
+The only legitimate hand-written tables in `auth` / `app` are things the
+rulebook genuinely cannot model: `auth.trusted_tenants` (JWT public keys)
+and the `app.jwt_*()` helper functions themselves.
+
 This skill is the **generic** flow: any project, any Postgres database. For
 the bases-specific flow (auto-RLS templates, `auth.trusted_tenants`,
 `/auth/generate-policy`), use the `effortless-bases` skill instead.
@@ -350,6 +366,47 @@ SELECT * FROM documents;  -- only Alice's rows
 RESET app.jwt_email;
 SELECT * FROM documents;  -- empty (deny_all wins)
 ```
+
+### Gotcha: recursion when the role resolver reads an RLS-protected table
+
+If `app.jwt_role()` queries a table with FORCE RLS, and that table's
+policy calls `app.jwt_is_admin()` (which calls `jwt_role()`), you get
+infinite recursion → `stack depth limit exceeded` on every authenticated
+request. The role-resolver must bypass RLS:
+
+```sql
+CREATE OR REPLACE FUNCTION app.jwt_role() RETURNS text
+LANGUAGE plpgsql STABLE
+SECURITY DEFINER
+SET row_security = off
+AS $$
+DECLARE r text;
+BEGIN
+  SELECT au.role INTO r FROM public.vw_app_users au
+   WHERE lower(au.email_address) = app.jwt_email() LIMIT 1;
+  RETURN COALESCE(r, 'anon');
+END $$;
+```
+
+Same pattern for any helper invoked from inside an RLS USING/WITH CHECK.
+
+## "It started up" is not "it works"
+
+`200 /healthz` proves a process bound a port. It does not prove JWT
+verification, RLS, role lookup, or view grants work. Before declaring an
+auth/RLS change done, run an actual role-aware smoke test:
+
+```sql
+BEGIN;
+  SELECT set_config('app.jwt_claims', '{"email":"<admin>","tenant_id":"..."}', true);
+  SELECT app.jwt_email(), app.jwt_role(), app.jwt_is_admin();
+  SET LOCAL ROLE app_anon;
+  SELECT count(*) FROM <protected_view>;
+COMMIT;
+```
+
+`set_config(..., true)` is transaction-local — without `BEGIN`/`COMMIT`
+each statement gets a fresh GUC and your test reads NULL.
 
 ---
 

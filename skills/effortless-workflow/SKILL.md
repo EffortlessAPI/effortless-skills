@@ -66,6 +66,14 @@ All generated files (regenerated)
 
 These are not routine file edits — they affect the source of truth and trigger cascading regeneration.
 
+## "Just add a small table" is the #1 trap
+
+When the user says "make a Foo table" / "add a Bar entity" / "I need an X table" — that is a Path A change. The entity goes in Airtable; `effortless build` regenerates `public.foo` + `vw_foo`. Do NOT hand-write the table in `01b-customize-schema.sql`. The `01b-05b` files are for infrastructure the rulebook cannot model (auth tenants, JWT helpers, role GRANTs) — never for business entities. If you're typing `CREATE TABLE app.users (...)` or similar, you've taken a wrong turn.
+
+## Commit the build before any follow-on edits
+
+After `effortless build`, commit the regenerated output separately from any hand-written follow-ons. Mixing regenerated files and hand edits in one commit makes the boundary unrecoverable — future readers can't tell which lines came from the rulebook and which were authored by hand.
+
 ## NO SILENT FALLBACK ALLOWED
 
 If you cannot make a change in Airtable (e.g., API limitations for formula fields, no API key):
