@@ -77,14 +77,13 @@ expires per the self-tenant's `jwt_expires_in_seconds`.
 MAGICLINK="https://magiclink.effortlessapi.com"
 BASES="https://bases.effortlessapi.com"
 
-# 0. One-time: get a self-auth JWT (developer's own email).
-curl -sS "$MAGICLINK/auth/send-code" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"dev@example.com"}'
-
-SELF_JWT=$(curl -sS "$MAGICLINK/auth/verify-code" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"dev@example.com","code":"123456"}' | jq -r .jwt)
+# 0. Self-auth — Claude drives this, user just reads back the 6-digit code.
+#    Cache the token in /tmp so subsequent ops in the same session don't
+#    re-burden the user. /auth/verify-code returns the JWT as `.token`
+#    (NOT `.jwt` — that's only the per-tenant /verify-code shape).
+#    See magic-links skill "Step 0" for the full pattern Claude should follow.
+SELF_JWT=$(jq -r .token "/tmp/magiclink-self-auth-$DEV_EMAIL.json" 2>/dev/null) \
+  || { echo "Run the send-code/verify-code dance and cache the result first."; exit 1; }
 
 # 1. Create a tenant. Server generates the keypair.
 TENANT=$(curl -sS "$MAGICLINK/api/tenants" \
@@ -196,6 +195,38 @@ session priming step. The JWT is verified in-line at every query.
 
 ---
 
+## Sharing a tenant with a downstream consumer app
+
+A common topology: a base lives on `bases.effortlessapi.com` **and** a
+separate downstream app (its own Postgres, often on the user's machine)
+reads/writes against a sibling DB. End-users should sign in **once** and
+have JWTs honored on both.
+
+**Do this — share one tenant.** Don't mint a second tenant for the
+downstream app. Magic-links is issuer-only; trust is expressed entirely
+on the consumer side via `auth.trusted_tenants`.
+
+1. Find the existing tenant for the base (the one already registered in
+   the base's `auth.trusted_tenants`).
+2. `GET {MAGICLINK}/api/tenants/{tenant_id}` to fetch its
+   `public_key_pem` (open endpoint, no auth required).
+3. In the downstream app's Postgres, install the same `auth.trusted_tenants`
+   table and insert the same `(tenant_id, public_key_pem)` row.
+4. Install the same `app.jwt_email()` / `app.jwt_claims()` helpers in the
+   downstream Postgres so RLS policies can use them.
+5. The downstream app's middleware looks up `auth.trusted_tenants` by
+   `iss`, RS256-verifies, and `SET LOCAL app.jwt_claims` per request.
+
+JWTs minted at `/api/tenants/<shared>/verify-code` now verify cleanly on
+both databases. No cross-API plumbing, no key rotation choreography.
+
+For the generic shape of this pattern (multi-row registry, peek-iss-then-
+verify middleware, zero-downtime tenant addition/revocation) see the
+**`magic-links`** skill's "Sharing one tenant across multiple databases"
+section.
+
+---
+
 ## Cheat sheet
 
 | You want to… | Endpoint |
@@ -221,7 +252,7 @@ session priming step. The JWT is verified in-line at every query.
   the base. Anything user-shaped goes there.
 - **Asking magic-links for the private key.** It will never give it to
   you. The only key the API ever returns is `public_key_pem`.
-- **Reusing one tenant across unrelated apps.** One tenant per app —
+- **Reusing one tenant across *unrelated* apps.** One tenant per product surface —
   rotation, ownership, and audit all live at the tenant boundary.
 - **Letting the anon role read `auth.trusted_tenants`.** It must not.
   Verify with `GET .../auth/privileges` —

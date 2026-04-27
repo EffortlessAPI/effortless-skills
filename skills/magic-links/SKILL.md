@@ -72,31 +72,65 @@ MAGICLINK = https://magiclink.effortlessapi.com
 `nbf`, `exp`, `sub`, `tenant_id`. No namespacing — your app owns its own
 claim conventions (e.g. `role`, `app_user_id`).
 
-**JWT details:** RS256, `iss = {tenant_id}`, `email` = verified email,
-`exp` per the tenant's `jwt_expires_in_seconds` (default 3600s).
+**JWT details:** RS256, `iss = {magiclink_base}/{tenant_id}` (the **full
+URL**, not the bare UUID), `tenant_id` = the bare UUID (separate claim),
+`email` = verified email, `exp` per the tenant's `jwt_expires_in_seconds`
+(default 3600s).
+
+**Verifier gotcha:** look up your `auth.trusted_tenants` row by the
+`tenant_id` claim — **not** by `iss`. Then pass `iss` as the expected
+issuer to your JWT library. Confusing the two means your registry lookup
+silently misses every token.
 
 ---
 
 ## Recipe: zero → secured app
 
-### Step 0 — get a self-auth JWT (one time, per developer)
+### Step 0 — get a self-auth JWT (Claude drives this; user just reads a code)
+
+**This is Claude's job, not the user's.** Whenever a tenant create/modify
+operation is needed (`POST/PATCH/DELETE /api/tenants`), Claude obtains and
+caches the self-auth JWT itself. The user's only involvement is reading
+the 6-digit code from their inbox when asked.
+
+The flow:
+
+1. Claude POSTs `/auth/send-code` with the user's email (from
+   `git config user.email`, the user's known email in context, or by
+   asking once if neither is available).
+2. Claude tells the user "I sent a code to <email> — paste it back."
+3. User pastes the 6-digit code.
+4. Claude POSTs `/auth/verify-code` and stores the returned token
+   somewhere session-durable (e.g. `/tmp/magiclink-self-auth-<email>.json`
+   with mode 0600). The response shape is `{ token, expires_in, user }`
+   — the JWT field is `token`, **not** `jwt` (`/api/tenants/{id}/verify-code`
+   uses `jwt`; `/auth/verify-code` uses `token` — easy to get wrong).
+5. Claude reuses that cached token for every subsequent tenant op in the
+   session, until `expires_in` lapses (default 3600s). Then re-runs Steps
+   1–4.
 
 ```bash
 MAGICLINK="https://magiclink.effortlessapi.com"
-DEV_EMAIL="dev@example.com"
+DEV_EMAIL="<the user's email>"
 
+# Claude runs:
 curl -sS "$MAGICLINK/auth/send-code" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$DEV_EMAIL\"}"
+# → tell the user: "I sent a code to $DEV_EMAIL — paste it back."
 
-# Read the 6-digit code from the email, then:
-SELF_JWT=$(curl -sS "$MAGICLINK/auth/verify-code" \
+# After user pastes CODE:
+curl -sS "$MAGICLINK/auth/verify-code" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$DEV_EMAIL\",\"code\":\"123456\"}" | jq -r .jwt)
+  -d "{\"email\":\"$DEV_EMAIL\",\"code\":\"$CODE\"}" \
+  > /tmp/magiclink-self-auth-$DEV_EMAIL.json
+chmod 600 /tmp/magiclink-self-auth-$DEV_EMAIL.json
+
+SELF_JWT=$(jq -r .token /tmp/magiclink-self-auth-$DEV_EMAIL.json)
 ```
 
-Cache `SELF_JWT` for the rest of the session. Re-run the two-step flow
-when it expires.
+**Do not put this flow in the user's lap as "you go run these curls."**
+The user shouldn't be juggling tokens; that's the agent's responsibility.
 
 ### Step 1 — mint the tenant
 
@@ -136,11 +170,17 @@ export function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'missing_token' });
   }
   try {
-    const decoded = jwt.verify(auth.slice(7), PUBLIC_KEY, {
+    const token = auth.slice(7);
+    // iss is the FULL URL form: https://magiclink.effortlessapi.com/<tenant_id>
+    // Read it off the unverified payload, then pass it to jwt.verify so the
+    // verifier checks the signature *and* matches the expected issuer.
+    const unverified = jwt.decode(token);
+    if (unverified?.tenant_id !== TENANT_ID) throw new Error('wrong_tenant');
+    const decoded = jwt.verify(token, PUBLIC_KEY, {
       algorithms: ['RS256'],
-      issuer: TENANT_ID,
+      issuer: unverified.iss,
     });
-    req.user = decoded; // { email, sub, iss, exp, ...additional_claims }
+    req.user = decoded; // { email, sub, iss, tenant_id, exp, ...additional_claims }
     next();
   } catch {
     return res.status(401).json({ error: 'invalid_token' });
@@ -284,6 +324,109 @@ replicas.
 
 ---
 
+## Sharing one tenant across multiple databases (mutual trust)
+
+Magic-links is **issuer-only** — it has no concept of "trust." Trust is
+expressed entirely on the consumer side: each Postgres database keeps a
+small registry of `(tenant_id, public_key_pem)` rows it will honor, and
+verifies any inbound JWT against the row whose `tenant_id` matches the
+JWT's `iss` claim.
+
+This makes mutual trust trivial. **You do not need one tenant per app.**
+A JWT issued at `/api/tenants/<T>/verify-code` is signed with tenant T's
+private key, and will verify cleanly on any database that has T's public
+key in its registry.
+
+### When to share a tenant vs mint a new one
+
+- **Share** when multiple apps/databases form one product surface and
+  end-users should sign in once and have access across them (e.g.
+  `bases.effortlessapi.com` + a downstream consumer app that reads from
+  the same base).
+- **Mint a new tenant** when the apps are independent products, have
+  different `from_email` branding, or need independent rotation/revocation.
+
+### The pattern
+
+Pick (or mint) **one** tenant, then in **every** Postgres that should
+honor its JWTs:
+
+```sql
+CREATE SCHEMA IF NOT EXISTS auth;
+
+CREATE TABLE IF NOT EXISTS auth.trusted_tenants (
+  tenant_id      text PRIMARY KEY,
+  public_key_pem text NOT NULL,
+  is_active      boolean NOT NULL DEFAULT true,
+  added_at       timestamptz NOT NULL DEFAULT now()
+);
+
+INSERT INTO auth.trusted_tenants (tenant_id, public_key_pem)
+VALUES ('<shared-tenant-id>', '<public_key_pem>')
+ON CONFLICT (tenant_id) DO UPDATE
+  SET public_key_pem = EXCLUDED.public_key_pem,
+      is_active = true;
+```
+
+Per request, the app middleware:
+
+1. Reads the Bearer JWT, decodes the header + `iss` claim **without**
+   verifying.
+2. Looks up `auth.trusted_tenants` by `tenant_id = iss AND is_active`.
+3. RS256-verifies the JWT against that row's `public_key_pem`, with
+   `issuer: tenant_id`.
+4. Sets `app.jwt_email` / `app.jwt_claims` GUCs (Pattern A) so RLS fires.
+
+```js
+import jwt from 'jsonwebtoken';
+
+export async function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return res.status(401).end();
+  const token = auth.slice(7);
+
+  // Peek at iss without verifying.
+  const unverified = jwt.decode(token);
+  if (!unverified?.iss) return res.status(401).end();
+
+  const { rows } = await pool.query(
+    `SELECT public_key_pem FROM auth.trusted_tenants
+     WHERE tenant_id = $1 AND is_active = true`,
+    [unverified.iss],
+  );
+  if (!rows.length) return res.status(401).end();
+
+  try {
+    req.user = jwt.verify(token, rows[0].public_key_pem, {
+      algorithms: ['RS256'],
+      issuer: unverified.iss,
+    });
+    next();
+  } catch {
+    res.status(401).end();
+  }
+}
+```
+
+### Adding a second tenant later (zero downtime)
+
+Just `INSERT` another row. Existing JWTs keep verifying against their
+issuer's row; new JWTs from the new tenant verify against theirs. To
+revoke, set `is_active = false` — outstanding JWTs from that issuer stop
+being honored on the next request.
+
+### Anti-pattern
+
+- **Hard-coding a single `MAGICLINK_PUBLIC_KEY_PEM` env var.** Works for
+  one tenant, breaks the moment you need a second. Prefer the
+  `auth.trusted_tenants` table from the start, even when there's only one
+  row — it costs nothing and the second-tenant migration is a no-op.
+- **Caching the public key without keying by `iss`.** A process-wide
+  single-key cache hides the multi-tenant case until production. If you
+  cache, key by `tenant_id`.
+
+---
+
 ## Cheat sheet
 
 | You want to… | Endpoint |
@@ -309,9 +452,13 @@ replicas.
   The only key the API ever returns is `public_key_pem`.
 - **Reusing one tenant across unrelated apps.** One tenant per app —
   rotation, ownership, and audit live at the tenant boundary.
-- **Forgetting to set `iss` on the verifier.** Without `issuer: TENANT_ID`,
+- **Forgetting to set `iss` on the verifier.** Without an `issuer` option,
   a JWT minted for *any* tenant the same magic-links instance hosts would
-  pass — which is a cross-tenant auth bug.
+  pass — which is a cross-tenant auth bug. Pass the **decoded `iss`** (the
+  URL form), not the bare tenant UUID.
+- **Looking up `auth.trusted_tenants` by `iss`.** The registry's primary
+  key is the bare UUID; `iss` is a URL. Use the `tenant_id` claim for the
+  lookup. (Discovered the hard way in the v2-naked-claude-demo project.)
 - **Putting bases-side knowledge into magic-links via a custom endpoint.**
   Use `additional_claims` instead — they bake straight into the JWT, and
   reserved claims always win.
