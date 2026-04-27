@@ -187,7 +187,9 @@ This orchestrator provides the big picture. For specifics, the following compani
 
 | Skill | When to Use |
 |-------|-------------|
+| `effortless-install-cli` | Installing/updating the `effortless` CLI itself — clones the repo and registers it as a global npm package. Triggered by "install effortless", "the cli isn't installed", `effortless: command not found`. |
 | `effortless-cli` | CLI commands — login, init, install, build, API keys, project settings |
+| `effortless-setup-postgres` | First-run setup of an ERB project that targets Postgres — installs the pipeline, pulls the rulebook, generates SQL, creates the local DB. Run BEFORE writing any application code. |
 | `effortless-bootstrap` | Bootstrapping from raw text — the Shadle steps from vocabulary to rulebook to Airtable |
 | `effortless-leopold-loop` | The iterative ERB dev cycle — triggered by "the loop", "Leopold loop", "do a turn", "rebuild the rulebook", etc. |
 | `effortless-query` | Querying the rulebook JSON — listing tables, extracting schema, finding relationships, inspecting formulas |
@@ -199,6 +201,8 @@ This orchestrator provides the big picture. For specifics, the following compani
 | `effortless-airtable` | Airtable API — adding scalar fields, creating/modifying records, field renaming — anything the REST API supports |
 | `effortless-airtable-omni` | Non-scalar schema changes via Playwright + OMNI — formula fields, lookup fields, rollup fields, and new table creation (requires the Name formula). Drives a headed Chrome browser automatically. |
 | `effortless-diagnostics` | Diagnostic queries, DAG validation, legacy code migration |
+| `effortless-bases` | Spin up a Postgres base on bases.effortlessapi.com and secure it end-to-end with magic-links auth + RLS — the "create a base + magic-links tenant + RLS-secured app in 5 minutes" flow. |
+| `magic-links` | Add passwordless email-code (magic-link) auth to ANY Postgres-backed project (not just bases.effortlessapi.com). Mints a tenant on magiclink.effortlessapi.com, wires `Authorization: Bearer` middleware, installs the `app.jwt_*()` SQL helpers for RLS. |
 
 ## Schema Change Decision Tree
 
@@ -259,10 +263,11 @@ When told to "do a turn of the loop" or "rebuild", load the effortless-leopold-l
 
 ## ERB Skills
 All conventions live in the effortless-* skills (not in memory files):
-effortless-claude, effortless-cli, effortless-bootstrap, effortless-conventions,
-effortless-schema, effortless-query, effortless-sql, effortless-pipeline,
-effortless-workflow, effortless-airtable, effortless-airtable-omni,
-effortless-leopold-loop, effortless-diagnostics.
+effortless-claude, effortless-install-cli, effortless-cli, effortless-setup-postgres,
+effortless-bootstrap, effortless-conventions, effortless-schema, effortless-query,
+effortless-sql, effortless-pipeline, effortless-workflow, effortless-airtable,
+effortless-airtable-omni, effortless-leopold-loop, effortless-diagnostics,
+effortless-bases, magic-links.
 ```
 
 Fill in `{ProjectName}` and `{baseId}` from the project's `effortless.json` (or legacy `ssotme.json`). Add any project-specific notes (e.g., which tables are most active, known quirks, deployment targets).
