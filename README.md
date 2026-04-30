@@ -169,4 +169,4 @@ Each skill file under `skills/` is the source of truth for that skill's behavior
 
 ## License
 
-Proprietary. Copyright EffortlessAPI. All rights reserved.
+MIT. See [LICENSE](LICENSE).
