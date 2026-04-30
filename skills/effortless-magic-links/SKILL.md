@@ -1,5 +1,5 @@
 ---
-name: magic-links
+name: effortless-magic-links
 description: >
   Use when the user wants to add passwordless email-code (magic-link) auth to
   any project backed by a Postgres database — not just bases.effortlessapi.com.
@@ -9,20 +9,30 @@ description: >
   RLS policies can filter by the verified email. Triggers: "add magic links
   to this app", "secure this app with magic links", "passwordless auth on a
   postgres app", "wire JWT auth into this project".
+audience: general
 ---
 
 # Magic Links → any Postgres app
 
-## The axiom (load-bearing)
-
-> **Magic-links is a notary, not a referee.** It makes one claim per JWT:
-> *"we sent code C to email E, the holder of C returned it, therefore E is
-> verified."* Magic-links stores no end-users, no roles, no ownership. All
-> user-shaped state lives in the **consuming app's** Postgres database.
+> **Load-bearing axiom: Magic-links is a notary, not a referee.**
+> It makes one claim per JWT: *"we sent code C to email E, the holder of C
+> returned it, therefore E is verified."* Magic-links stores no end-users,
+> no roles, no ownership. All user-shaped state lives in the **consuming
+> app's** Postgres database.
 
 If a feature wants magic-links to know what an end-user does in your app,
 the feature belongs in your app — not in magic-links. See
 `magiclink.effortlessapi.com/UNIFICATION-PLAN.md` for the full contract.
+
+This skill is the **generic** flow: any project, any Postgres database. For
+the bases-specific flow (auto-RLS templates, `auth.trusted_tenants`,
+`/auth/generate-policy`), use the `effortless-bases` skill instead.
+
+> Long-tail material — Pattern B (in-DB JWT verification), the recursion
+> gotcha for `app.jwt_role()`, the multi-DB tenant-sharing pattern, the
+> FastAPI middleware flavor, the full refresh flow, and the cheat sheet —
+> lives in [REFERENCE.md](REFERENCE.md). The core flow (Steps 0–3, RLS
+> Pattern A, Common Mistakes) stays here.
 
 ## "AppUsers" / "Roles" / "Profiles" tables belong in the consuming app, NOT in `app.*`
 
@@ -39,10 +49,6 @@ someone adds it the right way.
 The only legitimate hand-written tables in `auth` / `app` are things the
 rulebook genuinely cannot model: `auth.trusted_tenants` (JWT public keys)
 and the `app.jwt_*()` helper functions themselves.
-
-This skill is the **generic** flow: any project, any Postgres database. For
-the bases-specific flow (auto-RLS templates, `auth.trusted_tenants`,
-`/auth/generate-policy`), use the `effortless-bases` skill instead.
 
 ---
 
@@ -133,7 +139,7 @@ MAGICLINK = https://magiclink.effortlessapi.com
 | `DELETE`| `/api/tenants/{id}` | self-auth + ownership | Remove tenant. |
 | `POST` | `/api/tenants/{id}/send-code` | open | `{email, additional_claims?}` → `{ok:true}`. |
 | `POST` | `/api/tenants/{id}/verify-code` | open | `{email, code, additional_claims?}` → `{ok, jwt, expires_in}`. |
-| `POST` | `/api/tenants/{id}/refresh` | Bearer expired JWT | Multi-use within grace window → fresh JWT. |
+| `POST` | `/api/tenants/{id}/refresh` | Bearer expired JWT | Multi-use within grace window → fresh JWT. (Details: [REFERENCE.md](REFERENCE.md#refresh-flow).) |
 
 **`additional_claims`** are baked into the JWT verbatim. Reserved claims
 **always win** (and you cannot override them): `email`, `iss`, `iat`,
@@ -223,9 +229,8 @@ MAGICLINK_TENANT_ID=<tenant_id>
 MAGICLINK_PUBLIC_KEY_PEM=<public_key_pem multi-line>
 ```
 
-### Step 2 — install the JWT verification middleware
+### Step 2 — install the JWT verification middleware (Node / Express)
 
-**Node / Express:**
 ```js
 import jwt from 'jsonwebtoken';
 
@@ -256,25 +261,7 @@ export function requireAuth(req, res, next) {
 }
 ```
 
-**Python / FastAPI:**
-```python
-import jwt
-from fastapi import Header, HTTPException
-
-PUBLIC_KEY = os.environ["MAGICLINK_PUBLIC_KEY_PEM"]
-TENANT_ID  = os.environ["MAGICLINK_TENANT_ID"]
-
-def require_auth(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(401, "missing_token")
-    try:
-        return jwt.decode(
-            authorization[7:], PUBLIC_KEY,
-            algorithms=["RS256"], issuer=TENANT_ID,
-        )
-    except jwt.PyJWTError:
-        raise HTTPException(401, "invalid_token")
-```
+For Python / FastAPI flavor, see [REFERENCE.md → Python middleware](REFERENCE.md#python--fastapi-middleware).
 
 ### Step 3 — build the two-step login UI
 
@@ -304,15 +291,11 @@ localStorage.setItem('jwt', jwt);
 
 All subsequent API calls send `Authorization: Bearer ${jwt}`.
 
-### Step 4 (optional) — push the verified email into Postgres
+### Step 4 (optional) — push the verified email into Postgres (Pattern A)
 
-If you want **the database** to filter rows by the JWT email (RLS), you
-have two patterns. Pick one:
-
-#### Pattern A — app sets a session variable per request
-
-Simplest, no DB extensions. The app verifies the JWT, then sets a session
-GUC before running queries:
+If you want **the database** to filter rows by the JWT email (RLS),
+simplest is to have the app set a session GUC per request, then write
+policies that read it:
 
 ```sql
 -- Run once after connecting (or per request, before the query):
@@ -332,12 +315,8 @@ CREATE POLICY "owner_access" ON documents
 `current_setting('...', true)` returns NULL when unset → policy fails
 closed.
 
-#### Pattern B — verify the JWT inside Postgres (pgjwt / plpython)
-
-Heavier — requires the `pgjwt` extension (or a custom plpgsql function
-that does RS256 verification). Only worth it if you cannot trust the
-caller to set the GUC, e.g. direct DB access. For most app-fronted DBs,
-Pattern A is correct.
+For Pattern B (verify the JWT inside Postgres with `pgjwt` /
+`plpython`), see [REFERENCE.md → Pattern B](REFERENCE.md#pattern-b--verify-the-jwt-inside-postgres).
 
 ### Step 5 — write RLS policies (skip if the DB doesn't need to filter)
 
@@ -367,28 +346,10 @@ RESET app.jwt_email;
 SELECT * FROM documents;  -- empty (deny_all wins)
 ```
 
-### Gotcha: recursion when the role resolver reads an RLS-protected table
-
-If `app.jwt_role()` queries a table with FORCE RLS, and that table's
-policy calls `app.jwt_is_admin()` (which calls `jwt_role()`), you get
-infinite recursion → `stack depth limit exceeded` on every authenticated
-request. The role-resolver must bypass RLS:
-
-```sql
-CREATE OR REPLACE FUNCTION app.jwt_role() RETURNS text
-LANGUAGE plpgsql STABLE
-SECURITY DEFINER
-SET row_security = off
-AS $$
-DECLARE r text;
-BEGIN
-  SELECT au.role INTO r FROM public.vw_app_users au
-   WHERE lower(au.email_address) = app.jwt_email() LIMIT 1;
-  RETURN COALESCE(r, 'anon');
-END $$;
-```
-
-Same pattern for any helper invoked from inside an RLS USING/WITH CHECK.
+> If `app.jwt_role()` reads an RLS-protected table, you can hit a
+> recursion bug — `stack depth limit exceeded` on every authenticated
+> request. The fix (mark the resolver `SET row_security = off`) is in
+> [REFERENCE.md → Recursion gotcha](REFERENCE.md#gotcha-recursion-when-the-role-resolver-reads-an-rls-protected-table).
 
 ## "It started up" is not "it works"
 
@@ -410,146 +371,6 @@ each statement gets a fresh GUC and your test reads NULL.
 
 ---
 
-## Refresh flow
-
-When a JWT is near-expired or freshly expired:
-
-```js
-const { jwt: newJwt } = await fetch(
-  `${MAGICLINK}/api/tenants/${TENANT_ID}/refresh`,
-  {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${expiredJwt}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ grace_period: 86400 }), // optional
-  },
-).then(r => r.json());
-```
-
-Multi-use within the grace window. No session affinity, works across
-replicas.
-
----
-
-## Sharing one tenant across multiple databases (mutual trust)
-
-Magic-links is **issuer-only** — it has no concept of "trust." Trust is
-expressed entirely on the consumer side: each Postgres database keeps a
-small registry of `(tenant_id, public_key_pem)` rows it will honor, and
-verifies any inbound JWT against the row whose `tenant_id` matches the
-JWT's `iss` claim.
-
-This makes mutual trust trivial. **You do not need one tenant per app.**
-A JWT issued at `/api/tenants/<T>/verify-code` is signed with tenant T's
-private key, and will verify cleanly on any database that has T's public
-key in its registry.
-
-### When to share a tenant vs mint a new one
-
-- **Share** when multiple apps/databases form one product surface and
-  end-users should sign in once and have access across them (e.g.
-  `bases.effortlessapi.com` + a downstream consumer app that reads from
-  the same base).
-- **Mint a new tenant** when the apps are independent products, have
-  different `from_email` branding, or need independent rotation/revocation.
-
-### The pattern
-
-Pick (or mint) **one** tenant, then in **every** Postgres that should
-honor its JWTs:
-
-```sql
-CREATE SCHEMA IF NOT EXISTS auth;
-
-CREATE TABLE IF NOT EXISTS auth.trusted_tenants (
-  tenant_id      text PRIMARY KEY,
-  public_key_pem text NOT NULL,
-  is_active      boolean NOT NULL DEFAULT true,
-  added_at       timestamptz NOT NULL DEFAULT now()
-);
-
-INSERT INTO auth.trusted_tenants (tenant_id, public_key_pem)
-VALUES ('<shared-tenant-id>', '<public_key_pem>')
-ON CONFLICT (tenant_id) DO UPDATE
-  SET public_key_pem = EXCLUDED.public_key_pem,
-      is_active = true;
-```
-
-Per request, the app middleware:
-
-1. Reads the Bearer JWT, decodes the header + `iss` claim **without**
-   verifying.
-2. Looks up `auth.trusted_tenants` by `tenant_id = iss AND is_active`.
-3. RS256-verifies the JWT against that row's `public_key_pem`, with
-   `issuer: tenant_id`.
-4. Sets `app.jwt_email` / `app.jwt_claims` GUCs (Pattern A) so RLS fires.
-
-```js
-import jwt from 'jsonwebtoken';
-
-export async function requireAuth(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith('Bearer ')) return res.status(401).end();
-  const token = auth.slice(7);
-
-  // Peek at iss without verifying.
-  const unverified = jwt.decode(token);
-  if (!unverified?.iss) return res.status(401).end();
-
-  const { rows } = await pool.query(
-    `SELECT public_key_pem FROM auth.trusted_tenants
-     WHERE tenant_id = $1 AND is_active = true`,
-    [unverified.iss],
-  );
-  if (!rows.length) return res.status(401).end();
-
-  try {
-    req.user = jwt.verify(token, rows[0].public_key_pem, {
-      algorithms: ['RS256'],
-      issuer: unverified.iss,
-    });
-    next();
-  } catch {
-    res.status(401).end();
-  }
-}
-```
-
-### Adding a second tenant later (zero downtime)
-
-Just `INSERT` another row. Existing JWTs keep verifying against their
-issuer's row; new JWTs from the new tenant verify against theirs. To
-revoke, set `is_active = false` — outstanding JWTs from that issuer stop
-being honored on the next request.
-
-### Anti-pattern
-
-- **Hard-coding a single `MAGICLINK_PUBLIC_KEY_PEM` env var.** Works for
-  one tenant, breaks the moment you need a second. Prefer the
-  `auth.trusted_tenants` table from the start, even when there's only one
-  row — it costs nothing and the second-tenant migration is a no-op.
-- **Caching the public key without keying by `iss`.** A process-wide
-  single-key cache hides the multi-tenant case until production. If you
-  cache, key by `tenant_id`.
-
----
-
-## Cheat sheet
-
-| You want to… | Endpoint |
-|---|---|
-| Get a self-auth JWT (developer login) | `POST {MAGICLINK}/auth/send-code` then `/auth/verify-code` |
-| Create a tenant | `POST {MAGICLINK}/api/tenants` (self-auth Bearer) |
-| Look up a tenant's public key | `GET {MAGICLINK}/api/tenants/{id}` |
-| Update tenant settings | `PATCH {MAGICLINK}/api/tenants/{id}` |
-| Delete a tenant | `DELETE {MAGICLINK}/api/tenants/{id}` |
-| Issue an end-user JWT | `POST {MAGICLINK}/api/tenants/{id}/send-code` then `/verify-code` |
-| Refresh an end-user JWT | `POST {MAGICLINK}/api/tenants/{id}/refresh` |
-
----
-
 ## Common mistakes
 
 - **Hand-decoding JWTs without verifying the signature.** Always RS256-verify
@@ -567,7 +388,7 @@ being honored on the next request.
   URL form), not the bare tenant UUID.
 - **Looking up `auth.trusted_tenants` by `iss`.** The registry's primary
   key is the bare UUID; `iss` is a URL. Use the `tenant_id` claim for the
-  lookup. (Discovered the hard way in the v2-naked-claude-demo project.)
+  lookup.
 - **Putting bases-side knowledge into magic-links via a custom endpoint.**
   Use `additional_claims` instead — they bake straight into the JWT, and
   reserved claims always win.
@@ -577,16 +398,9 @@ being honored on the next request.
 
 ---
 
-## When to use the bases-specific skill instead
+## See also
 
-If the project's database lives on `bases.effortlessapi.com`, use the
-`effortless-bases` skill — it adds:
-- `auth.trusted_tenants` registration (multi-tenant key fan-out per base),
-- a two-role privilege template (admin + anon),
-- `/auth/generate-policy` for owner / role_based / authenticated /
-  admin_only RLS templates,
-- `app.jwt_email()` / `app.jwt_claims()` SQL helpers pre-installed,
-- policy linting + RLS test endpoints.
-
-For a plain Postgres DB you control directly, this skill is the right
-fit.
+- [REFERENCE.md](REFERENCE.md) — long-tail material kept out of the core: Python/FastAPI middleware, Pattern B (in-DB JWT verification), the role-resolver recursion gotcha, refresh flow, multi-database tenant sharing, full cheat sheet.
+- `effortless-bases` — switch to this skill if the project's database lives on `bases.effortlessapi.com`. Bases-specific endpoints (`/auth/generate-policy`, `/auth/apply-privileges-template`) and pre-installed `app.jwt_*()` helpers replace much of Steps 4–5 here.
+- `effortless-orchestrator` — if this is an ERB project, `AppUsers` belongs in Airtable, not in `app.app_users` by hand.
+- `effortless-sql` — for `*b-customize-*.sql` placement of `auth.trusted_tenants` and `app.jwt_*()` helpers in ERB projects.

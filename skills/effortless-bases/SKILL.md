@@ -8,8 +8,9 @@ description: >
   magiclink.effortlessapi.com's unified `/api/*` surface, registering
   trusted tenants on the base, applying the two-role privilege template,
   and writing email-DAG RLS policies. Triggers: "set up a secure base",
-  "wire magic links into this app", "RLS app from scratch",
-  "create a magic-links tenant".
+  "wire magic links into this app on bases.effortlessapi.com",
+  "RLS app on bases", "create a magic-links tenant for a base".
+audience: customer
 ---
 
 # Effortless Bases + Magic Links Quickstart
@@ -222,8 +223,8 @@ both databases. No cross-API plumbing, no key rotation choreography.
 
 For the generic shape of this pattern (multi-row registry, peek-iss-then-
 verify middleware, zero-downtime tenant addition/revocation) see the
-**`magic-links`** skill's "Sharing one tenant across multiple databases"
-section.
+**`effortless-magic-links`** skill's REFERENCE.md, "Sharing one tenant
+across multiple databases" section.
 
 ---
 
@@ -262,3 +263,12 @@ section.
 - **Trying to put bases-side knowledge in magic-links via a custom
   endpoint.** Use `additional_claims` instead — they bake straight into
   the JWT, and reserved claims always win.
+
+---
+
+## See also
+
+- `effortless-magic-links` — the **generic** magic-links flow for any Postgres app, when the DB is NOT on bases.effortlessapi.com. Same axiom, fewer bases-specific endpoints.
+- `effortless-orchestrator` — for the "AppUsers belongs in Airtable, not in `app.app_users` by hand" rule.
+- `effortless-sql` — for `*b-customize-*.sql` placement of `auth.trusted_tenants` and `app.jwt_*()` helpers.
+- `effortless-setup-postgres` — if you're standing up the underlying Postgres ERB project, run that first.

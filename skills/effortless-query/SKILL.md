@@ -5,6 +5,7 @@ description: >
   schema without data, finding FK relationships, inspecting calculated fields and
   formulas. Activates for any project with effortless-rulebook.json or
   effortless-rulebook/ directory.
+audience: customer
 ---
 
 # Querying the Effortless Rulebook
@@ -17,8 +18,12 @@ is the source. Query it with targeted one-liners that produce minimal output.
 
 ### Token Discipline
 
-The rulebook JSON can be megabytes (it includes data rows). **NEVER read the full file.**
-Instead, use the targeted queries below that extract ONLY what you need:
+> The canonical Token Discipline statement lives in `effortless-orchestrator`.
+> This section restates the rule from the rulebook-querying angle: **never read
+> the full `effortless-rulebook.json` — query it.**
+
+The rulebook JSON can be megabytes (it includes data rows). The targeted queries
+below extract ONLY what you need:
 
 - **List tables**: ~5 lines of output
 - **Show one table's schema**: ~10-30 lines
@@ -109,3 +114,12 @@ for k,v in tables:
   print(f'  {k}: {raw} raw, {calc} derived, {rel} relationships')
 "
 ```
+
+---
+
+## See also
+
+- `effortless-orchestrator` — canonical Token Discipline; this skill provides the queries it refers to.
+- `effortless-schema` — for what each field type / datatype actually means in the JSON.
+- `effortless-sql` — for `psql -c "\d vw_tablename"` as the post-build alternative when the DB is up.
+- `effortless-diagnostics` — for the same query patterns applied to validation (broken FKs, DAG cycles).

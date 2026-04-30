@@ -1,16 +1,23 @@
 ---
-name: effortless-claude
+name: effortless-orchestrator
 description: >
-  Use when working with Effortless Rulebook (ERB) projects — Airtable-sourced
-  schema-first business rules, `effortless.json` or the legacy `ssotme.json` build pipelines, effortless-rulebook.json
+  Top-level orchestrator for Effortless Rulebook (ERB) projects — Airtable-sourced
+  schema-first business rules, `effortless.json` build pipelines, effortless-rulebook.json
   ontologies, rulebook-to-postgres code generation, or any project containing an
-  effortless-rulebook/ directory or effortless.json or ssotme.json file.
-  Also use when the user says "update effortless claude", "update your effortless skills",
-  "update effortless skills", "reinstall effortless", "refresh skills", or any variant
-  asking to update or reinstall the effortless skill set.
+  effortless-rulebook/ directory or effortless.json file.
+  Also use when the user says "update effortless skills", "update effortless claude skills",
+  "reinstall effortless skills", "refresh effortless skills", or any variant explicitly
+  asking to update or reinstall the effortless **skill set** (NOT the CLI binary —
+  for the CLI, use effortless-install-cli instead).
+audience: customer
 ---
 
 # Effortless Rulebook (ERB) — Orchestrator
+
+> **Load-bearing axiom: The rulebook is the invariant; generated code is disposable.**
+> Airtable holds truth, `effortless-rulebook.json` is its canonical projection, and
+> every other artifact (SQL, Go, Python, OWL, XLSX) is regenerated mechanically from
+> the rulebook. Never edit the projection — edit the source and rebuild.
 
 This is the top-level skill for ERB projects. It provides the mental model and routes to specialized sub-skills.
 
@@ -38,7 +45,7 @@ The **Leopold loop** is the user's name for the iterative ERB development cycle:
 
 **When the user mentions "the loop", "Leopold loop", "do a turn", "rebuild the rulebook", or any variant — load the `effortless-leopold-loop` skill.** That skill contains the full diagram, the trigger phrases, the step-by-step expectations, and the anti-patterns. Do not try to reason about the loop from this orchestrator alone.
 
-## 🚨 ORCHESTRATION RULE — `effortless-rulebook.json` LIVES IN `/effortless-rulebook/` 🚨
+## ORCHESTRATION RULE — `effortless-rulebook.json` LIVES IN `/effortless-rulebook/`
 
 The rulebook file path is **always** `/effortless-rulebook/effortless-rulebook.json`. It is NEVER at the project root.
 
@@ -64,7 +71,9 @@ If `effortless-rulebook.json` ever appears at the project root: that is a bug �
 4. **Always ask permission** before modifying the json rulebook directly.
 5. **Usually `effortless build` is the final step**, except in the rare cases where we have modified the json rulebook directly, and are explicitly trying to move that data FROM the rulebook INTO airtable. In that case, an effortless build would overwrite the currently HEAD json.
 
-## Token Discipline — Pipeline Operations Are Atomic
+## Token Discipline (CANONICAL — leaf skills reference this)
+
+This section is the canonical statement of token discipline for the entire ERB skill suite. Other skills (`effortless-query`, `effortless-sql`, `effortless-setup-postgres`, `effortless-pipeline`) restate the same rule from their angle, but the source of truth lives here.
 
 **`effortless build` is a zero-context operation.** It does not produce output you need
 to read. It regenerates files deterministically from the rulebook. The correct pattern:
@@ -187,7 +196,7 @@ This orchestrator provides the big picture. For specifics, the following compani
 
 | Skill | When to Use |
 |-------|-------------|
-| `effortless-install-cli` | Installing/updating the `effortless` CLI itself — clones the repo and registers it as a global npm package. Triggered by "install effortless", "the cli isn't installed", `effortless: command not found`. |
+| `effortless-install-cli` | Installing/updating the `effortless` CLI itself — clones the repo and registers it as a global npm package. Triggered by "install the CLI", "the cli isn't installed", `effortless: command not found`. |
 | `effortless-cli` | CLI commands — login, init, install, build, API keys, project settings |
 | `effortless-setup-postgres` | First-run setup of an ERB project that targets Postgres — installs the pipeline, pulls the rulebook, generates SQL, creates the local DB. Run BEFORE writing any application code. |
 | `effortless-bootstrap` | Bootstrapping from raw text — the Shadle steps from vocabulary to rulebook to Airtable |
@@ -196,13 +205,13 @@ This orchestrator provides the big picture. For specifics, the following compani
 | `effortless-schema` | Understanding the JSON structure — field types, datatypes, formula syntax, `_meta` section |
 | `effortless-conventions` | Naming rules, DAG structure, PK/FK patterns, no many-to-many |
 | `effortless-workflow` | Making changes — Path A (Airtable-first) vs Path B (Rulebook-first), permission checkpoints |
-| `effortless-pipeline` | Build system — `effortless.json` or the legacy `ssotme.json`, transpilers, `effortless build`, installation |
+| `effortless-pipeline` | Build system — `effortless.json`, transpilers, `effortless build`, installation |
 | `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `*b-customize-*` files, SQL patterns |
 | `effortless-airtable` | Airtable API — adding scalar fields, creating/modifying records, field renaming — anything the REST API supports |
 | `effortless-airtable-omni` | Non-scalar schema changes via Playwright + OMNI — formula fields, lookup fields, rollup fields, and new table creation (requires the Name formula). Drives a headed Chrome browser automatically. |
 | `effortless-diagnostics` | Diagnostic queries, DAG validation, legacy code migration |
 | `effortless-bases` | Spin up a Postgres base on bases.effortlessapi.com and secure it end-to-end with magic-links auth + RLS — the "create a base + magic-links tenant + RLS-secured app in 5 minutes" flow. |
-| `magic-links` | Add passwordless email-code (magic-link) auth to ANY Postgres-backed project (not just bases.effortlessapi.com). Mints a tenant on magiclink.effortlessapi.com, wires `Authorization: Bearer` middleware, installs the `app.jwt_*()` SQL helpers for RLS. |
+| `effortless-magic-links` | Add passwordless email-code (magic-link) auth to ANY Postgres-backed project (not just bases.effortlessapi.com). Mints a tenant on magiclink.effortlessapi.com, wires `Authorization: Bearer` middleware, installs the `app.jwt_*()` SQL helpers for RLS. |
 
 ## Schema Change Decision Tree
 
@@ -221,7 +230,7 @@ Is it a scalar field (text, number, select, checkbox, date, FK link, etc.)?
   NO  → Is it a formula, lookup, or rollup?
     YES → Use OMNI via Playwright (effortless-airtable-omni skill)
           Run: node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> '<prompt>'
-    
+
 Is it a new table?
   YES → Use OMNI — every table needs a Name formula: SUBSTITUTE(LOWER({Label}), " ", "-")
         Create scalar fields + FKs via API first, then add Name formula via OMNI
@@ -270,20 +279,22 @@ When told to "do a turn of the loop" or "rebuild", load the effortless-leopold-l
 
 ## ERB Skills
 All conventions live in the effortless-* skills (not in memory files):
-effortless-claude, effortless-install-cli, effortless-cli, effortless-setup-postgres,
+effortless-orchestrator, effortless-install-cli, effortless-cli, effortless-setup-postgres,
 effortless-bootstrap, effortless-conventions, effortless-schema, effortless-query,
 effortless-sql, effortless-pipeline, effortless-workflow, effortless-airtable,
 effortless-airtable-omni, effortless-leopold-loop, effortless-diagnostics,
-effortless-bases, magic-links.
+effortless-bases, effortless-magic-links.
 ```
 
-Fill in `{ProjectName}` and `{baseId}` from the project's `effortless.json` (or legacy `ssotme.json`). Add any project-specific notes (e.g., which tables are most active, known quirks, deployment targets).
+Fill in `{ProjectName}` and `{baseId}` from the project's `effortless.json`. Add any project-specific notes (e.g., which tables are most active, known quirks, deployment targets).
 
 This ensures the skills ARE the single source of truth for project behavior, not scattered memory entries.
 
 ## Updating Effortless Claude Skills
 
-When the user says "update effortless claude", "update your effortless skills", "reinstall effortless skills", or similar:
+When the user says "update effortless skills", "update effortless claude skills", "reinstall effortless skills", "refresh effortless skills", or similar:
+
+> **Note:** "install the CLI" / "update the CLI" / "the CLI isn't installed" mean something different — load `effortless-install-cli` for those. This skill manages the **skill set**, not the CLI binary.
 
 ### Where the Skills Live
 
@@ -336,6 +347,7 @@ bash install.sh --uninstall  # Remove all installed effortless-* skills
    description: >
      Use when ... (this text controls when Claude loads the skill —
      make it specific about trigger conditions)
+   audience: customer   # or: general
    ---
    ```
 
@@ -368,4 +380,12 @@ The `description` in the YAML frontmatter is what Claude Code uses to decide whe
 - **Schema is small, data is big** — extract schema to save tokens, and query for root entities (other than the name/description and meta data - these are all tables).  They can be queried as {"Widgets":{"schema":[{fields}, {}...], "data":[{data},{...}, ...], other meta-data...}.  You can use json query to not grep or ever have to read/process the whole thing.
 - **Two change paths**: Airtable-first (preferred) or Rulebook-first with reverse sync
 - **`effortless build`** from root runs enabled transpilers; `-id` includes disabled ones
-- **`effortless.json` or the legacy `ssotme.json`** defines the build pipeline
+- **`effortless.json`** defines the build pipeline
+
+## See also
+
+- `effortless-install-cli` — for installing or updating the **CLI binary** (different from skills).
+- `effortless-leopold-loop` — the iterative dev cycle this orchestrator routes to.
+- `effortless-setup-postgres` — first-run setup; load this for any new Postgres ERB project.
+- `effortless-query` — for the targeted JSON queries this orchestrator's Token Discipline section refers to.
+- `effortless-conventions` — for naming/DAG rules referenced in the Quick Reference.

@@ -4,9 +4,17 @@ description: >
   Use when you need ERB naming conventions, DAG structure rules, PascalCase table
   names, primary key and foreign key patterns, the Name field requirement, or
   understanding why many-to-many relationships are not allowed.
+audience: customer
 ---
 
 # ERB Naming & Design Conventions
+
+> **Load-bearing axiom: `Name` is the primary key. Surrogates are the substrate's problem.**
+> Every table's first field is `Name` — a kebab-cased compound formula that
+> uniquely identifies a row in human-readable form. `{Entity}Id` columns
+> never appear in the rulebook; substrates (Postgres, Airtable, etc.) may
+> mint surrogate keys off-screen for referential integrity, but they are
+> invisible to the domain model.
 
 ## Table Names
 - **PascalCase**, no spaces, no symbols, no underscores
@@ -108,3 +116,12 @@ Artifacts ------> Datasets
 ```
 
 Arrows point from child (many-side) to parent (one-side). Data flows UPWARD through lookups and aggregations.
+
+---
+
+## See also
+
+- `effortless-schema` — for the JSON shape these conventions produce in `effortless-rulebook.json`.
+- `effortless-orchestrator` — for the bigger mental model these conventions live inside.
+- `effortless-airtable-omni` — for OMNI prompts that respect the `Name` formula and singular-FK rules.
+- `effortless-sql` — for how PascalCase / `Name` / FK conventions translate to snake_case columns and `vw_*` views.

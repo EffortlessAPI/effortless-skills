@@ -6,6 +6,7 @@ description: >
   or "effortless-shadle-steps". Covers the full pipeline from raw input text
   through vocabulary extraction, glossary, narrative, mock data, schema
   normalization, and initial Airtable setup via OMNI.
+audience: customer
 ---
 
 # Effortless Bootstrap — The Shadle Steps
@@ -176,11 +177,12 @@ This output is a **starting point** — it needs to be reviewed, normalized, and
 | Bootstrap rulebook | `bootstrap/bootstrap-rulebook.json` | Rough first-pass rulebook |
 | Final rulebook | `effortless-rulebook/effortless-rulebook.json` | Production rulebook (after Airtable sync) |
 
-## Relationship to Other Skills
+## See also
 
-- **`effortless-cli`** — the `-install` and build commands used throughout
-- **`effortless-conventions`** — naming and DAG rules the rulebook must follow
-- **`effortless-schema`** — JSON structure the rulebook must conform to
-- **`effortless-airtable-omni`** — OMNI automation for creating tables (Step 9)
-- **`effortless-airtable`** — API calls for descriptions and data (Steps 10-11)
-- **`effortless-leopold-loop`** — what you enter at Step 13
+- `effortless-cli` — the `-install` and build commands used throughout.
+- `effortless-conventions` — naming and DAG rules the rulebook must follow.
+- `effortless-schema` — JSON structure the rulebook must conform to.
+- `effortless-airtable-omni` — OMNI automation for creating tables (Step 9).
+- `effortless-airtable` — API calls for descriptions and data (Steps 10–11).
+- `effortless-leopold-loop` — what you enter at Step 13 once Airtable is the SSoT.
+- `effortless-setup-postgres` — for projects that target Postgres, run after Step 13.

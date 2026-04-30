@@ -1,12 +1,18 @@
 ---
 name: effortless-install-cli
 description: >
-  Use when installing, updating, or reinstalling the `effortless` CLI (also known as
-  `ssotme` / `aicapture` / `aic`). Claude clones https://github.com/effortlessapi/cli
-  and registers it as a global npm package — no MSI/PKG installer needed. Triggers:
-  "install effortless", "install the cli", "update effortless cli", "the cli isn't
-  installed", `effortless: command not found`, version mismatches, or before any
-  workflow that requires the CLI when it isn't present on PATH.
+  Use when installing, updating, or reinstalling the `effortless` **CLI binary**
+  (also known as `ssotme` / `aicapture` / `aic`) — the executable that runs
+  `effortless build` etc. Claude clones https://github.com/effortlessapi/cli
+  and registers it as a global npm package — no MSI/PKG installer needed.
+  Triggers: "install the CLI", "install effortless cli", "update effortless cli",
+  "the CLI isn't installed", `effortless: command not found`, CLI version
+  mismatches, or before any workflow that requires the CLI when it isn't
+  present on PATH.
+  NOTE: This skill is for the CLI binary, NOT the Effortless Claude **skill set**.
+  For "update effortless skills" / "reinstall effortless skills" / "refresh
+  effortless skills", use effortless-orchestrator instead.
+audience: customer
 ---
 
 # Install / Update the Effortless CLI
@@ -132,3 +138,12 @@ effortless -info          # shows login state (will say "not logged in" if fresh
 `cli.js` self-syncs the .NET `<Version>` and `CLI_VERSION` constant from `package.json` before every build, so `-help` and `-version` should never drift. If they do, the clone is from before commit `55634ab` (2026-04-25) — `git pull` and reinstall.
 
 If smoke tests pass, hand off to `effortless-cli` for usage and `effortless-pipeline` / `effortless-setup-postgres` for project-level workflows.
+
+---
+
+## See also
+
+- `effortless-cli` — for usage of the CLI once it's installed (login, init, build, transpiler installs, API keys).
+- `effortless-pipeline` — for the build pipeline the CLI drives.
+- `effortless-setup-postgres` — for the canonical first-run sequence that depends on this CLI being present.
+- `effortless-orchestrator` — for **updating the skill set** (different operation; this skill only handles the CLI binary).

@@ -4,6 +4,7 @@ description: >
   Use when you need to understand the structure of effortless-rulebook.json —
   table objects, field schema definitions, field types (raw, calculated, lookup,
   relationship, aggregation), datatypes, formula syntax, or the _meta section.
+audience: customer
 ---
 
 # Rulebook JSON Schema Reference
@@ -136,3 +137,12 @@ Formulas use Excel dialect with `={{FieldName}}` for field references:
   }
 }
 ```
+
+---
+
+## See also
+
+- `effortless-query` — for one-liners that extract this structure without reading the full file.
+- `effortless-conventions` — for the naming / DAG rules that explain *why* the JSON looks the way it does.
+- `effortless-sql` — for how each field type / datatype maps to the generated Postgres tables, functions, and views.
+- `effortless-orchestrator` — for the canonical "Token Discipline" rule that says: query this JSON, never read it whole.

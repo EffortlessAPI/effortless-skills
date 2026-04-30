@@ -4,6 +4,7 @@ description: >
   Use when diagnosing ERB project health — validating DAG integrity, checking for
   broken FK targets, finding JOIN anti-patterns in application code, migrating
   legacy code from base table reads to view reads, or running diagnostic queries.
+audience: customer
 ---
 
 # ERB Diagnostics & Migration
@@ -68,3 +69,12 @@ rows, _ := db.Query(`
     FROM vw_bids
     WHERE bid_id = $1`, bidID)
 ```
+
+---
+
+## See also
+
+- `effortless-query` — for the rulebook one-liners these diagnostics rely on.
+- `effortless-sql` — for the "always read from `vw_*`" rule and `*b-customize-*.sql` placement.
+- `effortless-conventions` — for the DAG / FK rules that define what "broken" means.
+- `effortless-workflow` — for the right way to fix a missing field once a diagnostic finds one (Airtable → build, never hand-edit generated SQL).

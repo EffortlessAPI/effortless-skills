@@ -5,6 +5,7 @@ description: >
   installing transpilers, setting API keys, initializing projects, or troubleshooting
   the CLI. The CLI is also known as `ssotme` or `aicapture` but all documentation
   should use the canonical name `effortless`.
+audience: customer
 ---
 
 # Effortless CLI Reference
@@ -48,7 +49,7 @@ effortless -projectLogin
 effortless -init
 ```
 
-Creates the current folder as the root of an effortless project. Generates an `effortless.json` (or legacy `ssotme.json`) project file.
+Creates the current folder as the root of an effortless project. Generates an `effortless.json` project file.
 
 **With a project name:**
 ```bash
@@ -85,7 +86,7 @@ This stores the key in `~/.ssotme/ssotme.key`, a JSON file structured as:
 Priority order for Airtable API key resolution:
 1. `AIRTABLE_API_KEY` environment variable
 2. `~/.ssotme/ssotme.key` -> parse JSON -> `APIKeys.airtable`
-3. `effortless.json` (or `ssotme.json`) -> `ProjectSettings` -> `_apikey_`
+3. `effortless.json` -> `ProjectSettings` -> `_apikey_`
 
 ### The `-account` flag
 
@@ -113,7 +114,7 @@ Transpilers are installed from the directory where the output is expected. The e
 effortless -install <transpiler-name> -p param1=value1 -i input-file.txt -o output-file.json
 ```
 
-**The `-install` flag saves the command into the project's `effortless.json` (or `ssotme.json`) under `ProjectTranspilers`.**
+**The `-install` flag saves the command into the project's `effortless.json` under `ProjectTranspilers`.**
 
 The installed entry records:
 - `RelativePath` — the folder from which the install was run (relative to project root)
@@ -208,7 +209,7 @@ effortless -buildOnTrigger    # Build on trigger invocation
 effortless -copilotConnect    # Connect baseId to SSoTme Copilot Agent
 ```
 
-## Project File Structure (`effortless.json` / `ssotme.json`)
+## Project File Structure (`effortless.json`)
 
 ```json
 {
@@ -230,3 +231,12 @@ effortless -copilotConnect    # Connect baseId to SSoTme Copilot Agent
 ```
 
 **The `baseId` setting** stores the Airtable base ID for the project. This is shared across all airtable-facing tools and should always be set here so any tool can read it.
+
+---
+
+## See also
+
+- `effortless-install-cli` — for installing or updating the CLI binary itself (clones the repo and registers `effortless` as a global npm package).
+- `effortless-pipeline` — for the build pipeline / `ProjectTranspilers` schema this skill references.
+- `effortless-setup-postgres` — for the canonical first-run sequence that uses these CLI commands in order.
+- `effortless-airtable` — for the airtable-facing API key conventions (`-account airtable`, `~/.ssotme/ssotme.key`).

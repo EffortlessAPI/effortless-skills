@@ -1,13 +1,14 @@
 ---
 name: effortless-pipeline
 description: >
-  Use when working with the ERB build pipeline — ssotme.json configuration,
+  Use when working with the ERB build pipeline — effortless.json configuration,
   transpiler catalog, effortless build commands, the -id flag, transpiler
   installation, or understanding how the build flows from Airtable through
   to generated code.
+audience: customer
 ---
 
-# The ssotme.json Build Pipeline
+# The effortless.json Build Pipeline
 
 ## Structure
 
@@ -46,11 +47,11 @@ description: >
 
 ## Finding the Base ID and API Key
 
-1. **Base ID**: Check `effortless.json` (or legacy `ssotme.json`) -> `ProjectSettings` -> `baseId`. This is the canonical location — all airtable-facing tools read it from here.
+1. **Base ID**: Check `effortless.json` -> `ProjectSettings` -> `baseId`. This is the canonical location — all airtable-facing tools read it from here.
 2. **API Key**: Priority order:
    - `AIRTABLE_API_KEY` environment variable
    - `~/.ssotme/ssotme.key` -> `APIKeys.airtable` (set via `effortless -setAccountAPIKey airtable=...`)
-   - `effortless.json` (or `ssotme.json`) -> `ProjectSettings` -> `_apikey_`
+   - `effortless.json` -> `ProjectSettings` -> `_apikey_`
 3. **Setting the API Key**: `effortless -setAccountAPIKey airtable=patXXXXXXXX.XXXXXXXX`
 
 ## Running a Build
@@ -82,8 +83,8 @@ one-liner (see `effortless-query`) or run `psql -c "\d vw_tablename"`.
 
 ---
 
-- **From project root**: `effortless build` reads `ssotme.json` and runs each enabled transpiler in its `RelativePath` directory. Disabled transpilers (`"IsDisabled": true`) are skipped.
-- **From a subfolder**: `effortless build` can also be run from any subfolder that contains its own `ssotme.json` or is referenced as a `RelativePath`. This is how you run a specific transpiler in isolation.
+- **From project root**: `effortless build` reads `effortless.json` and runs each enabled transpiler in its `RelativePath` directory. Disabled transpilers (`"IsDisabled": true`) are skipped.
+- **From a subfolder**: `effortless build` can also be run from any subfolder that contains its own `effortless.json` or is referenced as a `RelativePath`. This is how you run a specific transpiler in isolation.
 - **The `-id` flag** (include disabled): Forces execution of all transpilers, even those marked `"IsDisabled": true`. This is essential for the reverse-sync workflow (Path B), where `rulebook-to-airtable` is intentionally disabled during normal builds but needs to run when pushing local changes back to Airtable.
 
 **Example: Pushing rulebook changes back to Airtable:**
@@ -100,7 +101,7 @@ Transpilers are installed using the `effortless` CLI with the `-install` flag. *
 effortless -install <transpiler-name> -p param1=value1 -i input-file.txt -o output-file.json
 ```
 
-The installed transpiler configuration is stored in `effortless.json` (or legacy `ssotme.json`) under `ProjectTranspilers`, recording:
+The installed transpiler configuration is stored in `effortless.json` under `ProjectTranspilers`, recording:
 - `RelativePath` — the folder the install was run from (relative to project root)
 - `CommandLine` — the full command with all flags
 
@@ -169,3 +170,13 @@ The rulebook is **substrate-agnostic**. The same JSON generates equivalent imple
 - **Blank test**: Load data with calculated fields set to NULL
 - **Execute**: Each substrate computes the calculated fields
 - **Grade**: Compare output to answer-key. All deterministic substrates must match exactly.
+
+---
+
+## See also
+
+- `effortless-orchestrator` — canonical Token Discipline (atomic builds); this skill restates the rule from the pipeline angle.
+- `effortless-cli` — for the CLI flags and command surface that drive the pipeline.
+- `effortless-setup-postgres` — for the canonical first-run install order (which transpiler from which directory).
+- `effortless-workflow` — for Path A vs Path B and when `-id` is appropriate.
+- `effortless-leopold-loop` — for the iterative dev cycle the pipeline supports.

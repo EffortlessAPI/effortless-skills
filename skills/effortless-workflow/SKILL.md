@@ -4,6 +4,7 @@ description: >
   Use when making changes to an ERB project — modifying effortless-rulebook.json,
   Airtable schema or data, or running effortless build. Covers Path A (Airtable-first)
   vs Path B (Rulebook-first reverse sync) and permission checkpoints.
+audience: customer
 ---
 
 # ERB Change Workflow
@@ -42,7 +43,7 @@ Use this when Airtable is not accessible, or when it's more practical to edit th
 
 1. **Edit `effortless-rulebook.json` directly** — Make your schema/data changes in the JSON
 2. **Push changes back to Airtable** — Run `effortless build -id` from the `effortless-rulebook/push-to-airtable/` subfolder
-   - The `-id` flag tells effortless to include disabled transpilers — this is necessary because `rulebook-to-airtable` is typically disabled in `ssotme.json` (since most of the time Airtable is authoritative, not the JSON)
+   - The `-id` flag tells effortless to include disabled transpilers — this is necessary because `rulebook-to-airtable` is typically disabled in `effortless.json` (since most of the time Airtable is authoritative, not the JSON)
    - This must be run directly from the `push-to-airtable/` subfolder, not from the project root
 3. **Then run the normal build** — `effortless build` from project root to regenerate downstream files
 
@@ -83,3 +84,13 @@ If you cannot make a change in Airtable (e.g., API limitations for formula field
    - **Path B**: You edit `effortless-rulebook.json` directly, then push to Airtable via `effortless build -id` from `push-to-airtable/`
    - **Customization files**: Use `*b-customize-*` files for logic that can't be expressed in Airtable
 3. **Wait for user direction** - do not proceed without explicit permission
+
+---
+
+## See also
+
+- `effortless-orchestrator` — for the bigger mental model and the schema-change decision tree this skill operationalizes.
+- `effortless-leopold-loop` — for the iterative cycle Path A produces.
+- `effortless-airtable` / `effortless-airtable-omni` — for *how* to make the change in Path A (API vs OMNI).
+- `effortless-pipeline` — for the `-id` flag mechanics referenced in Path B.
+- `effortless-sql` — for the rule that `*b-customize-*.sql` is the ONLY hand-edited surface, and never for business entities.

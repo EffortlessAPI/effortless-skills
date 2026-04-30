@@ -4,18 +4,27 @@ description: >
   Use when working with ERB-generated SQL — reading from vw_* views vs base tables,
   understanding generated files (00-05), using *b-customize-* files, SQL function
   patterns (calc_*, get_*), view structure, or ERBCustomizations table.
+audience: customer
 ---
 
 # ERB Generated SQL Patterns
 
+> **Load-bearing axiom: Generated SQL is a projection, not a source.**
+> Files `00`–`05` under `postgres/` are mechanical output of the rulebook.
+> Read views with `psql -c "\d vw_<table>"`, never `cat` the generated SQL
+> into your context — and never edit it by hand. The `*b-customize-*.sql`
+> files are the only legitimate place for project-specific SQL.
+
 ## CRITICAL: Never Read Generated SQL Files Into Context
 
 **The generated SQL files (00-05) are a PROJECTION of the rulebook. You do not need
-to read them.** They exist for PostgreSQL to consume, not for you.
+to read them.** They exist for PostgreSQL to consume, not for you. (See the
+canonical Token Discipline section in `effortless-orchestrator` — this skill
+restates the same rule from the SQL angle.)
 
 If you need to know what a view contains:
 - **Best:** `psql -d <dbname> -c "\d vw_tablename"` (zero context tokens)
-- **OK:** Query the rulebook schema with a one-liner (see effortless-query)
+- **OK:** Query the rulebook schema with a one-liner (see `effortless-query`)
 - **NEVER:** `cat postgres/03-create-views.sql` or reading any 00-05 file
 
 The pipeline is deterministic. The view `vw_<tablename>` will always contain:
@@ -188,3 +197,13 @@ For any foreign key `foo`, the view includes:
 - `is_*` - boolean flags
 - `*_status` - status lookups
 - `*_at` - timestamps
+
+---
+
+## See also
+
+- `effortless-orchestrator` — canonical Token Discipline section; this skill restates the same rule from the SQL angle.
+- `effortless-query` — for the rulebook one-liners that replace `cat`-ing the generated SQL.
+- `effortless-conventions` — for the naming patterns that explain why view columns look the way they do.
+- `effortless-workflow` — for the rule about `*b-customize-*.sql` being for infra only, never business entities.
+- `effortless-diagnostics` — for finding JOIN anti-patterns and broken FK targets.

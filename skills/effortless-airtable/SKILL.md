@@ -4,6 +4,7 @@ description: >
   Use when making schema or data changes via the Airtable API in an ERB project —
   adding fields, creating tables, modifying existing fields, or when you need to
   understand Airtable API limitations (e.g., formula fields cannot be created via API).
+audience: customer
 ---
 
 # Airtable as Single Source of Truth
@@ -26,7 +27,7 @@ echo "$AIRTABLE_API_KEY"
 
 If `AIRTABLE_API_KEY` is set and non-empty, use it immediately. Only if it is empty, fall back in this order:
 1. `~/.ssotme/ssotme.key` → parse JSON → `APIKeys.airtable`
-2. `effortless.json` (or legacy `ssotme.json`) → `ProjectSettings` → `_apikey_`
+2. `effortless.json` → `ProjectSettings` → `_apikey_`
 
 ### Reading from `~/.ssotme/ssotme.key`
 
@@ -69,7 +70,7 @@ An `effortless.env` file in the project root can also store keys as environment 
 
 ## Getting the Base ID
 
-The Airtable base ID for the project is stored in the project settings file (`effortless.json` or legacy `ssotme.json`) as `baseId`:
+The Airtable base ID for the project is stored in the project settings file (`effortless.json`) as `baseId`:
 
 ```bash
 cat effortless.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(next(s['Value'] for s in d['ProjectSettings'] if s['Name']=='baseId'))"
@@ -81,7 +82,7 @@ This base ID is shared across all airtable-facing tools and should always be rea
 
 **ALL schema changes must go through Airtable, then regenerate:**
 
-1. **Get the base ID** from `effortless.json` or legacy `ssotme.json` (the `baseId` setting)
+1. **Get the base ID** from `effortless.json` (the `baseId` setting)
 2. **Get the API key** using the priority order above
 3. **Use the Airtable API** to make changes
 4. **ALWAYS run `effortless build`** from project root to regenerate all code — every time Airtable schema or data is modified, a build must follow
@@ -175,3 +176,12 @@ Some operations (like modifying formula fields) cannot be done via API. When you
    - User can make the change manually in Airtable's UI
    - User can add logic to a customization file (e.g., `02b-customize-functions.sql`)
 3. **Wait for user direction** - do not proceed with manual edits to generated files
+
+---
+
+## See also
+
+- `effortless-airtable-omni` — load this instead when the change is a formula, lookup, rollup, or new table (the API can't do those).
+- `effortless-workflow` — for Path A vs Path B decisions and permission checkpoints around schema changes.
+- `effortless-conventions` — for the naming / DAG rules that any new field or table must follow.
+- `effortless-cli` — for `effortless -setAccountAPIKey airtable=...` and `~/.ssotme/ssotme.key` mechanics.

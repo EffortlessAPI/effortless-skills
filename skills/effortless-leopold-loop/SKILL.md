@@ -6,11 +6,17 @@ description: >
   reference to the iterative ERB development cycle. This is the user's name for the
   CHANGE-RULE → REBUILD → CONSUME-VIEWS workflow that makes ERB feel effortless.
   Load this skill on first mention so you understand what the user expects to happen.
+audience: customer
 ---
 
 # The Leopold Loop
 
-The "Leopold loop" is the user's name for the iterative ERB development cycle. It is the **core workflow** that makes ERB feel effortless compared to hand-coding ("naked Claude"). When the user mentions the loop in any form, they are invoking this entire mental model — load this skill so you respond in the right paradigm.
+The "Leopold loop" is the user's name for the iterative ERB development cycle. It is the **core workflow** that makes ERB feel effortless compared to hand-coding without the rulebook (a mode the user calls **"naked Claude"** — every layer of schema, migration, DTO, ORM model, API serializer, and client type written and maintained by hand). When the user mentions the loop in any form, they are invoking this entire mental model — load this skill so you respond in the right paradigm.
+
+> **"Naked Claude"** (used in passing throughout this skill): coding without
+> the rulebook — i.e. hand-writing every schema/migration/DTO/serializer
+> layer instead of generating them from a single rulebook source. The
+> Leopold loop's whole purpose is to eliminate that mode.
 
 ## The Loop
 
@@ -41,7 +47,7 @@ The "Leopold loop" is the user's name for the iterative ERB development cycle. I
 
 A single rule change propagates through every layer with **zero hand-written migrations, DTOs, ORM updates, API serializers, or client types**. The business logic ("a customer is stopped when CurrentColor is Red") lives in **exactly one place** — the Airtable formula → generated SQL function → exposed in the view as `is_stopped`. The app just reads `is_stopped`. If the rule flips ("now Green means stopped"), the loop runs once and *no app code changes*.
 
-Compare to "naked Claude" (hand-coding every layer): the same change requires editing a migration, seed data, DTO, ORM model, API serializer, client type, and client logic — and probably missing one and shipping a bug. The Leopold loop exists specifically to eliminate that class of failure.
+Compare to **naked Claude** (defined above — hand-coding every layer): the same change requires editing a migration, seed data, DTO, ORM model, API serializer, client type, and client logic — and probably missing one and shipping a bug. The Leopold loop exists specifically to eliminate that class of failure.
 
 ## Phrases that mean "do a turn of the loop"
 
@@ -87,13 +93,13 @@ All of these mean: **propagate the current Airtable state through every downstre
 - **Skipping the build and editing generated SQL "just this once"** — there is no "just this once". The next build erases it and the bug returns. Always go around the loop.
 - **Treating `effortless-rulebook.json` as the SSoT** — it is a *projection* of the SSoT. Airtable is the SSoT. The only exception is the rare reverse-sync case (Path B in `effortless-workflow`), and that requires explicit permission.
 
-## How this skill relates to others
+## See also
 
-- **`effortless-claude`** — the big-picture mental model; references this skill for the loop itself.
-- **`effortless-workflow`** — Path A (Airtable-first, the normal loop) vs Path B (Rulebook-first, reverse sync).
-- **`effortless-pipeline`** — the mechanics of `effortless build` itself.
-- **`effortless-airtable`** / **`effortless-airtable-omni`** — *how* to make the rule change in step 1.
-- **`effortless-sql`** — verifying step 3's generated output and using `*b-customize-*` overrides correctly.
+- `effortless-orchestrator` — the big-picture mental model; references this skill for the loop itself.
+- `effortless-workflow` — Path A (Airtable-first, the normal loop) vs Path B (Rulebook-first, reverse sync).
+- `effortless-pipeline` — the mechanics of `effortless build` itself.
+- `effortless-airtable` / `effortless-airtable-omni` — *how* to make the rule change in step 1.
+- `effortless-sql` — verifying step 3's generated output and using `*b-customize-*` overrides correctly.
 
 ## TL;DR for future-you
 

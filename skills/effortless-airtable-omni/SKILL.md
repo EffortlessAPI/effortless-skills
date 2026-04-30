@@ -4,11 +4,17 @@ description: >
   Use ONLY for Airtable schema changes that the API cannot handle — formula fields,
   lookup fields, rollup fields, and new table creation (which requires the Name formula).
   All scalar field changes and CRUD operations go through the Airtable API directly.
+audience: customer
 deprecated_skill_names:
   - effortless-omni-prompt
 ---
 
 # Airtable OMNI — For Non-Scalar Schema Changes Only
+
+> **Load-bearing axiom: OMNI is an escape hatch, not the default.**
+> Most Airtable work goes through the REST API (see `effortless-airtable`).
+> Reach for OMNI only when the API can't do the thing — formula fields,
+> lookups, rollups, or a new table that needs a `Name` formula.
 
 ## When to Use OMNI vs the API
 
@@ -98,18 +104,41 @@ This skill includes a bundled script: **`omni-send.mjs`** (in the same directory
 
 #### Prerequisites
 
-Playwright must be installed in the project (or globally):
-```bash
-npx playwright --version 2>/dev/null || { npm install -D playwright && npx playwright install chromium; }
-```
+Before `omni-send.mjs` will run end-to-end, all of these must be true:
+
+1. **Node 18+ on PATH.** The script uses ESM (`.mjs`) and modern syntax.
+   `node --version` should report ≥ 18. If the user is still on Node 16,
+   point them at `effortless-install-cli` — the same Node 20 guidance applies.
+2. **Playwright + a Chromium browser.** Project-local install is preferred so
+   the script runs reliably from `~/.claude/skills/effortless-airtable-omni/`:
+   ```bash
+   npx playwright --version 2>/dev/null \
+     || { npm install -D playwright && npx playwright install chromium; }
+   ```
+   If you'd rather install globally, `npm i -g playwright && npx playwright install chromium`
+   is fine — just be aware that some `npm` configurations restrict global installs.
+3. **A headed display.** The script launches Chrome **headed** on purpose —
+   the user logs in once and inspects what OMNI is doing afterwards. On a
+   headless server (CI, remote SSH), it will fail or hang waiting for
+   interaction. macOS / Linux desktops / WSLg are the supported environments.
+4. **A persistent profile dir.** Default is `/tmp/airtable-omni-profile`.
+   The first run requires the user to log in to Airtable manually inside that
+   browser session; subsequent runs reuse the same profile and skip login.
+   Never delete that directory unless the user has explicitly asked to log out.
+5. **Network access to airtable.com.** The script navigates to
+   `https://airtable.com/<baseId>` and times out (with a debug screenshot)
+   if Airtable is blocked or auth-walled.
+6. **A valid Airtable base id.** Pull from `effortless.json`:
+   ```bash
+   cat effortless.json | jq -r '.ProjectSettings[] | select(.Name == "baseId") | .Value'
+   ```
+
+If any of these are missing, **stop and tell the user** before running the
+script — OMNI failures with broken prerequisites usually waste an entire
+debug cycle.
 
 #### Getting the Base ID
 
-```bash
-cat ssotme.json | jq -r '.ProjectSettings[] | select(.Name == "baseId") | .Value'
-```
-
-Or from `effortless.json`:
 ```bash
 cat effortless.json | jq -r '.ProjectSettings[] | select(.Name == "baseId") | .Value'
 ```
@@ -171,7 +200,7 @@ node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs $BASE_ID \
 ```
 
 Workflow:
-1. Get the base ID from `ssotme.json`
+1. Get the base ID from `effortless.json`
 2. Ensure login: `node omni-send.mjs <baseId> --login`
 3. Send one field request at a time
 4. Read stdout for OMNI's response, verify success
@@ -210,3 +239,13 @@ Workflow:
 4. **NEVER include `{Entity}Id` fields** — surrogate keys are managed off-screen
 5. **Links use singular PascalCase**: `Schema | link:SDCSchemas`
 6. **Boolean fields MUST be specified as Checkbox type** — when telling OMNI to create a boolean/true-false field, always say "Checkbox field", never just "boolean". Example: `Add a Checkbox field called "IsActive"` (not `Add a boolean field called "IsActive"`). Airtable's native type for booleans is Checkbox.
+
+---
+
+## See also
+
+- `effortless-airtable` — the **default** for everything OMNI is overkill for: scalar fields, FK links, CRUD.
+- `effortless-conventions` — for the `Name` formula, PascalCase, and singular-FK rules every OMNI prompt must follow.
+- `effortless-bootstrap` — for the multi-table OMNI prompt pattern (Part 1 raw + links, Part 2 lookups + formulas).
+- `effortless-workflow` — for the permission checkpoints around any Airtable schema change.
+- `effortless-orchestrator` — for the schema-change decision tree that decides between API and OMNI.

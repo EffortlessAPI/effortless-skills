@@ -7,8 +7,8 @@
  *   node omni-send.mjs <baseId> --login           Open browser for login only
  *   node omni-send.mjs <baseId> --screenshot      Take a screenshot of the current state
  *
- * The base ID can be found in ssotme.json:
- *   cat ssotme.json | jq -r '.ProjectSettings[] | select(.Name == "baseId") | .Value'
+ * The base ID can be found in effortless.json:
+ *   cat effortless.json | jq -r '.ProjectSettings[] | select(.Name == "baseId") | .Value'
  *
  * On first run, the user must log in manually — the persistent browser profile
  * at /tmp/airtable-omni-profile retains the session for subsequent runs.
