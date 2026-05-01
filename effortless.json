@@ -1,0 +1,7 @@
+{
+  "Name": "effortless-claude",
+  "Description": "The effortless-claude skill suite — hand-authored rulebook, no Airtable source, no transpiler pipeline. The rulebook describes the 22 live skills and their high-level attributes (Category, ScopeGate, Audience).",
+  "RulebookPath": "effortless-rulebook/effortless-rulebook.json",
+  "AirtableBacked": false,
+  "ProjectTranspilers": []
+}

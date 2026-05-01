@@ -16,9 +16,8 @@ audience: customer
 
 # CMCC — The Conceptual Model Completeness Conjecture
 
-> **Load-bearing axiom: SDLAF over a bitemporal ACID DAG is sufficient to express**  
-> **any finitely-computable, design-time semantics — without sidecar code, grammars,**  
-> **or DSLs.** This is the conjecture the entire effortless toolchain empirically operationalizes. It is what justifies "the rulebook is the code."
+> **Load-bearing axiom: SDLAF over a bitemporal ACID DAG is sufficient to express any finitely-computable, design-time semantics — without sidecar code, grammars, or DSLs.**
+> This is the conjecture the entire effortless toolchain empirically operationalizes. It is what justifies "the rulebook is the code."
 
 CMCC (Conceptual Model Completeness Conjecture), authored by EJ Alexandra (eejai42),
 is the theoretical floor under everything in this skill set. If you understand
@@ -86,24 +85,40 @@ runtime can't drift — neither is canonical, both are projections.
 rule changed. If yes, change the rule and rebuild. If no, the docs are already
 current.
 
-## What CMCC Forbids
+## CMCC Violations — The Anti-Pattern Checklist
 
-If CMCC is right, these patterns are always wrong (in an ERB project):
+If CMCC is right, the following patterns are always wrong in an ERB project. This
+is the scannable checklist — keep it open when reviewing PRs, your own work, or
+LLM-generated code. Each row names a real thing engineers reach for, the CMCC
+substrate constraint it violates, and the CMCC-shaped fix.
 
-- **Hand-coded JOINs in application code** — that's a Lookup the view should
-have materialized. See `effortless-diagnostics`.
-- **Procedural recomputation of derived values** — that's a Formula. Put it in
-the rulebook.
-- **Mutate-in-place semantics for facts that need history** — bitemporal substrate
-exists for this exact reason.
-- **Many-to-many relationships** — break the DAG. Use a junction table. See
-`effortless-conventions`.
-- **Editing generated files (`00`-`05`, generated Python, generated Go, etc.)** —
-by definition, you're editing a projection. The next build erases you, correctly.
+| Anti-pattern (what the code looks like) | What it violates | The CMCC-shaped fix |
+|---|---|---|
+| `SELECT a.*, b.foo FROM a JOIN b ON ...` in app code | **L** (Lookup) — the join should be materialized in a `vw_*` view | Add a `lookup` field on `a` pointing through the FK to `b.foo`; read from the view. |
+| `total = sum(line.amount for line in order.lines)` in app code | **A** (Aggregation) — derived values must live in the model | Add a `rollup` field `Order.TotalAmount` on the rulebook; consume it as opaque truth. |
+| `if user.is_admin and order.status == 'open': ...` recomputed in multiple places | **F** (Formula) — derived booleans drift across call sites | Add a calculated `Is{Something}` boolean on the rulebook; reference it everywhere. |
+| `UPDATE customers SET email = ? WHERE id = ?` (overwrite in place) | **Bitemporal** — destroys "what did we believe and when" | Insert a new fact with valid-time bounds; let the substrate keep history. |
+| Many-to-many junction added without a model entity (e.g. raw `student_courses` join table) | **DAG** — many-to-many breaks acyclicity | Promote the junction to a first-class entity (`Enrollment`) with two 1-to-many FKs. |
+| Editing `postgres/00-05*.sql`, generated Python/Go/docs to "fix a bug" | **Substrate equivalence** — generated artifacts are projections | Trace back to the rulebook entry; fix the rule; rebuild. The build correctly erases your edit. |
+| Adding a field directly to a generated Postgres view | **SSoT** — view is generated from the rulebook | Add the field to the rulebook (or to a `*b-customize-*` seam if rulebook genuinely can't express it). |
+| Hand-written ORM model that restates the schema in Python/TypeScript | **SSoT + substrate equivalence** — re-fragments truth | Generate the language binding from the rulebook (see existing transpilers in `effortless-pipeline`). |
+| `{Entity}Id` columns appearing in the rulebook | **Convention** — surrogates live in the substrate, not the model | Use `Name` (the kebab-cased compound formula) as the logical PK; let substrates mint surrogates off-screen. See `effortless-conventions`. |
+| Calculated value cached in a column the app updates manually | **F + ACID** — derived values must derive on read | Replace the cached column with a formula field; the substrate recomputes deterministically. |
+| New "auth users" / "lookup" / "small admin" table created directly in Postgres | **SSoT** — Airtable is the editorial surface for *all* business entities, no exceptions | Add the table in Airtable (via OMNI for the Name formula); rebuild. |
+| Triggers / stored procedures hiding business rules in Postgres | **SSoT + substrate equivalence** — rules in one substrate can't be projected to others | Move the logic into the rulebook as a formula or aggregation; let every substrate render it. |
+| Comment in code: "TODO: keep this in sync with X" | **SSoT** — synchronization-by-convention is drift waiting to happen | The fact that you wrote that comment IS the diagnostic. Find the rulebook entry that should generate both. |
 
-When you catch yourself reaching for any of these, the right move is almost never
-"do it anyway, just this once." It's "the rulebook is missing a primitive — add
-it properly."
+**The escalation rule.** When you catch yourself reaching for any of these, the
+right move is almost never "do it anyway, just this once." Three steps in order:
+
+1. **Re-shape as SDLAF.** 90% of the time, the urge is actually a Lookup,
+   Aggregation, or Formula in disguise. Express it in the rulebook.
+2. **Use a customization seam.** If the rulebook genuinely can't express the
+   rule (rare), use a `*b-customize-*` file or `ERBCustomizations` entry — and
+   leave a one-line comment naming *why* the rulebook can't express it.
+3. **Flag a missing primitive.** If you escalate to a seam more than occasionally
+   for similar reasons, the rulebook IR or the transpiler is genuinely missing
+   something. That's a finding worth surfacing, not a workaround to normalize.
 
 ## Computational Universality
 
