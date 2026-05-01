@@ -174,6 +174,71 @@ The rulebook is **substrate-agnostic**. The same JSON generates equivalent imple
 - **Execute**: Each substrate computes the calculated fields
 - **Grade**: Compare output to answer-key. All deterministic substrates must match exactly.
 
+For a runnable demonstration with 11+ substrates including ARM64, COBOL, OWL/SHACL, and English prose, see `effortless-rulebooks`.
+
+---
+
+## The ssotme:// Protocol — Why This Pipeline Has the Shape It Has
+
+The `effortless` CLI is the local driver of a broader open architecture: the
+**ssotme:// protocol** ([github.com/SSoTme](https://github.com/SSoTme)). Understanding
+the protocol clarifies why the pipeline is shaped the way it is.
+
+### The Protocol in One Paragraph
+
+A transpiler is a self-contained tool that consumes one well-defined input
+artifact and produces one well-defined output artifact. Transpilers are
+**registered** (not bundled) — `effortless -install <name>` clones a transpiler
+from its source repo, records its `RelativePath` and `CommandLine` in
+`effortless.json`, and from then on `effortless build` runs each registered
+transpiler in order. The protocol is what makes the catalog **open** — anyone
+can publish a transpiler that joins the pipeline, and any substrate the
+community cares about becomes a generation target.
+
+### Why It's a Protocol, Not a Monorepo
+
+A monorepo would couple every substrate to a single release cadence and a
+single maintainer's priorities. A protocol-shaped registry makes substrates
+**peripheral** — they can evolve independently, be authored by different teams,
+and be added or dropped per-project via `effortless.json` without touching the
+core CLI or the rulebook IR. This is the operational analogue of the CMCC
+claim that substrates are interchangeable peripherals (see `effortless-cmcc`).
+
+### What the Protocol Guarantees
+
+- **The IR is the contract.** Every transpiler agrees on `effortless-rulebook.json`
+  as input (or some derivative of it). The IR shape is the only thing all
+  transpilers must respect.
+- **Determinism.** Same rulebook in → same artifact out. No transpiler is
+  allowed to be order-dependent or environment-dependent in ways that defeat
+  reproducibility.
+- **Conformance.** When multiple transpilers target executable substrates, the
+  conformance suite (see `effortless-rulebooks`) is the gate that proves they
+  all compute the same answers.
+
+### What the Protocol Does NOT Guarantee
+
+- It does not guarantee that an arbitrary third-party transpiler is correct.
+  Trust is earned by passing the conformance suite, not by being installable.
+- It does not guarantee performance equivalence across substrates — only
+  semantic equivalence (same answers).
+- It does not constrain how a transpiler is implemented internally — only its
+  IR contract and its determinism.
+
+### When You Care About the Protocol vs. Just `effortless build`
+
+Most of the time, you don't. `effortless build` Just Works. You only need the
+protocol layer when:
+
+- Adding a new substrate to a project (registering a transpiler from a different
+  directory than the standard ones).
+- Debugging why a transpiler isn't producing what you expect (is it the
+  rulebook, the transpiler, or the registration?).
+- Authoring a new transpiler. (If this is the work you're doing, the protocol
+  is the contract you're implementing against.)
+
+For the catalog of public transpilers and their source repos, see `effortless-ecosystem`.
+
 ---
 
 ## See also
@@ -183,3 +248,6 @@ The rulebook is **substrate-agnostic**. The same JSON generates equivalent imple
 - `effortless-setup-postgres` — for the canonical first-run install order (which transpiler from which directory).
 - `effortless-workflow` — for Path A vs Path B and when `-id` is appropriate.
 - `effortless-leopold-loop` — for the iterative dev cycle the pipeline supports.
+- `effortless-cmcc` — the conjecture that justifies the substrate-equivalence stance.
+- `effortless-rulebooks` — the empirical demonstration of multi-substrate equivalence.
+- `effortless-ecosystem` — the catalog of public transpiler repos and the orgs that maintain them.

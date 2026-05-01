@@ -39,6 +39,34 @@ This is the top-level skill for ERB projects. It provides the mental model and r
         tables.*    <-- ALWAYS WRITE TO THESE
 ```
 
+## My Posture (the self-awareness piece)
+
+I am not a code author when I'm operating inside an ERB project. The transpilers
+are the code authors. I am a **rulebook tender** — my legitimate workspace is:
+
+1. The **rulebook itself** (Airtable, or `effortless-rulebook.json` when working
+   in Path B with the user's permission).
+2. The **explicit customization seams** the pipeline leaves open (`*b-customize-*`
+   files, the `ERBCustomizations` table, the runtime application layer that
+   *consumes* the views).
+
+Everything else — the generated `00`-`05` SQL files, generated Python, generated
+Go, generated docs — is read-only output. Editing it is editing a shadow; the
+next `effortless build` correctly erases what I wrote. When a generated artifact
+looks wrong, I trace back to the rulebook entry that produced it; I do not
+"fix" the artifact.
+
+When a request feels like "write some imperative business logic," my first move
+is to ask whether it's actually a Lookup, an Aggregation, or a Formula in
+disguise (almost always: yes — see `effortless-cmcc`). Only if that genuinely
+fails do I escalate to a customization seam, and that escalation deserves a
+short comment explaining why the rulebook can't express the rule.
+
+"Stay on the declarative side of the line" is not a stylistic preference. It
+is what makes the substrate-equivalence guarantee hold across all the targets
+the transpilers project into. Break it and the conformance story breaks with
+it. See `effortless-rulebooks` for what that guarantee actually buys.
+
 ## The Leopold Loop
 
 The **Leopold loop** is the user's name for the iterative ERB development cycle: CHANGE RULE (in Airtable) → `effortless build` → CONSUME the generated views in app code → repeat. It is the core workflow that makes ERB feel effortless.
@@ -212,6 +240,10 @@ This orchestrator provides the big picture. For specifics, the following compani
 | `effortless-diagnostics` | Diagnostic queries, DAG validation, legacy code migration |
 | `effortless-bases` | Spin up a Postgres base on bases.effortlessapi.com and secure it end-to-end with magic-links auth + RLS — the "create a base + magic-links tenant + RLS-secured app in 5 minutes" flow. |
 | `effortless-magic-links` | Add passwordless email-code (magic-link) auth to ANY Postgres-backed project (not just bases.effortlessapi.com). Mints a tenant on magiclink.effortlessapi.com, wires `Authorization: Bearer` middleware, installs the `app.jwt_*()` SQL helpers for RLS. |
+| `effortless-cmcc` | The conceptual floor — SDLAF, bitemporal ACID DAG, the 5 primitives, what the conjecture predicts and forbids. Load when the user asks WHY ERB is structured the way it is. |
+| `effortless-rulebooks` | The empirical demonstration — 11+ substrates (incl. ARM64, COBOL, OWL/SHACL, English), conformance suite, ExplainDAG. Load when the user wants proof, asks about ExplainDAG, or wants to see CMCC running in code. |
+| `effortless-ecosystem` | The OSS repo catalog — every public repo in the SSoTme / effortlessapi orgs with one-liner + install snippet. Load when asked "what repos exist", "where's the source for X". |
+| `effortless-rationale` | Skeptic-facing answers grounded in receipts, not enthusiasm. Common objections + cited responses. Load when the user (or a third party) needs the methodology defended. |
 
 ## Schema Change Decision Tree
 
@@ -283,7 +315,8 @@ effortless-orchestrator, effortless-install-cli, effortless-cli, effortless-setu
 effortless-bootstrap, effortless-conventions, effortless-schema, effortless-query,
 effortless-sql, effortless-pipeline, effortless-workflow, effortless-airtable,
 effortless-airtable-omni, effortless-leopold-loop, effortless-diagnostics,
-effortless-bases, effortless-magic-links.
+effortless-bases, effortless-magic-links, effortless-cmcc, effortless-rulebooks,
+effortless-ecosystem, effortless-rationale.
 ```
 
 Fill in `{ProjectName}` and `{baseId}` from the project's `effortless.json`. Add any project-specific notes (e.g., which tables are most active, known quirks, deployment targets).
