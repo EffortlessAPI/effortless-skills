@@ -102,7 +102,7 @@ if [ "$MODE" = "uninstall" ]; then
   for skill in "${SKILLS[@]}"; do
     dest="$SKILLS_DEST/$skill"
     if [ -e "$dest" ]; then
-      ((found++))
+      ((++found))
       echo "  $skill  (modified $(mod_time "$dest/SKILL.md"))"
     fi
   done
@@ -125,7 +125,7 @@ if [ "$MODE" = "uninstall" ]; then
     if [ -e "$dest" ]; then
       rm -r "$dest"
       echo "  Removed: $skill"
-      ((removed++))
+      ((++removed))
     fi
   done
 
@@ -163,7 +163,7 @@ for skill in "${SKILLS[@]}"; do
 
   if [ ! -e "$dest" ]; then
     echo "  NEW   $skill — will be installed"
-    ((actions_needed++))
+    ((++actions_needed))
   elif dirs_identical "$src" "$dest"; then
     echo "  OK    $skill — installed copy is identical (no change needed)"
   else
@@ -172,7 +172,7 @@ for skill in "${SKILLS[@]}"; do
     echo "  UPDATE $skill — content differs"
     echo "           source modified:    $src_time"
     echo "           installed modified: $dest_time"
-    ((actions_needed++))
+    ((++actions_needed))
   fi
 done
 
@@ -219,7 +219,7 @@ for skill in "${SKILLS[@]}"; do
       echo "  $skill already exists ($existing_desc)"
       if ! ask_yes_no "  Overwrite with source (modified $(mod_time "$src/SKILL.md"))?"; then
         echo "  Skipped."
-        ((skipped++))
+        ((++skipped))
         continue
       fi
     fi
@@ -231,10 +231,10 @@ for skill in "${SKILLS[@]}"; do
 
   if $is_new; then
     echo "  Installed: $skill"
-    ((installed++))
+    ((++installed))
   else
     echo "  Updated:   $skill"
-    ((updated++))
+    ((++updated))
   fi
 done
 

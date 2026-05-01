@@ -139,7 +139,7 @@ if [ "$MODE" = "uninstall" ]; then
   for skill in "${SKILLS[@]}"; do
     dest="$SKILLS_DEST/$skill"
     if [ -e "$dest" ] || [ -L "$dest" ]; then
-      ((found++))
+      ((++found))
       if [ -L "$dest" ]; then
         target="$(readlink "$dest")"
         echo "  $skill  (symlink -> $target)"
@@ -167,7 +167,7 @@ if [ "$MODE" = "uninstall" ]; then
     if [ -e "$dest" ] || [ -L "$dest" ]; then
       rm -rf "$dest"
       echo "  Removed: $skill"
-      ((removed++))
+      ((++removed))
     fi
   done
 
@@ -209,18 +209,18 @@ for skill in "${SKILLS[@]}"; do
 
   if [ ! -e "$dest" ] && [ ! -L "$dest" ]; then
     echo "  NEW   $skill — will be installed"
-    ((actions_needed++))
+    ((++actions_needed))
   elif is_our_symlink "$dest" "$src"; then
     if $USE_SYMLINK; then
       echo "  OK    $skill — already symlinked to this repo (no change needed)"
     else
       echo "  CHANGE $skill — currently symlinked here; will replace with copy"
-      ((actions_needed++))
+      ((++actions_needed))
     fi
   elif [ -L "$dest" ]; then
     target="$(readlink "$dest")"
     echo "  CHANGE $skill — symlinked to $target; will replace"
-    ((actions_needed++))
+    ((++actions_needed))
   elif dirs_identical "$src" "$dest"; then
     echo "  OK    $skill — installed copy is identical (no change needed)"
   else
@@ -229,7 +229,7 @@ for skill in "${SKILLS[@]}"; do
     echo "  UPDATE $skill — content differs"
     echo "           source modified:    $src_time"
     echo "           installed modified: $dest_time"
-    ((actions_needed++))
+    ((++actions_needed))
   fi
 done
 
@@ -285,7 +285,7 @@ for skill in "${SKILLS[@]}"; do
       echo "  $skill already exists ($existing_desc)"
       if ! ask_yes_no "  Overwrite with $(if $USE_SYMLINK; then echo 'symlink'; else echo 'copy from'; fi) source (modified $(mod_time "$src/SKILL.md"))?"; then
         echo "  Skipped."
-        ((skipped++))
+        ((++skipped))
         continue
       fi
     fi
@@ -301,10 +301,10 @@ for skill in "${SKILLS[@]}"; do
 
   if $is_new; then
     echo "  Installed: $skill"
-    ((installed++))
+    ((++installed))
   else
     echo "  Updated:   $skill"
-    ((updated++))
+    ((++updated))
   fi
 done
 
@@ -328,7 +328,7 @@ if [ "${#DEPRECATED_SKILLS[@]}" -gt 0 ]; then
       if ask_yes_no "  Remove deprecated skill '$dep_skill'?"; then
         rm -rf "$dep_dest"
         echo "  Removed: $dep_skill"
-        ((deprecated_removed++))
+        ((++deprecated_removed))
       else
         echo "  Kept: $dep_skill"
       fi
