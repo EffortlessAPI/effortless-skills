@@ -64,21 +64,24 @@ All of these mean: **propagate the current Airtable state through every downstre
 
 ## What "do a turn of the Leopold loop" actually entails
 
+0. **Pre-build: check the tree first.** Run `git status --porcelain` (read-only).
+   If non-empty, **pause and ask the user for permission to build** — they may want to commit or stash first
+   so the resulting diff cleanly isolates the build output. Do not offer to commit, stash, or `git add`
+   anything yourself; the user owns their git state. Once the user gives the go-ahead (or the tree is clean),
+   proceed.
 1. **Run `effortless build`** from the project root. This is atomic — fire and forget.
    Do NOT read the generated files afterwards. (Ask permission first if your project's CLAUDE.md requires it.)
-2. **Commit the build output immediately** — `git add -A && git commit -m "effortless build: <reason>"`.
-   This is **critical**: the commit captures the exact diff on `effortless-rulebook.json` and
-   all generated files. Future steps (and future phases) can reference `git diff HEAD~1 -- effortless-rulebook/effortless-rulebook.json`
-   to get a **100% accurate, high-fidelity** description of what changed in the schema.
-   This diff is the most trustworthy input for deciding what app code needs updating.
-3. **Run `init-db.sh`** if the project has a postgres target — this reloads the database.
-4. **Query the rulebook for schema changes** — use a lightweight one-liner to see what
+   **Do NOT commit the output yourself.** The user will commit when they choose to. You may proceed with the
+   rest of the loop on the dirty tree the build just produced — but do not run `git add`, `git commit`, or
+   any other git write command.
+2. **Run `init-db.sh`** if the project has a postgres target — this reloads the database.
+3. **Query the rulebook for schema changes** — use a lightweight one-liner to see what
    tables/fields exist now (see `effortless-query`). Do NOT read generated SQL files.
    Or use `psql -c "\d vw_tablename"` to see the current view columns.
-   Or — even better — use `git diff HEAD~1 -- effortless-rulebook/effortless-rulebook.json`
-   from the commit you just made. This is the highest-fidelity view of what changed.
-5. **Update the app code only where it touches the schema surface** — column names that changed, new fields the UI now needs to display, removed tables to clean up references to. **Never reimplement** rule logic in the app; consume the calculated fields from the view as opaque truth.
-6. **Restart the app** — run `./start.sh` from the project root.
+   Or — even better — use `git diff -- effortless-rulebook/effortless-rulebook.json` (read-only)
+   against the unstaged build output. This is the highest-fidelity view of what changed.
+4. **Update the app code only where it touches the schema surface** — column names that changed, new fields the UI now needs to display, removed tables to clean up references to. **Never reimplement** rule logic in the app; consume the calculated fields from the view as opaque truth.
+5. **Restart the app** — run `./start.sh` from the project root.
 
 ## MANDATORY: Always Build After Airtable Changes
 

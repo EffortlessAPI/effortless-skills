@@ -107,24 +107,24 @@ startIndex cannot be larger than length of string. (Parameter 'startIndex')
 
 When this happens, the transpiler **does not get added to `effortless.json`** even though the files were written correctly. Workaround: append the transpiler entry to `effortless.json` by hand (see Steps 3 and 5). The `airtable-to-rulebook` install does not exhibit this — registration succeeds normally.
 
-## BUILD DISCIPLINE — the BRIGHT RED LINE between rulebook and hand-written code
+## BUILD DISCIPLINE — ask before building on a dirty tree
 
 `effortless build` regenerates files under `effortless-rulebook/` and `postgres/` and **drops + re-inits** the local Postgres DB. Anything hand-edited inside those folders WILL be overwritten.
 
-The point of git-framing every build is to draw a **bright red line** in history between **ontology changes** (anything that flows from Airtable → rulebook → generated SQL) and **hand-written code** (app, scripts, customizations). One commit per build, containing **only** generated output, makes that line legible to humans, agents, and `git blame` forever.
+The discipline below is what makes `git diff` a trustworthy view of what the build changed — letting the user keep ontology changes (Airtable → rulebook → generated SQL) cleanly separable from hand-written code (app, scripts, customizations) in their own commits.
 
-Every `effortless build` — INCLUDING the very first one immediately after setup — MUST be sandwiched as follows:
+For every `effortless build` **after** the one-time setup commits documented below in Steps 0-6:
 
-1. **Pre-build: clean tree required.**
-   - Run `git status --porcelain`. If non-empty, **STOP** and ask the user before continuing — do NOT silently overwrite in-progress work. Offer to commit, stash, or abort.
-   - Once clean, proceed.
+1. **Pre-build: check the tree.**
+   - Run `git status --porcelain` (read-only). If non-empty, **pause and ask the user for permission to build** — they may want to commit or stash first so the resulting diff cleanly isolates the build output. Do not offer to commit, stash, or `git add` anything yourself; the user owns their git state.
+   - Once the user gives the go-ahead (or the tree is clean), proceed.
 2. **Run:** `effortless build`.
-3. **Post-build commit — IMMEDIATELY, BEFORE writing or modifying ANY other code.**
-   - `git add -A && git commit -m "effortless build: <one-line reason>"`.
-   - Do NOT scaffold the app, edit `package.json`, write `start.sh`, edit any application code, or run any other tool between the build and this commit. The commit must contain **only** what the build produced.
-   - This is the bright red line. Crossing it (mixing build output with hand-written code in one commit) destroys the ability to tell rulebook-driven changes apart from manual ones, and makes bad builds painful to revert.
+3. **Post-build: do NOT commit on the user's behalf.**
+   - The working tree will be dirty with regenerated files. That's fine — leave it for the user to commit when they choose.
+   - Do not run `git add`, `git commit`, or any other git write command. Effortless skills only ever read git (`git status`, `git diff`, `git log`).
+   - Continue with whatever the user asked for next (e.g. updating app code against the new schema). The user can review the combined diff and split commits as they see fit.
 
-This is non-negotiable. The agent must never run `effortless build` on a dirty tree without explicit user approval, and must always commit the build output as its own commit before doing anything else.
+**The one exception is the initial setup flow in Steps 0-6 below**, which explicitly performs granular `git init` + bootstrap commits to lay down a clean starting point. That exception ends at Step 6; from then on, the discipline above applies.
 
 ## Setup — Run These Commands IN ORDER
 
@@ -169,28 +169,23 @@ When working in this project, load the relevant `effortless-*` skills:
 - `effortless-cli` — CLI flags / commands
 - `effortless-airtable` / `effortless-airtable-omni` — Airtable schema changes
 
-## Build discipline — THE BRIGHT RED LINE (applies every time)
+## Build discipline (applies every time)
 
 `effortless build` regenerates `effortless-rulebook/` and `postgres/` and
 DROPS + re-inits the local Postgres DB. Hand-edits in those folders will
 be lost.
 
-Every build draws a **bright red line** in git history between **ontology
-changes** (Airtable → rulebook → generated SQL) and **hand-written code**
-(app, scripts, customizations). The discipline below keeps that line clean.
+Effortless skills are **read-only with respect to git** — they may run
+`git status`, `git diff`, `git log`, but never `git add`, `git commit`, or
+any other write command. Around every `effortless build`:
 
-Around every `effortless build`:
-
-1. **Before:** working tree MUST be clean (`git status --porcelain` empty).
-   If dirty, **ask the user for permission** before building — never silently
-   overwrite work in progress.
+1. **Before:** run `git status --porcelain` (read-only). If non-empty,
+   **pause and ask the user for permission to build** — they may want to
+   commit or stash first so the resulting diff cleanly isolates the build
+   output. Don't offer to commit, stash, or `git add` anything yourself.
 2. **Run** `effortless build`.
-3. **Immediately after — BEFORE writing ANY other code, scaffolding the app,
-   editing `package.json`, or running any other tool:**
-   `git add -A && git commit -m "effortless build: <reason>"`.
-   The build commit must contain **only** generated output. Mixing build
-   output with hand-written code in a single commit erases the red line and
-   makes bad builds painful to revert. Do not cross the line.
+3. **After:** the tree will be dirty with regenerated files. Leave it for
+   the user to commit when they choose. Do not auto-commit on their behalf.
 EOF
 
 git add CLAUDE.md .gitignore
@@ -290,7 +285,7 @@ After Step 5, `effortless build` from the project root will:
 
 ### Step 6: Commit the bootstrap output
 
-Setup wrote a lot of generated files. Commit them now so the very next `effortless build` (per **BUILD DISCIPLINE** above) starts from a clean tree:
+Setup wrote a lot of generated files. Commit them now so the very next `effortless build` starts from a clean tree:
 
 ```bash
 cd <PROJECT_ROOT>
@@ -298,7 +293,7 @@ git add -A
 git commit -q -m "chore: effortless setup-postgres bootstrap (rulebook + SQL + init-db)"
 ```
 
-From here on, every `effortless build` MUST be sandwiched in commits per the BUILD DISCIPLINE section at the top of this skill.
+**This is the last git write any effortless skill performs in this project.** From here on, the BUILD DISCIPLINE section at the top of this skill applies: ask for permission before building on a dirty tree, and never auto-commit afterwards. Git writes are the user's call.
 
 ## Verifying the install (one-shot, lightweight)
 

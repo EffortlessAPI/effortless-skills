@@ -71,9 +71,16 @@ These are not routine file edits — they affect the source of truth and trigger
 
 When the user says "make a Foo table" / "add a Bar entity" / "I need an X table" — that is a Path A change. The entity goes in Airtable; `effortless build` regenerates `public.foo` + `vw_foo`. Do NOT hand-write the table in `01b-customize-schema.sql`. The `01b-05b` files are for infrastructure the rulebook cannot model (auth tenants, JWT helpers, role GRANTs) — never for business entities. If you're typing `CREATE TABLE app.users (...)` or similar, you've taken a wrong turn.
 
-## Commit the build before any follow-on edits
+## Don't drive git on the user's behalf
 
-After `effortless build`, commit the regenerated output separately from any hand-written follow-ons. Mixing regenerated files and hand edits in one commit makes the boundary unrecoverable — future readers can't tell which lines came from the rulebook and which were authored by hand.
+Effortless skills are read-only with respect to git. Before `effortless build`, check the tree with
+`git status --porcelain` (read-only); if non-obvious changes are present, **ask the user for permission
+to build** — they may want to commit or stash first so the resulting diff cleanly isolates the regenerated
+output from hand-written follow-ons. After the build, do NOT auto-commit; leave the dirty tree for the
+user to commit when they choose.
+
+(Exception: `effortless-setup-postgres` performs one-time bootstrap commits during initial project
+creation — that flow is explicitly authorized to drive git. Nothing else is.)
 
 ## NO SILENT FALLBACK ALLOWED
 

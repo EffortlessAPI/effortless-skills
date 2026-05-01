@@ -69,10 +69,13 @@ files from the rulebook. After running it:
 - Do NOT read the generated files to "verify" or "understand" them
 - Do NOT load skills to interpret build output
 - Do NOT cat SQL files into your context window
-- **Always commit immediately after the build** — `git add -A && git commit -m "effortless build: <reason>"`.
-  This captures the exact diff on `effortless-rulebook.json` and all generated files.
-  The diff from this commit (`git diff HEAD~1 -- effortless-rulebook/effortless-rulebook.json`)
-  is the highest-fidelity source of truth for what changed in the schema.
+- **Before building, check the tree.** Run `git status --porcelain` (read-only). If non-obvious changes
+  are present, pause and ask the user for permission to build — they may want to commit or stash first
+  so the resulting diff cleanly isolates the build output.
+- **Do NOT commit on the user's behalf.** After the build completes, the working tree will be dirty
+  with regenerated files. That's fine — leave it for the user to commit when they choose. Don't run
+  `git add`, `git commit`, or any other git write command. Effortless skills only ever read git
+  (`git status`, `git diff`, `git log`), they don't drive it.
 - Then proceed to use the views in app code
 
 The correct mental model: `effortless build` is like `npm install` — you run it and
