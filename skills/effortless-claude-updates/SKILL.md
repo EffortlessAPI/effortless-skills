@@ -1,39 +1,35 @@
 ---
 name: effortless-claude-updates
 description: >
-  Use to check whether the locally-installed effortless-claude skill set is up
-  to date with the upstream repo (github.com/effortlessapi/effortless-claude).
-  Triggers: "are my effortless skills up to date", "check for effortless skill
-  updates", "any new effortless-claude commits", "is effortless claude stale",
-  "what's new in effortless-claude". Also use proactively at the start of an
-  effortless project session if it's been more than the recommended cadence
-  since the last check (the cadence depends on upstream commit frequency —
-  see the workflow below).
+  Use for anything about the effortless-claude **skill set** itself — both
+  CHECKING for updates and APPLYING them. Triggers: "are my effortless skills
+  up to date", "check for effortless skill updates", "update effortless
+  skills", "reinstall effortless skills", "refresh effortless skills",
+  "what's new in effortless-claude", "add a new effortless skill", "edit a
+  skill". NOT for the CLI binary — for that, use effortless-cli.
+
+  **Scope (load gate):** Loads only on explicit user request about the skill set itself. Does NOT require an Effortless-marked project (skill maintenance is project-independent).
 audience: customer
 ---
 
-# effortless-claude-updates — is the local skill set stale?
+# Effortless Skill Set — Check, Update, Author
 
-This skill is the **read-only check** for whether `~/.claude/skills/effortless-*`
-is behind upstream. It does **not** do the actual update — that's
-`effortless-orchestrator`'s job. This skill answers two questions:
+The effortless-claude skill set lives in two places:
 
-1. **Is my local clone behind upstream?** (and by how much / what changed)
-2. **How often should I be checking?** (based on upstream commit cadence)
+| Location | Role |
+|---|---|
+| `<clone>/skills/` (a git clone of `effortlessapi/effortless-claude`) | **SSoT** — all edits happen here |
+| `~/.claude/skills/effortless-*` | **Installed copies** — what Claude Code loads at runtime |
 
-If the answer to #1 is "yes, behind", hand off to `effortless-orchestrator`
-for the install. Don't `git pull` or run `install.sh` from this skill — that's
-the orchestrator's job and the user should know they're authorizing an update.
+**Never edit installed copies directly.** Edit in the SSoT clone, then run `install.sh`.
 
-## The workflow
+## Check: is my local clone behind upstream?
 
-### Step 1 — Locate the local SSoT clone
+This is read-only. Don't `git pull` or `git fetch` — just compare.
 
-The user's local clone of `effortless-claude` is wherever they cloned it.
-Common spots:
+### 1. Locate the clone
 
 ```bash
-# Check git remotes in likely locations
 for d in ~/effortless-claude ~/src/effortless-claude ~/code/effortless-claude \
          ~/projects/effortless-claude ./effortless-claude; do
   if [ -d "$d/.git" ]; then
@@ -43,97 +39,103 @@ for d in ~/effortless-claude ~/src/effortless-claude ~/code/effortless-claude \
 done
 ```
 
-If no clone is found, ask the user for the path. (If they don't have a clone,
-they can't update — point them at the orchestrator's setup section.)
+If none found, ask the user. No clone → no update path; recommend cloning.
 
-### Step 2 — Read local HEAD (read-only)
-
-```bash
-cd <path-to-clone>
-git log -1 --format='%H %ci %s'   # current local commit
-git rev-parse HEAD                 # SHA only, for compare
-```
-
-Do **not** `git pull`, `git fetch`, or modify the clone. The skill is read-only.
-
-### Step 3 — Fetch upstream commit history (read-only)
-
-Prefer `gh` if available (richer metadata, no rate limit concerns when authed):
+### 2. Compare local HEAD to upstream
 
 ```bash
-gh api repos/effortlessapi/effortless-claude/commits \
-  --jq '.[] | {sha: .sha[0:7], date: .commit.author.date, msg: .commit.message | split("\n")[0]}' \
-  | head -20
+LOCAL=$(git -C <clone> rev-parse HEAD)
+gh api "repos/effortlessapi/effortless-claude/compare/$LOCAL...main" \
+  --jq '{ahead: .ahead_by, behind: .behind_by, commits: [.commits[] | {sha: .sha[0:7], msg: .commit.message | split("\n")[0]}]}'
 ```
 
-Fallback to the public REST endpoint via `curl` if `gh` isn't installed:
+Fallback if `gh` is missing:
 
 ```bash
 curl -s 'https://api.github.com/repos/effortlessapi/effortless-claude/commits?per_page=20' \
   | python3 -c "import sys,json; [print(c['sha'][:7], c['commit']['author']['date'], c['commit']['message'].split(chr(10))[0]) for c in json.load(sys.stdin)]"
 ```
 
-### Step 4 — Compute "behind by N commits" and what changed
+If `behind: 0` — current. Done.
+If `behind: N > 0` — list the messages. Don't summarize as "minor" / "safe to skip"; the user reads and decides.
 
-Count commits between local HEAD and upstream HEAD. With `gh`:
+### 3. Recommend a re-check cadence
+
+From the last 20 upstream commits, compute median gap in days:
+
+| Median gap | Recommended cadence |
+|---|---|
+| < 2 days | Daily, or each session start |
+| 2–7 days | Weekly |
+| 7–30 days | Monthly |
+| > 30 days | On demand only |
+
+## Update: apply the latest
+
+**Per the read-only-git memory: ASK before running git commands.** The user authorizes each step.
 
 ```bash
-LOCAL=$(git -C <path-to-clone> rev-parse HEAD)
-gh api "repos/effortlessapi/effortless-claude/compare/$LOCAL...main" \
-  --jq '{ahead: .ahead_by, behind: .behind_by, commits: [.commits[] | {sha: .sha[0:7], msg: .commit.message | split("\n")[0]}]}'
+cd <clone>
+git status                  # confirm clean tree first
+git pull
+bash install.sh --yes       # copies skills/* into ~/.claude/skills/
+ls ~/.claude/skills/effortless-*  # verify
 ```
 
-If `behind: 0` → local is current, tell the user.
-If `behind: N > 0` → list the N commit messages so the user can decide if any
-of them affect their current work. Don't summarize them as "minor" or "safe to
-skip" — the user reads the messages and decides.
+`install.sh` dynamically discovers all `skills/*/` directories and also cleans up entries listed in `DEPRECATED_SKILLS.md`.
 
-### Step 5 — Compute cadence and recommend a re-check interval
+### Install modes
 
-From the last 20 upstream commits, compute the median gap between commits in
-days. Map to a cadence recommendation:
+```bash
+bash install.sh              # interactive — asks per skill
+bash install.sh --yes        # non-interactive
+bash install.sh --symlink    # symlink instead of copy (contributor / dev mode)
+bash install.sh --uninstall  # remove all installed effortless-* skills
+```
 
-| Median gap between commits | Recommended check cadence |
-|---|---|
-| < 2 days (very active) | Check daily, or at start of each session |
-| 2–7 days (weekly) | Check weekly |
-| 7–30 days (monthly) | Check monthly, or only on demand |
-| > 30 days (quiet) | On demand only — no scheduled check needed |
+Use `--symlink` if you're actively editing skills — changes take effect immediately without reinstall.
 
-Report the cadence + the date the user should next check (today + interval).
+## Author: add or edit a skill
 
-### Step 6 — If behind, hand off to the orchestrator
+### Add a new skill
 
-Tell the user something like:
+```
+<clone>/skills/effortless-myskill/SKILL.md
+```
 
-> Local is behind by N commits since YYYY-MM-DD. Recent changes:
-> - `<sha>` <message>
-> - ...
->
-> To update, run the install flow from `effortless-orchestrator`:
-> `cd <clone>; git pull; bash install.sh --yes`
->
-> (Or just say "update effortless skills" and that flow will load.)
+Frontmatter is what Claude Code uses to decide when to load the skill — write the description as a **trigger specification**, not a summary:
 
-Do NOT run `git pull` or `install.sh` yourself from this skill. The user
-authorizes the update by triggering the orchestrator. This keeps the
-"check" and "act" steps cleanly separated and matches the broader rule that
-effortless skills don't drive git on the user's behalf.
+```yaml
+---
+name: effortless-myskill
+description: >
+  Use when ... (include exact phrases users will say, file/directory names that
+  indicate relevance, and what NOT to use it for).
+audience: customer
+---
+```
 
-## What this skill does NOT do
+Then `bash install.sh --yes`. Discovery is automatic.
 
-- **Does not modify any local clone** — no `git pull`, `git fetch`, no writes.
-- **Does not run the installer** — that's `effortless-orchestrator`.
-- **Does not edit `~/.claude/skills/`** — read-only.
-- **Does not auto-schedule itself.** If the user wants a recurring check
-  (daily/weekly), they can set that up via `/loop` or `/schedule` — but this
-  skill doesn't create those on its own.
+### Edit an existing skill
 
-## When to use proactively
+1. Edit `<clone>/skills/<skill-name>/SKILL.md`
+2. `bash install.sh --yes` (skip if you're using `--symlink` mode)
+3. Next Claude Code conversation picks it up.
 
-At the start of an effortless project session, if you notice it's been a while
-since this check ran (or if the user opens an effortless project after several
-days away), it's reasonable to run Step 3 alone (fetch upstream HEAD only,
-~one API call) and mention "by the way, upstream has N new commits since you
-last pulled — want me to show what changed?" Don't do the full workflow
-unprompted — one cheap signal is enough to surface the question.
+### Skill-writing principles
+
+- Concise — these are for Claude, not human onboarding. Target ~150 lines.
+- Lead with rules/axioms; skip tutorial framing.
+- Link to other effortless-* skills instead of restating their content.
+- Tables and code blocks beat prose paraphrases.
+- The `description` is the load-decision; be explicit about triggers AND non-triggers.
+
+### Deprecating a skill
+
+Add an entry to `<clone>/DEPRECATED_SKILLS.md` (the installer parses this table to clean up users' installed copies). Optionally leave a shim `SKILL.md` in `skills/<old-name>/` pointing to the replacement until the target removal date.
+
+## See also
+
+- `effortless-cli` — for the CLI **binary** (different artifact entirely).
+- `effortless-orchestrator` — top-level ERB framing; routes here for skill-set work.

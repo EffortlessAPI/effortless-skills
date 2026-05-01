@@ -4,6 +4,8 @@ description: >
   Use when making schema or data changes via the Airtable API in an ERB project —
   adding fields, creating tables, modifying existing fields, or when you need to
   understand Airtable API limitations (e.g., formula fields cannot be created via API).
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 

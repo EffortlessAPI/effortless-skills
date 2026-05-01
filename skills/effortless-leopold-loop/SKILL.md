@@ -6,6 +6,8 @@ description: >
   reference to the iterative ERB development cycle. This is the user's name for the
   CHANGE-RULE → REBUILD → CONSUME-VIEWS workflow that makes ERB feel effortless.
   Load this skill on first mention so you understand what the user expects to happen.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 

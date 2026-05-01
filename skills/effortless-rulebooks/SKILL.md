@@ -8,6 +8,8 @@ description: >
   COBOL substrate, or any request to demonstrate that the conjecture holds in a
   runnable way. Also use when the user asks "what's in the effortless-rulebooks
   repo" or links to github.com/effortlessapi/effortless-rulebooks.
+
+  **Scope (load gate):** Loads when the user asks for empirical proof of CMCC / wants to see ExplainDAG / asks about the effortless-rulebooks repo. Does not require a marked Effortless project.
 audience: customer
 ---
 

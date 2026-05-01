@@ -7,6 +7,8 @@ description: >
   about how the various GitHub repos fit together. Also load proactively when
   framing the methodology — the catalog here is the canonical "what's actually
   out there" so messaging stays consistent across sessions.
+
+  **Scope (load gate):** Loads when the user asks about the Effortless / SSoTme ecosystem of repos. Does not require a marked Effortless project.
 audience: customer
 ---
 

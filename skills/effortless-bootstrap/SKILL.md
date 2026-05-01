@@ -6,6 +6,8 @@ description: >
   or "effortless-shadle-steps". Covers the full pipeline from raw input text
   through vocabulary extraction, glossary, narrative, mock data, schema
   normalization, and initial Airtable setup via OMNI.
+
+  **Scope (load gate):** Effortless projects, OR when the user explicitly asks to bootstrap a new Effortless project from raw text/requirements.
 audience: customer
 ---
 

@@ -5,6 +5,8 @@ description: >
   schema without data, finding FK relationships, inspecting calculated fields and
   formulas. Activates for any project with effortless-rulebook.json or
   effortless-rulebook/ directory.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 

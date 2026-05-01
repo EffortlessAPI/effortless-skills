@@ -4,6 +4,8 @@ description: >
   Use ONLY for Airtable schema changes that the API cannot handle — formula fields,
   lookup fields, rollup fields, and new table creation (which requires the Name formula).
   All scalar field changes and CRUD operations go through the Airtable API directly.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 deprecated_skill_names:
   - effortless-omni-prompt

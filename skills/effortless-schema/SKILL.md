@@ -1,54 +1,51 @@
 ---
 name: effortless-schema
 description: >
-  Use when you need to understand the structure of effortless-rulebook.json —
-  table objects, field schema definitions, field types (raw, calculated, lookup,
-  relationship, aggregation), datatypes, formula syntax, or the _meta section.
+  Use to understand the **structure** of effortless-rulebook.json — top-level
+  keys, table objects, the field schema definition, field types (raw,
+  calculated, lookup, relationship, aggregation), datatypes, formula syntax,
+  and the `_meta` section. This skill is JSON-structure only; for naming /
+  DAG / FK *rules*, use effortless-conventions.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 
-# Rulebook JSON Schema Reference
+# Rulebook JSON Structure
 
-## Top-Level Structure
+This skill describes the **shape** of `effortless-rulebook.json`. It does NOT cover naming/DAG/FK rules — those are in **effortless-conventions**.
+
+## Top-level
 
 ```json
 {
   "$schema": "https://example.com/cmcc-schema/v1",
   "Name": "Project Display Name",
   "Description": "Rulebook generated from Airtable base 'Base Name'.",
-  "TableName": {
-    "Description": "Table: TableName",
-    "schema": [ /* field definitions */ ],
-    "data": [ /* row records */ ]
-  },
+  "TableName": { "Description": "...", "schema": [...], "data": [...] },
   "AnotherTable": { ... },
   "_meta": { /* conversion metadata */ }
 }
 ```
 
-**Top-level keys:**
 | Key | Purpose |
-|-----|---------|
-| `$schema` | Schema version URI (always `https://example.com/cmcc-schema/v1`) |
-| `Name` | Human-readable project/base name |
-| `Description` | Auto-generated description |
-| `{TableName}` | One key per entity table (PascalCase) |
+|---|---|
+| `$schema` | Always `https://example.com/cmcc-schema/v1` |
+| `Name` / `Description` | Project metadata |
+| `{TableName}` | One key per entity table |
 | `_meta` | Conversion metadata, type mappings, tool version |
 
-## Table Object
+## Table object
 
-Each table key contains:
 ```json
 {
   "Description": "Table: TableName",
-  "schema": [ /* array of field definitions */ ],
-  "data": [ /* array of row objects */ ]
+  "schema": [ /* field definitions */ ],
+  "data": [ /* row records */ ]
 }
 ```
 
-## Field Schema Object
-
-Every field in the `schema` array follows this structure:
+## Field schema object
 
 ```json
 {
@@ -56,70 +53,59 @@ Every field in the `schema` array follows this structure:
   "datatype": "string",
   "type": "raw",
   "nullable": true,
-  "Description": "What this field represents and how it is used.",
+  "Description": "What this field represents.",
   "formula": "=CONCAT({{FirstName}}, \" \", {{LastName}})",
   "RelatedTo": "OtherTable"
 }
 ```
 
-| Property | Required | Values | Notes |
-|----------|----------|--------|-------|
-| `name` | Yes | PascalCase string | Field identifier |
-| `datatype` | Yes | `string`, `integer`, `number`, `boolean`, `datetime` | Target data type |
-| `type` | Yes | `raw`, `calculated`, `lookup`, `relationship`, `aggregation` | Field derivation type |
-| `nullable` | Yes | `true` / `false` | Whether NULL is allowed |
-| `Description` | Should exist | Free text | Purpose, usage, ontology mapping |
-| `formula` | If calculated/lookup/aggregation | Excel-dialect formula | How the value is derived |
-| `RelatedTo` | If relationship | Table name (PascalCase) | FK target entity |
+| Property | Required | Values |
+|---|---|---|
+| `name` | yes | field identifier (PascalCase per conventions) |
+| `datatype` | yes | `string`, `integer`, `number`, `boolean`, `datetime` |
+| `type` | yes | `raw`, `calculated`, `lookup`, `relationship`, `aggregation` |
+| `nullable` | yes | `true` / `false` |
+| `Description` | should | free text |
+| `formula` | if calculated/lookup/aggregation | Excel-dialect (see below) |
+| `RelatedTo` | if relationship | target table name |
 
-## Field Types
+## Field types
 
-| Type | Meaning | Stored In | Example |
-|------|---------|-----------|---------|
-| `raw` | Direct user input | Base table | `FirstName`, `EmailAddress`, `DueDate` |
-| `calculated` | Derived from formula on same-row fields | View (via function) | `FullName = {{LastName}} & ", " & {{FirstName}}` |
-| `lookup` | Value pulled from a related table via FK | View (via function) | `=INDEX(Roles!{{Label}}, MATCH({{AssignedRole}}, Roles!{{RoleId}}, 0))` |
-| `relationship` | Foreign key reference to another table | Base table (as text ID) | `Customer` pointing to `Customers` table |
-| `aggregation` | Rollup/count/sum over related rows | View (via function) | `=COUNTIFS(Orders!{{Customer}}, Customers!{{CustomerId}})` |
+| Type | Stored In | Meaning |
+|---|---|---|
+| `raw` | Base table | Direct user input |
+| `calculated` | View (via function) | Derived from formula on same-row fields |
+| `lookup` | View (via function) | Pulled from a related table via FK |
+| `relationship` | Base table (as ID) | Foreign key to another table |
+| `aggregation` | View (via function) | Rollup/count/sum over related rows |
 
-## Data Types
+## Datatype mapping
 
-| Datatype | Postgres | Go | Python | Airtable Source |
-|----------|----------|-----|--------|-----------------|
+| Datatype | Postgres | Go | Python | Airtable source |
+|---|---|---|---|---|
 | `string` | `TEXT` | `string` | `str` | singleLineText, multilineText, email, url, phoneNumber, singleSelect |
-| `integer` | `INTEGER` | `int` | `int` | number (when whole) |
-| `number` | `NUMERIC` | `float64` | `float` | number (when decimal) |
+| `integer` | `INTEGER` | `int` | `int` | number (whole) |
+| `number` | `NUMERIC` | `float64` | `float` | number (decimal) |
 | `boolean` | `BOOLEAN` | `bool` | `bool` | checkbox |
 | `datetime` | `TIMESTAMPTZ` | `time.Time` | `datetime` | date, dateTime |
 
-## Formula Syntax
+## Formula syntax (Excel dialect)
 
-Formulas use Excel dialect with `={{FieldName}}` for field references:
+`={{FieldName}}` references same-row fields. Cross-table uses `Table!{{Field}}`.
 
 ```
-# String concatenation
 ={{LastName}} & ", " & {{FirstName}}
-
-# Conditional
 =IF({{Status}} = "Active", TRUE(), FALSE())
-
-# Boolean compound
 =AND({{HasSyntax}}, {{IsParsed}}, NOT({{CanBeHeld}}))
-
-# Lookup (cross-table)
 =INDEX(Roles!{{Label}}, MATCH({{AssignedRole}}, Roles!{{RoleId}}, 0))
-
-# Aggregation
 =COUNTIFS(WorkflowSteps!{{IsStepOf}}, Workflows!{{WorkflowId}})
 =SUMIFS(Orders!{{Amount}}, Orders!{{Customer}}, Customers!{{CustomerId}})
-
-# String manipulation
 =SUBSTITUTE(LOWER({{CompanyName}}), " ", "-")
 ```
 
-**Supported functions:** IF, AND, OR, NOT, TRUE, FALSE, CONCAT, SUBSTITUTE, LOWER, UPPER, LEFT, RIGHT, MID, LEN, TRIM, FIND, SEARCH, TEXT, VALUE, SUM, COUNT, COUNTIFS, SUMIFS, AVERAGEIFS, MIN, MAX, INDEX, MATCH, POWER, LOG, LOG10, ABS, ROUND, COALESCE/IFERROR.
+**Functions:** IF, AND, OR, NOT, TRUE, FALSE, CONCAT, SUBSTITUTE, LOWER, UPPER, LEFT, RIGHT, MID, LEN, TRIM, FIND, SEARCH, TEXT, VALUE, SUM, COUNT, COUNTIFS, SUMIFS, AVERAGEIFS, MIN, MAX, INDEX, MATCH, POWER, LOG, LOG10, ABS, ROUND, COALESCE/IFERROR.
 
-## The _meta Section
+## `_meta`
 
 ```json
 "_meta": {
@@ -138,11 +124,9 @@ Formulas use Excel dialect with `={{FieldName}}` for field references:
 }
 ```
 
----
-
 ## See also
 
-- `effortless-query` — for one-liners that extract this structure without reading the full file.
-- `effortless-conventions` — for the naming / DAG rules that explain *why* the JSON looks the way it does.
-- `effortless-sql` — for how each field type / datatype maps to the generated Postgres tables, functions, and views.
-- `effortless-orchestrator` — for the canonical "Token Discipline" rule that says: query this JSON, never read it whole.
+- `effortless-conventions` — naming, DAG, FK rules. THIS skill is structure-only.
+- `effortless-query` — one-liners that extract this structure without reading the full file.
+- `effortless-sql` — how each field type / datatype maps to generated Postgres tables, functions, views.
+- `effortless-orchestrator` — Token Discipline rule: query this JSON, never read it whole.

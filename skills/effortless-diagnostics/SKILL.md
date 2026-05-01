@@ -4,6 +4,8 @@ description: >
   Use when diagnosing ERB project health — validating DAG integrity, checking for
   broken FK targets, finding JOIN anti-patterns in application code, migrating
   legacy code from base table reads to view reads, or running diagnostic queries.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 

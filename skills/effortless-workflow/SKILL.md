@@ -4,6 +4,8 @@ description: >
   Use when making changes to an ERB project — modifying effortless-rulebook.json,
   Airtable schema or data, or running effortless build. Covers Path A (Airtable-first)
   vs Path B (Rulebook-first reverse sync) and permission checkpoints.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 

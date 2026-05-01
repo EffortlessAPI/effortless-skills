@@ -5,6 +5,8 @@ description: >
   transpiler catalog, effortless build commands, the -id flag, transpiler
   installation, or understanding how the build flows from Airtable through
   to generated code.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 

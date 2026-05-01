@@ -9,6 +9,8 @@ description: >
   receipts rather than enthusiasm. This skill is strictly receipts-based — every
   claim cites a paper, repo, or runnable demo. Pair with effortless-cmcc for the
   theory and effortless-rulebooks for the empirical proof.
+
+  **Scope (load gate):** Loads when the user (or a third party) needs the methodology defended. Does not require a marked Effortless project.
 audience: customer
 ---
 

@@ -9,6 +9,8 @@ description: >
   Load this skill BEFORE answering any "why" question about ERB so the answer is
   grounded in the conjecture, not improvised. Pair with effortless-rulebooks for
   the empirical receipts and effortless-rationale for skeptic-facing answers.
+
+  **Scope (load gate):** Loads when the user asks about Effortless / ERB / CMCC theory or methodology. Does not require a marked Effortless project.
 audience: customer
 ---
 

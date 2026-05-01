@@ -10,6 +10,8 @@ description: >
   and writing email-DAG RLS policies. Triggers: "set up a secure base",
   "wire magic links into this app on bases.effortlessapi.com",
   "RLS app on bases", "create a magic-links tenant for a base".
+
+  **Scope (load gate):** Loads only on explicit user request — applies to any Postgres-backed app on bases.effortlessapi.com, not just Effortless-marked projects. Do not auto-load just because a project uses Postgres.
 audience: customer
 ---
 

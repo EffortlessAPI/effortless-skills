@@ -6,6 +6,8 @@ description: >
   project that targets postgres — it installs the pipeline, pulls the
   rulebook, generates SQL, and creates the database. Must be run before
   writing any application code.
+
+  **Scope (load gate):** Effortless projects, OR when the user explicitly asks to set up a new Postgres-backed Effortless project from an existing Airtable base.
 audience: customer
 ---
 

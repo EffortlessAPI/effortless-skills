@@ -1,220 +1,224 @@
 ---
 name: effortless-cli
 description: >
-  Use when running effortless CLI commands, understanding CLI flags, logging in,
-  installing transpilers, setting API keys, initializing projects, or troubleshooting
-  the CLI. The CLI is also known as `ssotme` or `aicapture` but all documentation
-  should use the canonical name `effortless`.
+  Use for the `effortless` CLI — both **installing/updating the binary** AND
+  **using its commands**. Triggers: "install effortless", "install the CLI",
+  "update effortless cli", "the cli isn't installed", `effortless: command
+  not found`, version mismatches, login flow, `effortless -init`,
+  `effortless build`, `-setAccountAPIKey`, `-install <transpiler>`, transpiler
+  management, build flags, project file structure. The CLI is also known as
+  `ssotme`, `aicapture`, or `aic` — always use `effortless` in docs/scripts.
+  For the **skill set** (different artifact), use effortless-claude-updates.
+
+  **Scope (load gate):** Effortless projects, OR when the user explicitly asks to install / update / use the Effortless CLI. CLI-management work doesn't require an Effortless-marked project.
 audience: customer
 ---
 
-# Effortless CLI Reference
+# Effortless CLI — Install + Use
 
-The `effortless` CLI (also invocable as `ssotme` or `aicapture` — but always use `effortless` in documentation and scripts) is the command-line interface for the EffortlessAPI / SSoT.me platform.
+The `effortless` CLI ships from https://github.com/effortlessapi/cli as an npm package whose `bin` entries (`effortless`, `ssotme`, `aicapture`, `aic`) all shim through `cli.js`, which invokes the bundled .NET 8 binary. Because it's just an npm package, Claude can manage the install end-to-end.
 
-Current version format: `SSoTme CLI version YYYY.M.DD.NNN`
+**Canonical clone location:** `~/.effortless/cli`
+**Canonical command name:** `effortless`
 
-## Authentication — MUST happen first
+---
 
-Before any CLI operation, the user must be logged in:
+# Part 1 — Install / Update the Binary
+
+## Prerequisites
 
 ```bash
-effortless -login
+which dotnet && dotnet --version    # need >= 8.0
+which npm && npm --version
+node --version                      # need >= 18, prefer 20+
 ```
 
-This launches an interactive flow:
-1. Prompts for an email address
-2. Sends a 6-digit verification code to that email
-3. User enters the code within 5 minutes
-4. On success, a JWT is issued and stored locally, associating that email with the CLI account
+If `dotnet` is missing: tell the user, link to https://dotnet.microsoft.com/download. Don't auto-install .NET.
 
-**Check login status:**
+### Node version — install the CLI under Node 20+
+
+The CLI itself runs on Node 16+, but generated apps (Vite 5) require Node 18+ (`crypto.getRandomValues` is missing on 16). Always install the CLI under the same Node version the user's apps will run on, otherwise `which effortless` resolves to a different nvm prefix and switching versions silently "loses" the CLI.
+
+When the user has nvm with an old default:
+
 ```bash
-effortless -info
+source ~/.nvm/nvm.sh
+nvm install 20 || true
+nvm use 20 && nvm alias default 20
+cd ~/.effortless/cli && npm install -g .
+which effortless                    # should resolve under v20.x.x/bin
 ```
 
-**Logout:**
+Symptoms that this is needed: Vite/Node errors like `crypto.getRandomValues is not a function`, ESM `node:` import errors, "this worked a few days ago" after an nvm change. Check `node --version` before suggesting "downgrade Vite."
+
+App `node_modules` built against Node 16 must be rebuilt: `cd app && rm -rf node_modules package-lock.json && npm install`.
+
+**`nvm alias default 20` only affects new shells.** Existing terminals keep the old version. For projects with a `start.sh`, bake the switch into the script:
+
 ```bash
+if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
+    . "$HOME/.nvm/nvm.sh"
+    node_major=$(node -p "process.versions.node.split('.')[0]" 2>/dev/null || echo 0)
+    if (( node_major < 18 )); then
+        echo "Node $(node --version) is too old for Vite 5 — switching to Node 20."
+        nvm use 20 >/dev/null
+    fi
+fi
+```
+
+## Fresh install
+
+```bash
+mkdir -p ~/.effortless
+rm -rf ~/.effortless/cli
+git clone --depth 1 https://github.com/effortlessapi/cli ~/.effortless/cli
+cd ~/.effortless/cli && npm install -g .
+```
+
+Verify:
+
+```bash
+which effortless                    # should resolve in npm prefix, NOT /usr/local/bin
+effortless -version                 # first run triggers dotnet build (~30-60s)
+effortless -version                 # second run is instant
+```
+
+First invocation prints `dotnet build` warnings — normal. Final line is the version.
+
+## Update
+
+```bash
+cd ~/.effortless/cli
+git pull
+rm -rf Windows/CLI/bin            # force rebuild against new sources
+npm install -g .
+effortless -version
+```
+
+## Uninstall
+
+```bash
+npm uninstall -g ssotme           # the npm package name is "ssotme"
+rm -rf ~/.effortless/cli
+```
+
+## Coexistence with the legacy PKG installer
+
+Older Macs may have `/usr/local/bin/{ssotme,aicapture}` from the old PKG. The npm install doesn't touch those — it places its own symlinks in the npm global prefix. As long as the npm prefix bin dir comes before `/usr/local/bin` on PATH, the npm copy wins.
+
+```bash
+echo $PATH | tr ':' '\n' | grep -nE 'nvm|/usr/local/bin'
+which -a effortless ssotme
+```
+
+If `/usr/local/bin` resolves first: reorder PATH or remove the legacy symlinks (with explicit user confirmation) — `sudo rm /usr/local/bin/ssotme /usr/local/bin/aicapture`.
+
+## When to install automatically
+
+- **Without asking:** `which effortless` returns nothing AND the user has just asked for something that requires the CLI.
+- **Confirm first:** working CLI exists; user hasn't asked for an update.
+- **Stop and surface:** `dotnet` is missing.
+
+---
+
+# Part 2 — Using the CLI
+
+## Authentication — must happen first
+
+```bash
+effortless -login              # interactive: email + 6-digit code
+effortless -info               # check login status
 effortless -logout
+effortless -projectLogin       # project-scoped override
 ```
 
-**Project-specific login** (overrides global user for this project only):
-```bash
-effortless -projectLogin
-```
-
-## Initializing a Project
+## Initializing a project
 
 ```bash
-effortless -init
+effortless -init -projectName "My Project"   # creates effortless.json
+effortless -init force                       # nested sub-project
 ```
 
-Creates the current folder as the root of an effortless project. Generates an `effortless.json` project file.
-
-**With a project name:**
-```bash
-effortless -init -projectName "My Project"
-```
-
-**Force sub-project** (creates a nested project inside an existing one):
-```bash
-effortless -init force
-```
+For the full project-init walkthrough (directory structure, CLAUDE.md, start.sh, Airtable connection), see **effortless-init**.
 
 ## API Key Management
-
-### Setting an Account API Key
 
 ```bash
 effortless -setAccountAPIKey airtable=patXXXXXXXX.XXXXXXXX
 ```
 
-This stores the key in `~/.ssotme/ssotme.key`, a JSON file structured as:
+Stored in `~/.ssotme/ssotme.key`:
 
 ```json
 {
   "EmailAddress": "user@example.com",
-  "Secret": "...",
-  "APIKeys": {
-    "airtable": "patXXXXXXXX.XXXXXXXX"
-  }
+  "APIKeys": { "airtable": "patXXXXXXXX.XXXXXXXX" }
 }
 ```
 
-### Reading the API Key
+**Resolution order for Airtable key:** `AIRTABLE_API_KEY` env → `~/.ssotme/ssotme.key` → `effortless.json` → `ProjectSettings._apikey_`.
 
-Priority order for Airtable API key resolution:
-1. `AIRTABLE_API_KEY` environment variable
-2. `~/.ssotme/ssotme.key` -> parse JSON -> `APIKeys.airtable`
-3. `effortless.json` -> `ProjectSettings` -> `_apikey_`
-
-### The `-account` flag
-
-When a transpiler needs an API key (e.g., Airtable tools), pass `-account airtable` so the CLI sends the key configured in `~/.ssotme/ssotme.key`:
+**Every airtable-facing tool MUST include `-account airtable`** to inject the key:
 
 ```bash
 effortless airtable-to-rulebook -o effortless-rulebook.json -account airtable
 ```
 
-**Every airtable-facing tool MUST include `-account airtable`.**
+`effortless.env` is the dotenv alternative for project-scoped secrets: `AIRTABLE_API_KEY=patXXX...`.
 
-### effortless.env
+## Installing transpilers
 
-An `effortless.env` file in the project root can also store keys as environment variables. This is an alternative to `~/.ssotme/ssotme.key` for project-scoped secrets. Format is standard dotenv:
-
-```
-AIRTABLE_API_KEY=patXXXXXXXX.XXXXXXXX
-```
-
-## Installing Transpilers
-
-Transpilers are installed from the directory where the output is expected. The exact syntax is:
+Transpilers are installed **from the directory where the output is expected**. The `-install` flag saves the command into `effortless.json` under `ProjectTranspilers`, recording `RelativePath` (where install was run) and `CommandLine` (full command).
 
 ```bash
-effortless -install <transpiler-name> -p param1=value1 -i input-file.txt -o output-file.json
+effortless -install <transpiler> -p key=value -i input.txt -o output.json
 ```
 
-**The `-install` flag saves the command into the project's `effortless.json` under `ProjectTranspilers`.**
-
-The installed entry records:
-- `RelativePath` — the folder from which the install was run (relative to project root)
-- `CommandLine` — the full command with all flags
-
-### Standard Tool Installation Paths
-
-Each tool MUST be installed from its designated directory:
+### Standard installation paths
 
 | Directory | Command | Notes |
-|-----------|---------|-------|
-| `/bootstrap/` | `effortless -install raw-text-to-rulebook -i requirements.txt -o bootstrap-rulebook.json` | Rough starting-point rulebook |
+|---|---|---|
+| `/bootstrap/` | `effortless -install raw-text-to-rulebook -i requirements.txt -o bootstrap-rulebook.json` | Rough starting rulebook |
 | `/effortless-rulebook/` | `effortless -install airtable-to-rulebook -o effortless-rulebook.json -account airtable` | Main rulebook sync |
-| `/effortless-rulebook/push-to-airtable/` | `effortless -install rulebook-to-airtable -i ../effortless-rulebook.json -account airtable` | **MUST BE DISABLED** — not run by default |
+| `/effortless-rulebook/push-to-airtable/` | `effortless -install rulebook-to-airtable -i ../effortless-rulebook.json -account airtable` | **MUST be `IsDisabled: true`** |
 | `/postgres/` | `effortless -install rulebook-to-postgres -i ../effortless-rulebook/effortless-rulebook.json` | SQL generation |
-| `/docs/` | `effortless -install rulebook-to-docs` | Documentation generation |
+| `/docs/` | `effortless -install rulebook-to-docs` | Doc generation |
 
-**Critical:** The `rulebook-to-airtable` tool in `push-to-airtable/` must be disabled (`"IsDisabled": true`) so it is NOT run during a normal `effortless build`. It is only run explicitly with `effortless build -id`.
+`rulebook-to-airtable` must be disabled so it doesn't run on a normal `effortless build` — only `effortless build -id` runs it.
 
 ## Building
 
 ```bash
-effortless build              # Run all ENABLED transpilers from project root
-effortless build -id          # Run ALL transpilers INCLUDING disabled ones
-effortless buildLocal         # Build only transpilers in the current folder
-effortless buildAll           # Build all transpilers in the project
+effortless build              # all enabled transpilers from project root
+effortless build -id          # ALL transpilers, including disabled
+effortless buildLocal         # only transpilers in current folder
+effortless buildAll           # all project transpilers
 ```
 
-### Build Flags
-- `-skipClean` / `-sc` — Don't clean output before building
-- `-dryRun` / `-dr` — Dry run (no actual execution)
-- `-debug` — Show debug output
-- `-ignoreErrors` — Continue build if a transpiler fails
-- `-waitTimeout N` / `-w N` — Timeout in milliseconds for a command
+**Build flags:** `-skipClean`/`-sc`, `-dryRun`/`-dr`, `-debug`, `-ignoreErrors`, `-waitTimeout N`/`-w N`.
 
-## Project Inspection
+## Project inspection / management
 
 ```bash
-effortless -describe          # Describe current project and transpilers
-effortless -describeAll       # Describe all transpilers
-effortless -listSettings      # List project settings
-effortless -addSetting key=value   # Add a setting
-effortless -removeSetting key      # Remove a setting
-effortless -info              # Show configured settings
+effortless -describe          # describe project + transpilers
+effortless -listSettings
+effortless -addSetting key=value
+effortless -removeSetting key
+
+effortless -uninstall         # remove current command from project file
+effortless -listVersions
+effortless -upgrade           # update pinned version to current head
+effortless -refreshTools      # purge + re-fetch the remote tools index
+
+effortless -clean             # clean current folder + downstream
+effortless -cleanAll
 ```
 
-## Managing Transpilers
-
-```bash
-effortless -uninstall         # Remove current command from project file
-effortless -listVersions      # List available versions of a tool
-effortless -upgrade           # Update pinned version to current head
-effortless -latest            # Run with current head AND update pinned version
-effortless -refreshTools      # Purge and re-fetch the remote tools index
-```
-
-## Cleaning
-
-```bash
-effortless -clean             # Clean transpilers in and downstream of this folder
-effortless -cleanAll          # Clean all project transpilers
-effortless -cleanLocal        # Clean only transpilers in the current folder
-```
-
-## Seeds (Project Templates)
-
-```bash
-effortless -listSeeds         # List available seed repositories
-effortless -cloneSeed <name>  # Clone a seed repository
-effortless -skipBuild         # Skip the build part of cloning
-```
-
-## Tool URL Management
-
-```bash
-effortless -listUrls          # List custom tool URLs for this user
-effortless -setUrl <name>=<url>    # Set a custom tool endpoint
-effortless -removeUrl <name>       # Reset to default URL
-effortless -updateUrls        # Check for URL updates
-effortless -viewUrl <name>    # View the URL for a specific tool
-```
-
-## Other Commands
-
-```bash
-effortless -version           # Show CLI version
-effortless -subscription      # View account subscription plan
-effortless -discuss           # Discuss the project with AI
-effortless -checkResults      # Check build results, create SPXML
-effortless -createDocs        # Create documentation from SPXML
-effortless -buildOnTrigger    # Build on trigger invocation
-effortless -copilotConnect    # Connect baseId to SSoTme Copilot Agent
-```
-
-## Project File Structure (`effortless.json`)
+## `effortless.json` structure
 
 ```json
 {
   "Name": "Project Name",
-  "Description": "Optional description",
   "ProjectSettings": [
     { "Name": "baseId", "Value": "appXXXXXXXXXXXX" },
     { "Name": "project-name", "Value": "my-project" }
@@ -230,13 +234,24 @@ effortless -copilotConnect    # Connect baseId to SSoTme Copilot Agent
 }
 ```
 
-**The `baseId` setting** stores the Airtable base ID for the project. This is shared across all airtable-facing tools and should always be set here so any tool can read it.
+The `baseId` setting is the Airtable base ID, shared across all airtable-facing tools.
+
+## Smoke tests
+
+```bash
+effortless -version           # last line: e.g. 2026-04-24.18.54
+effortless -help | head -1    # banner version derives from same package.json
+effortless -info              # login state
+```
+
+If `-help` and `-version` drift, the clone predates commit `55634ab` (2026-04-25) — `git pull` and reinstall.
 
 ---
 
 ## See also
 
-- `effortless-install-cli` — for installing or updating the CLI binary itself (clones the repo and registers `effortless` as a global npm package).
-- `effortless-pipeline` — for the build pipeline / `ProjectTranspilers` schema this skill references.
-- `effortless-setup-postgres` — for the canonical first-run sequence that uses these CLI commands in order.
-- `effortless-airtable` — for the airtable-facing API key conventions (`-account airtable`, `~/.ssotme/ssotme.key`).
+- `effortless-init` — full project-init walkthrough (this skill is just the CLI reference).
+- `effortless-pipeline` — build pipeline / `ProjectTranspilers` schema in depth.
+- `effortless-setup-postgres` — canonical first-run sequence for Postgres projects.
+- `effortless-airtable` — Airtable API key conventions.
+- `effortless-claude-updates` — for the **skill set** (different artifact).

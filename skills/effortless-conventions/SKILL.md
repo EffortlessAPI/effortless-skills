@@ -4,6 +4,8 @@ description: >
   Use when you need ERB naming conventions, DAG structure rules, PascalCase table
   names, primary key and foreign key patterns, the Name field requirement, or
   understanding why many-to-many relationships are not allowed.
+
+  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
 ---
 

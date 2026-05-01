@@ -9,6 +9,8 @@ description: >
   RLS policies can filter by the verified email. Triggers: "add magic links
   to this app", "secure this app with magic links", "passwordless auth on a
   postgres app", "wire JWT auth into this project".
+
+  **Scope (load gate):** Loads only on explicit user request — applies to any Postgres app, not just Effortless-marked projects. Do not auto-load just because a project uses Postgres.
 audience: general
 ---
 
