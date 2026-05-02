@@ -5,7 +5,7 @@ Marker pair (`effortless.json` + this file) tells Claude to load the project-onl
 
 ## What this repo is
 
-This is the **SSoT repo for the effortless-claude skill suite itself** — the 22 skills under `skills/` that get installed to `~/.claude/skills/` via `install.sh`. It is also a (lightweight) ERB project that *describes itself* with its own methodology.
+This is the **SSoT repo for the effortless-claude skill suite itself** — the 23 skills under `skills/` that get installed to `~/.claude/skills/` via `install.sh`. It is also a (lightweight) ERB project that *describes itself* with its own methodology.
 
 ## What's special about this ERB project
 

@@ -205,7 +205,7 @@
   },
 
   "Skills": {
-    "Description": "One row per SKILL.md under skills/. The 22 currently live skills in the suite. Deprecation history is in DEPRECATED_SKILLS.md, not here.",
+    "Description": "One row per SKILL.md under skills/. The 23 currently live skills in the suite. Deprecation history is in DEPRECATED_SKILLS.md, not here.",
     "schema": [
       {
         "name": "Name",
@@ -351,6 +351,14 @@
         "Audience": "customer"
       },
       {
+        "Slug": "effortless-mcp",
+        "Description": "Install and use the always-on Effortless MCP server — the streamable-HTTP endpoint that exposes ~54 transpiler tools plus the effortless-claude skill set as MCP Resources to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.).",
+        "WhyItExists": "The CLI binary is not the only way to drive the catalog — MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally. Without this skill, Claude improvises wiring instructions and tells users to paste handcrafted JSON into the wrong config file.",
+        "Category": "cli",
+        "ScopeGate": "explicit-request-only",
+        "Audience": "customer"
+      },
+      {
         "Slug": "effortless-conventions",
         "Description": "Naming rules (Name as PK, PascalCase plural tables, singular FKs, plural reverse FKs); DAG structure (1-to-many only, no cycles, no many-to-many); surrogate-key policy.",
         "WhyItExists": "These rules look arbitrary until you realize they're what makes the substrate-equivalence guarantee hold. Read this before 'fixing' something the linter complains about, because the linter is usually right.",
@@ -474,11 +482,11 @@
   },
 
   "_meta": {
-    "_CMCC_Summary": "Self-describing rulebook for the effortless-claude skill suite. Hand-authored (no Airtable source). Models the 22 currently-live skills against their three high-level attributes (Category, ScopeGate, Audience). Deprecation history lives in DEPRECATED_SKILLS.md, not in the rulebook.",
+    "_CMCC_Summary": "Self-describing rulebook for the effortless-claude skill suite. Hand-authored (no Airtable source). Models the 23 currently-live skills against their three high-level attributes (Category, ScopeGate, Audience). Deprecation history lives in DEPRECATED_SKILLS.md, not in the rulebook.",
     "_conversion_metadata": {
       "source": "hand-authored from skills/*/SKILL.md frontmatter and README.md",
       "table_count": 4,
-      "row_counts": { "Audiences": 2, "SkillCategories": 10, "ScopeGateTypes": 4, "Skills": 22 },
+      "row_counts": { "Audiences": 2, "SkillCategories": 10, "ScopeGateTypes": 4, "Skills": 23 },
       "tool_version": "n/a (hand-authored)",
       "export_mode": "manual",
       "airtable_backed": false

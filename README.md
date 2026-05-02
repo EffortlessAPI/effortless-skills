@@ -68,7 +68,7 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 ## Skills
 
-22 skills, grouped by purpose. Each one explains *why you'd want it* — what problem it actually solves for you when you reach for it.
+23 skills, grouped by purpose. Each one explains *why you'd want it* — what problem it actually solves for you when you reach for it.
 
 ### Orchestration
 
@@ -89,6 +89,8 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 ### CLI
 
 **`effortless-cli`** — Both **installing/updating the `effortless` binary** and **using it**. Covers prerequisites (.NET 8, Node 18+), the npm-package install (clones `effortlessapi/cli`, registers `effortless` / `ssotme` / `aicapture` / `aic` shims), nvm coexistence pitfalls, login flow, `-init`, `-setAccountAPIKey`, transpiler installation paths, build flags, project file structure. **Why?** Because nothing in the rest of the suite works without the CLI being on `PATH` and pointing at the right Node version. This skill is also where the `effortless: command not found` recovery flow lives.
+
+**`effortless-mcp`** — Install and use the always-on **Effortless MCP server** — the streamable-HTTP endpoint that exposes ~54 transpiler tools (auto-generated from the Airtable catalog) plus the effortless-claude skill set as MCP **Resources** to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.). Covers the deployed cpln URL, per-client wiring snippets, smoke tests, local dev (`./start.sh`, stdio mode), and the bake/publish flow for new versions. **Why?** The CLI binary is not the only way to drive the catalog — MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally.
 
 ### Schema & Conventions
 
@@ -228,6 +230,7 @@ effortless-claude/
 │   ├── effortless-leopold-loop/        ← the iteration cycle
 │   ├── effortless-claude-updates/      ← skill-set maintenance
 │   ├── effortless-cli/                 ← CLI binary install + command reference
+│   ├── effortless-mcp/                 ← MCP server install + per-client wiring
 │   ├── effortless-conventions/         ← naming, DAG, PK/FK rules
 │   ├── effortless-schema/              ← rulebook JSON structure
 │   ├── effortless-query/               ← token-efficient rulebook queries
