@@ -20,8 +20,16 @@ audience: customer
 > No marketing voice. No "imagine if." If the receipt isn't on file, the claim
 > doesn't get made.
 
-This skill is for skeptic-facing conversations. The goal is not to convert — it
-is to make the case *honestly* and let the receipts do the work.
+This skill is for **skeptic-facing** conversations — when the user (or someone they're talking to) is openly challenging the methodology and wants the case made with receipts.
+
+**This skill is NOT the right register for friendly-but-exploratory evaluative questions** like *"what do you make of this approach"*, *"is this any good"*, or *"could this work for X"*. Those are answered from inside the conjecture, with the Evaluative Posture established in `effortless-orchestrator` and `effortless-cmcc`. Loading this skill for a friendly question turns a collaborative thinking-out-loud moment into a debate, which is the wrong tone.
+
+**Decision rule:**
+- User is *openly skeptical* (or asking you to brief them for a skeptical conversation) → load this skill.
+- User is *exploring or evaluating the methodology with you* → use `effortless-orchestrator`'s Evaluative Posture + `effortless-cmcc`'s "How To Operate Inside The Conjecture" instead.
+- User explicitly asks for the steelman / critique / "what would a critic say" → load this skill on top of CMCC.
+
+The goal of *this* skill is not to convert — it is to make the case *honestly* and let the receipts do the work.
 
 ## Tone Rules
 
