@@ -188,3 +188,20 @@ This output is a **starting point** — it needs to be reviewed, normalized, and
 - `effortless-airtable` — API calls for descriptions and data (Steps 10–11).
 - `effortless-leopold-loop` — what you enter at Step 13 once Airtable is the SSoT.
 - `effortless-setup-postgres` — for projects that target Postgres, run after Step 13.
+
+## LOCALHOST MODE — read before doing anything
+
+Before any magic-links / bases work, check whether `MAGICLINK_BASE_URL` is set to a `http://localhost:*` URL (or the operator said "use the local dev stack" / "localhost"). If so, follow [MAGIC_LINKS_REFACTOR.md §13](../../MAGIC_LINKS_REFACTOR.md#13-localhost-mode--opt-in-via-env-vars) — production URLs become localhost URLs, the magic-link email loop is replaced by debug code `424242`, and bases registration goes against the local bases server.
+
+Operator quick-ref in localhost mode:
+- magiclink server: `http://localhost:4787` (admin UI at `/`)
+- bases server:     `http://localhost:4788` (admin UI at `/`)
+- unified dash:     `http://localhost:4789`
+- env file:         `magic-links-refactor/test-env/dev/.env` — `source` it before any curl recipe; gives you `OWNER_JWT`, `MAGICLINK_BASE_URL`, `BASES_BASE_URL`, etc.
+
+Up-check (run before assuming the stack is live):
+```
+curl -fsS http://localhost:4787/install-magic-links/v1.sql >/dev/null && echo "magiclink up" || echo "magiclink DOWN"
+curl -fsS http://localhost:4788/health >/dev/null && echo "bases up" || echo "bases DOWN"
+```
+If down, run `bash magic-links-refactor/test-env/scripts/dev-stack-up.sh`.

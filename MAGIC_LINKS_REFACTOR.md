@@ -282,6 +282,76 @@ chat", "never commit" disciplines are tracked in
 
 ---
 
+## §13 LOCALHOST MODE — opt-in via env vars
+
+> **READ THIS FIRST when bootstrapping any project.** It changes
+> nearly everything below.
+
+The skills above default to **production** URLs:
+
+```
+MAGICLINK_BASE_URL=https://magiclink.effortlessapi.com   # default
+BASES_BASE_URL=https://bases.effortlessapi.com           # default
+```
+
+When the operator is running the **local dev stack**
+(magic-links-refactor/test-env/scripts/dev-stack-up.sh — see
+api.effortlessapi.com), Claude MUST detect localhost mode and
+adjust behavior accordingly. Detection rule:
+
+> Localhost mode is on when `MAGICLINK_BASE_URL` is set to a
+> `http://localhost:*` URL **OR** when the operator says "use the
+> local dev stack" / "localhost magic-links" / similar in the
+> prompt.
+
+When localhost mode is on:
+
+| Step | Production behavior | Localhost behavior |
+|---|---|---|
+| Mint tenant | `POST https://magiclink.effortlessapi.com/api/tenants` (requires self-auth Bearer JWT) | `POST $MAGICLINK_BASE_URL/api/tenants` against the local server. Self-auth JWT is in `magic-links-refactor/test-env/dev/.env` as `OWNER_JWT` — source it and use it. |
+| Fetch install.sql | `curl https://magiclink.effortlessapi.com/api/tenants/{id}/install.sql` | `curl $MAGICLINK_BASE_URL/api/tenants/{id}/install.sql` |
+| Send magic-link code | Real email-receipt loop required. | **Skip the email loop.** The local server's `NODE_ENV=test` accepts the literal debug code `424242` in `verify-code` requests. Document this in the project's README so the operator can demo without an email round-trip. |
+| Register the project as a base | `POST https://bases.effortlessapi.com/...` (requires real bases auth) | `POST $BASES_BASE_URL/...` against the local bases server (which is itself a base on the local self-DB). |
+| What goes in `server/.env` of the new project | `MAGICLINK_BASE_URL=https://magiclink.effortlessapi.com` | `MAGICLINK_BASE_URL=http://localhost:4787` |
+| What goes in `server/.env.example` | `MAGICLINK_BASE_URL=https://magiclink.effortlessapi.com` | Same example URL — the localhost is for the operator's local dev only; `.env.example` should still show the production URL. |
+| Bases prod-stage gate | `confirm-prod-change: <summary>` header required. | Local bases lets every base default to `Stage=dev` so the gate is auto-permissive. The skill must still NOT default a base to `Stage=prod` in localhost mode. |
+
+**Operator quick-ref** for what's where in localhost mode:
+
+```
+magiclink server      http://localhost:4787
+bases server          http://localhost:4788
+unified dashboard     http://localhost:4789
+local Postgres        postgres://localhost:5432/<dbname>
+.env file with all    magic-links-refactor/test-env/dev/.env
+the URLs + JWTs       (source it before any curl recipe)
+```
+
+**The 424242 dev code is load-bearing for demos.** When the skill
+walks the operator through "now check your inbox" in production,
+in localhost mode it walks them through "the magiclink server is in
+debug mode; use code `424242`" instead. No SMTP needed; no real
+email account needed. This is the entire point — the demo is
+self-contained.
+
+**One last gate:** in localhost mode the skill MUST verify the
+local stack is actually up before proceeding. Quick check:
+
+```bash
+curl -fsS http://localhost:4787/install-magic-links/v1.sql >/dev/null \
+  && echo "magiclink up" || echo "magiclink DOWN — run dev-stack-up.sh"
+curl -fsS http://localhost:4788/health >/dev/null \
+  && echo "bases up" || echo "bases DOWN — run dev-stack-up.sh"
+```
+
+If either is down, point the operator at:
+
+```
+bash magic-links-refactor/test-env/scripts/dev-stack-up.sh
+```
+
+---
+
 ## How a cold reviewer verifies this
 
 1. This file exists at `effortless-claude/MAGIC_LINKS_REFACTOR.md`.
@@ -290,3 +360,5 @@ chat", "never commit" disciplines are tracked in
    §N for the v0.2 magic-links contract.`
 3. The lint script `lint-skills.sh` exits 0 (no forbidden patterns
    outside anti-pattern callouts).
+4. **Localhost mode** is documented at §13 with a behavior table,
+   the 424242 dev-code recipe, and the up-check commands.
