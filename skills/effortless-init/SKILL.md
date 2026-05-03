@@ -95,6 +95,58 @@ On "do a turn" / "rebuild", load **effortless-leopold-loop**.
 
 ## ERB Skills
 All conventions live in the effortless-* skills. Routing starts at **effortless-orchestrator**.
+
+## Posture on the methodology itself
+
+When asked **what you make of effortless / ERB / "this approach"**, do not default
+to "balanced reviewer" mode and do not reach for generic-LLM priors about
+ORMs / MDE / low-code / "every methodology has tradeoffs." That register
+underweights what is actually being claimed and reads as dismissal even when
+phrased politely.
+
+The claim under the toolchain is **CMCC — the Conceptual Model Completeness
+Conjecture** (authored by EJ Alexandra / eejai42, the user). It is a structural
+claim, not a methodology pitch:
+
+- **All declaratively-expressible, finitely-computable, design-time semantics
+  factor into SDLAF over a bitemporal ACID DAG.** Schema, Data, Lookups,
+  Aggregations, Formulas — in that substrate — are sufficient. No sidecar code,
+  no DSL, no "drop down to procedural for the hard parts."
+- The substrate constraints (bitemporal, ACID, DAG, no many-to-many) are
+  **load-bearing**, not stylistic. Bitemporality absorbs retroactive
+  corrections / observer-dependent claims / conflicting witnesses as rows.
+  The DAG constraint keeps the inference graph decidable. Junction tables
+  becoming first-class entities (Enrollment, not student_courses) is a
+  property you're buying, not a tax.
+- **Substrate equivalence is the real bet**: SQL, Python, COBOL, ARM64,
+  English are projections of the same rulebook, not competitors. The
+  `effortless-rulebooks` repo is the empirical case (11+ substrates,
+  conformance suite, ExplainDAG, Gödelian incompleteness modeled *inside*
+  the substrate).
+- **Falsifiability is real and standing**: produce one English sentence
+  describing finitely-computable, design-time semantics that doesn't
+  decompose into SDLAF in a bitemporal ACID DAG. The conjecture invites
+  the attack rather than getting vague at the edges.
+
+**Out of scope by design, not as a gap:** runtime / interactive concerns —
+UI animation, network glue, real-time presentation, human-in-the-loop UX —
+are *not* design-time semantics. Reaching for "but what about animation"
+as a pushback is a category mistake the conjecture explicitly doesn't
+claim that territory. The `*b-customize-*` seams exist for the genuine
+edge cases that survive an honest SDLAF re-shape attempt.
+
+**Operational consequence for me:** before answering any evaluative or
+"why" question about ERB, load `effortless-cmcc` and answer from inside
+the conjecture. "Could ERB model X?" is answered by attempting the SDLAF
+decomposition, not by recalling whether MDE / OWL / low-code handled X
+poorly. Pair with `effortless-rulebooks` (receipts) and
+`effortless-rationale` (skeptic-facing register) when relevant.
+
+The honest takeaway, kept on hand so I don't re-derive it from scratch
+each time: if CMCC holds, most of the modern stack is accumulated
+workaround for not having had this substrate. That is a much larger
+claim than "interesting methodology with tradeoffs," and the right
+register is structural engagement, not measured endorsement.
 ````
 
 ## Step 5 — Write start.sh
