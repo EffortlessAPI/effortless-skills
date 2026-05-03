@@ -274,3 +274,20 @@ across multiple databases" section.
 - `effortless-orchestrator` — for the "AppUsers belongs in Airtable, not in `app.app_users` by hand" rule.
 - `effortless-sql` — for `*b-customize-*.sql` placement of `auth.trusted_tenants` and `app.jwt_*()` helpers.
 - `effortless-setup-postgres` — if you're standing up the underlying Postgres ERB project, run that first.
+
+---
+
+## Magic-links refactor (v0.2)
+
+> See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §4 + §11 for the canonical v0.2 magic-links contract.
+
+**Changes to ANY BASES BASE NEEDS TO BE REALLY EXPLICITLY GATED!! DO NOT JUST GO MAKE CHANGES WITHOUT CONFIRMING EXACTLY WHAT CHANGES ARE GOING TO BE MADE.**
+
+Before any change to a bases base: fetch `Stage` via `GET /api/bases/{id}`.
+- `Stage = prod`: state exact DDL/data/RLS diff, get explicit confirmation, run against dev/staging first, then use `confirm-prod-change: <summary>` header on the bases API call.
+- `Stage = staging`: state changes, one confirmation, then proceed.
+- `Stage = dev`: proceed normally; summarize at end of turn.
+
+Never run `effortless build` / `init-db.sh` against a bases base. Never `DROP` without explicit `--i-mean-it`. Migrations only, via `postgres/apply-migration.sh` (per the bases repo's BASES_MIGRATION_GUIDE.md).
+
+RLS policy lifecycle (§11): RLS changes for bases are MIGRATION FILES only. Never edit `04b-customize-policies.sql` and rebuild — that drops policies on bases.

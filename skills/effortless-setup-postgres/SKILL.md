@@ -397,3 +397,15 @@ something goes sideways.
 - `effortless-leopold-loop` — for the iterative cycle once setup is done.
 - `effortless-bases` — switch to this skill instead if the Postgres database is hosted on `bases.effortlessapi.com`.
 - [REFERENCE.md](REFERENCE.md) — long-tail content (preflight install options per OS, Step 7 prototype-app skeleton, Common Issues troubleshooting).
+
+---
+
+## Magic-links refactor (v0.2)
+
+> See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §1 + §9 + §12 for the canonical v0.2 magic-links contract.
+
+First-time bootstrap MUST install `install-magic-links.sql` from `magiclink.effortlessapi.com/install-magic-links/v1.sql` — see §1.
+
+When the project will talk to a bases base (presence of `BASES_DATABASE_URL` in `.env.example`, or user explicitly says so), generate the three artifacts listed in §9 (CLAUDE.md migration-only block + `postgres/apply-migration.sh` + `postgres/migrations/.applied.log`) BEFORE doing any other work.
+
+When the user opts in to custom claims, capture the plaintext `tenant_api_key` from the `POST /api/tenants` response and write `MAGICLINK_TENANT_API_KEY=…` to `server/.env` (gitignored). Never commit it. See §12.

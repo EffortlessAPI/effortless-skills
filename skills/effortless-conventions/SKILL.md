@@ -127,3 +127,15 @@ Arrows point from child (many-side) to parent (one-side). Data flows UPWARD thro
 - `effortless-orchestrator` — for the bigger mental model these conventions live inside.
 - `effortless-airtable-omni` — for OMNI prompts that respect the `Name` formula and singular-FK rules.
 - `effortless-sql` — for how PascalCase / `Name` / FK conventions translate to snake_case columns and `vw_*` views.
+
+---
+
+## Magic-links refactor (v0.2)
+
+> See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §6 for the canonical v0.2 magic-links contract.
+
+Anti-patterns to flag during a project audit:
+
+1. **`MagicLinkIntegration` / `ERBmagiclinks` rulebook tables** — auth state does not belong in the rulebook. The only source of truth is `auth.trusted_tenants` from `install-magic-links.sql`. Offer migration when seen.
+
+2. **v1 GUC-cache pattern** — raw `set_config('app.jwt_email', …)` from Node middleware + RLS reading `current_setting('app.jwt_email', true)` directly, with no `auth.set_jwt(token)` in transaction. The v2 shape is `BEGIN; SELECT auth.set_jwt($1); … COMMIT;` and policies use `app.jwt_email()`. Offer migration when seen.

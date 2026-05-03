@@ -253,3 +253,16 @@ For the catalog of public transpilers and their source repos, see `effortless-ec
 - `effortless-cmcc` — the conjecture that justifies the substrate-equivalence stance.
 - `effortless-rulebooks` — the empirical demonstration of multi-substrate equivalence.
 - `effortless-ecosystem` — the catalog of public transpiler repos and the orgs that maintain them.
+
+---
+
+## Magic-links refactor (v0.2)
+
+> See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §5 for the canonical v0.2 magic-links contract.
+
+New build modes from plan 04 (rulebook-to-postgres):
+- Default `check-don't-drop` (transpiler param `mode=check-add`): re-runs are safe; preserves data; runs all `NN[b]?-*.sql` files in lex order; re-runs `install-magic-links.sql` first. (NOTE: full SQL emission for check-add is Phase 2.5; the init-db.sh-side changes are live.)
+- Nuclear (`drop-all=true`): localhost only; the transpiler refuses for stage in {staging, prod}.
+- `.sql.disabled` skip: rename `04b-customize-policies.sql` → `.sql.disabled` to opt out for one build; init-db.sh logs `[SKIP]`.
+
+Always run with `check-don't-drop` against any base you didn't create in the same conversation. Nuclear is opt-in via the user typing it explicitly.

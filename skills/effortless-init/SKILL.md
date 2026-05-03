@@ -178,3 +178,14 @@ If the project uses nvm, bake the version switch into start.sh — see effortles
 - `effortless-cli` — `effortless -init`, `-login`, `-setAccountAPIKey`, install/update of the CLI binary itself.
 - `effortless-pipeline` — `effortless.json` structure and transpiler installation paths.
 - `effortless-orchestrator` — the ORCHESTRATION RULE about `/effortless-rulebook/` and the rest of the framing.
+
+---
+
+## Magic-links refactor (v0.2)
+
+> See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §9 for the canonical v0.2 magic-links contract.
+
+When initializing a project that will talk to a bases base, generate the three artifacts listed in §9 of MAGIC_LINKS_REFACTOR.md BEFORE doing any other initialization work:
+1. `## Bases is migration-only` block in CLAUDE.md.
+2. `postgres/apply-migration.sh` (fetched from the bases repo template).
+3. `postgres/migrations/.applied.log` + `.gitkeep`.

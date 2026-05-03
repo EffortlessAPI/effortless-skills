@@ -193,3 +193,14 @@ Sub-skills load automatically based on what you're doing:
 - `effortless-leopold-loop` — for the iterative dev cycle.
 - `effortless-query` — for the targeted JSON queries the Token Discipline section requires.
 - `effortless-conventions` — full naming/DAG rules.
+
+---
+
+## Magic-links refactor (v0.2)
+
+> See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §7 for the canonical v0.2 magic-links contract.
+
+Routing for magic-links work:
+- Anything touching `bases.effortlessapi.com` → route to `effortless-bases` (read its hard-gate block first).
+- Auth / RLS / tenant / `auth.trusted_tenants` / `app.jwt_email` / JWT-verify → `effortless-magic-links`.
+- Postgres bootstrap (init-db.sh / install / `effortless build` / schema changes) → `effortless-setup-postgres` AND ensure §1's canonical install step is part of the bootstrap.

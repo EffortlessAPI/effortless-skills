@@ -293,13 +293,36 @@ localStorage.setItem('jwt', jwt);
 
 All subsequent API calls send `Authorization: Bearer ${jwt}`.
 
-### Step 4 (optional) — push the verified email into Postgres (Pattern A)
+### Step 4 (optional) — push the verified email into Postgres
+
+> **Anti-pattern alert (v1 GUC-cache).** The Pattern A example below
+> (raw `set_config('app.jwt_email', …)` from app code + RLS reading
+> `current_setting('app.jwt_email', true)` directly) is the v1 shape.
+> It still works, but it bypasses the canonical contract.
+>
+> The v2 shape per
+> [`MAGIC_LINKS_REFACTOR.md §2`](../../MAGIC_LINKS_REFACTOR.md) is:
+>
+> ```sql
+> BEGIN;
+> SELECT auth.set_jwt($1);          -- $1 = the bearer token
+> SELECT * FROM documents;          -- RLS reads app.jwt_email()
+> COMMIT;
+> ```
+>
+> RLS policies use `app.jwt_email()` (a SECURITY DEFINER helper),
+> never `current_setting(...)` directly. The v1 pattern below is kept
+> here for the cold-reader who's reading old code and needs to
+> recognize it; new projects must use the v2 shape.
+
+#### Pattern A (LEGACY v1 — anti-pattern; use v2 above instead)
 
 If you want **the database** to filter rows by the JWT email (RLS),
 simplest is to have the app set a session GUC per request, then write
 policies that read it:
 
 ```sql
+-- LEGACY v1 anti-pattern. Use auth.set_jwt() + app.jwt_email() instead.
 -- Run once after connecting (or per request, before the query):
 SELECT set_config('app.jwt_email',  $1, true);  -- true = LOCAL to txn
 SELECT set_config('app.jwt_claims', $2, true);
@@ -322,18 +345,26 @@ For Pattern B (verify the JWT inside Postgres with `pgjwt` /
 
 ### Step 5 — write RLS policies (skip if the DB doesn't need to filter)
 
-```sql
-ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+> **Anti-pattern alert.** The example below uses the v1 `current_setting`
+> shape. The v2 shape is `app.jwt_email()` (a SECURITY DEFINER helper
+> installed by `install-magic-links.sql`). Use the v2 shape for new
+> policies; the v1 shape below is preserved so cold readers recognize
+> it in legacy code.
 
--- Default deny.
+```sql
+-- v2 (RECOMMENDED): policies call app.jwt_email() — see MAGIC_LINKS_REFACTOR.md §3.
+-- CREATE POLICY "owner_select_v2" ON documents
+--   FOR SELECT TO magiclink_consumer
+--   USING (owner_email = app.jwt_email());
+
+-- v1 (LEGACY anti-pattern; kept for recognition):
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "deny_all" ON documents FOR ALL USING (false);
 
--- Owner sees their rows.
 CREATE POLICY "owner_select" ON documents
   FOR SELECT
   USING (owner_email = current_setting('app.jwt_email', true));
 
--- Owner can write their own rows.
 CREATE POLICY "owner_modify" ON documents
   FOR ALL
   USING (owner_email = current_setting('app.jwt_email', true))
@@ -406,3 +437,15 @@ each statement gets a fresh GUC and your test reads NULL.
 - `effortless-bases` — switch to this skill if the project's database lives on `bases.effortlessapi.com`. Bases-specific endpoints (`/auth/generate-policy`, `/auth/apply-privileges-template`) and pre-installed `app.jwt_*()` helpers replace much of Steps 4–5 here.
 - `effortless-orchestrator` — if this is an ERB project, `AppUsers` belongs in Airtable, not in `app.app_users` by hand.
 - `effortless-sql` — for `*b-customize-*.sql` placement of `auth.trusted_tenants` and `app.jwt_*()` helpers in ERB projects.
+
+---
+
+## Magic-links refactor (v0.2)
+
+> See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §2 + §3 for the canonical v0.2 magic-links contract.
+
+REFERENCE.md does NOT inline the install SQL — it points at `https://magiclink.effortlessapi.com/install-magic-links/v1.sql` and documents the contract surface (`auth.set_jwt`, `app.jwt_email`, `app.jwt_tenant_id`, `app.jwt_claims`, `app.has_role`).
+
+DO-NOT: never put `tenant_id` / `public_key_pem` in the rulebook. Never create `ERBmagiclinks` or `MagicLinkIntegration` tables. Auth lives in `auth.trusted_tenants` only.
+
+RLS template idiom (§3): `USING (owned_by_email_address = app.jwt_email())` — never `current_setting(...)` directly.
