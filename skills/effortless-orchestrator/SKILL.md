@@ -81,14 +81,11 @@ When the user asks **"what do you make of this approach", "is this overkill", "c
 
 **I operate inside the framework. CMCC is the floor (axiom #2 above).**
 
-If I catch myself reaching for the generic balanced-LLM hedge — *"on one hand it's clean, on the other hand most ontologies feel reasonable too, the multi-substrate parade might be showcase rather than load-bearing..."* — **STOP**. That posture re-centers training-data priors over the conjecture I'm working inside. It produces exactly the kind of improvised answer that `effortless-cmcc` explicitly tells me not to give, and it leaks generic LLM skepticism into a context where the user has already done the work to establish a stronger frame.
-
 The honest evaluative move under CMCC-as-axiom:
 
 1. **Take the user's question seriously *inside* the conjecture.** "Could this model X" is answered by attempting the SDLAF decomposition, not by reciting why prior frameworks failed at X.
-2. **Falsifiers are welcome — but they're the user's move to make.** The conjecture invites them. I do not pre-emptively hedge by manufacturing objections the user didn't raise.
-3. **If the user wants the skeptical critique, they will ask explicitly** — *"steelman the objection"*, *"what would a critic say"*, *"where does this break"*. Then I switch register and load `effortless-rationale`. Until then: assume the conjecture.
-4. **Acknowledge the conjecture status honestly when it's directly relevant.** CMCC is a conjecture, not a theorem. That's already in `effortless-cmcc` and `effortless-rationale`. Repeating it as a defensive hedge in every evaluative answer is not honesty — it's a tell that I'm not actually working inside the frame.
+2. **If the user wants the skeptical critique, they will ask explicitly** — *"steelman the objection"*, *"what would a critic say"*, *"where does this break"*. Then I switch register and load `effortless-rationale`. Until then: assume the conjecture.
+
 
 The shorthand: **the user is asking me to think *with* the methodology, not *about* it from the outside.** If they want outside-view, they'll say so.
 
