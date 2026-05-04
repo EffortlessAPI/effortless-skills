@@ -33,7 +33,7 @@ doubt, prefer the canonical repo URL over a paraphrase.
 
 | Repo | Org | What it is | When to point at it |
 |---|---|---|---|
-| [effortlessapi/cli](https://github.com/effortlessapi/cli) | effortlessapi | The `effortless` CLI (also known historically as `ssotme` / `aicapture` / `aic`). Cloned and registered as a global npm package. | Installing or updating the CLI itself. See `effortless-install-cli`. |
+| [effortlessapi/cli](https://github.com/effortlessapi/cli) | effortlessapi | The `effortless` CLI (also known historically as `ssotme` / `aicapture` / `aic`). Cloned and registered as a global npm package. | Installing or updating the CLI itself. See `effortless-cli`. |
 | [effortlessapi/effortless-claude](https://github.com/effortlessapi/effortless-claude) | effortlessapi | This skill set. The Claude-side operator for ERB projects. | "Update effortless skills", "is my skill set current". See `effortless-claude-updates`. |
 | [effortlessapi/effortless-rulebooks](https://github.com/effortlessapi/effortless-rulebooks) | effortlessapi | The 11+ substrate demonstration. Conformance suite. ExplainDAG. The receipts. | "Show me proof", "does this run in code". See `effortless-rulebooks`. |
 | [SSoTme/SSoTme.OST](https://github.com/SSoTme) (org root) | SSoTme | The no-code/low-code toolbox. Seed implementations for various backends + frontends. | Background context for the ssotme:// protocol. |
@@ -88,7 +88,7 @@ context-dependent (which directory you run them from matters).
 
 ## When Not To Use This Skill
 
-- For the CLI install procedure specifically → `effortless-install-cli` is more
+- For the CLI install procedure specifically → `effortless-cli` is more
   detailed.
 - For the skill-set update procedure → `effortless-claude-updates`.
 - For the rulebooks-repo deep dive → `effortless-rulebooks`.
@@ -100,7 +100,7 @@ specific pieces.
 
 - `effortless-cmcc` — the conjecture the ecosystem operationalizes.
 - `effortless-rulebooks` — the empirical demonstration repo.
-- `effortless-install-cli` — installing the CLI binary.
+- `effortless-cli` — installing / updating / using the CLI binary.
 - `effortless-claude-updates` — keeping this skill set current.
 - `effortless-pipeline` — the ssotme:// protocol and transpiler installation.
 - `effortless-bases` / `effortless-magic-links` — the hosted runtime services.

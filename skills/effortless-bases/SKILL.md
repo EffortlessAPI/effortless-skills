@@ -88,20 +88,30 @@ BASES="https://bases.effortlessapi.com"
 SELF_JWT=$(jq -r .token "/tmp/magiclink-self-auth-$DEV_EMAIL.json" 2>/dev/null) \
   || { echo "Run the send-code/verify-code dance and cache the result first."; exit 1; }
 
-# 1. Create a tenant. Server generates the keypair.
+# 1. Create a tenant. Server generates the keypair. Pass project_name +
+#    display_name so the bases tenant list shows real names instead of
+#    UUIDs (per MAGIC_LINKS_REFACTOR.md §1).
 TENANT=$(curl -sS "$MAGICLINK/api/tenants" \
   -H "Authorization: Bearer $SELF_JWT" \
   -H "Content-Type: application/json" \
-  -d '{"from_email":"noreply@example.com","jwt_expires_in_seconds":3600}')
+  -d "{\"from_email\":\"noreply@example.com\",
+       \"jwt_expires_in_seconds\":3600,
+       \"project_name\":\"$PROJECT_NAME\",
+       \"display_name\":\"$PROJECT_NAME — $CONTEXT\"}")
 
 TENANT_ID=$(echo "$TENANT" | jq -r .tenant_id)
-PUBLIC_KEY=$(echo "$TENANT" | jq -r .public_key_pem)
 
-# 2. Register the trusted tenant on the base.
-psql "$BASE_ADMIN_URL" <<SQL
-INSERT INTO auth.trusted_tenants (tenant_id, public_key_pem, is_active)
-VALUES ('$TENANT_ID', '$PUBLIC_KEY', true);
-SQL
+# 2. Register the trusted tenant on the base by FETCHING the per-tenant
+#    install script — it contains the auth schema, the helpers, AND the
+#    auth.trusted_tenants row already inlined as the final stanza. This
+#    is the only legitimate way to register; we do NOT hand-INSERT, and
+#    we do NOT psql against bases directly. For a bases base, the
+#    fetch-then-apply happens via postgres/apply-migration.sh — not
+#    a raw `psql $BASES_DATABASE_URL`.
+curl -fSL "$MAGICLINK/api/tenants/$TENANT_ID/install.sql" \
+  -o postgres/migrations/0050-install-magic-links-tenant.sql
+bash postgres/apply-migration.sh \
+  postgres/migrations/0050-install-magic-links-tenant.sql
 
 # 3. Apply the two-role privilege template (admin + anon).
 curl -sS "$BASES/bases/$BASE_ID/auth/apply-privileges-template" \
@@ -218,7 +228,13 @@ on the consumer side via `auth.trusted_tenants`.
 4. Install the same `app.jwt_email()` / `app.jwt_claims()` helpers in the
    downstream Postgres so RLS policies can use them.
 5. The downstream app's middleware looks up `auth.trusted_tenants` by
-   `iss`, RS256-verifies, and `SET LOCAL app.jwt_claims` per request.
+   the `tenant_id` claim, RS256-verifies against that row's
+   `public_key_pem`, then opens a transaction and calls
+   `SELECT auth.set_jwt($1)` with the raw token. The helper writes
+   `app.jwt_*` as transaction-local GUCs; RLS reads them via
+   `app.jwt_email()` / `app.has_role()`. **Never** `set_config(...)`
+   or `SET LOCAL app.jwt_*` from app code — that's the v1 GUC-cache
+   anti-pattern and bypasses the in-DB validation.
 
 JWTs minted at `/api/tenants/<shared>/verify-code` now verify cleanly on
 both databases. No cross-API plumbing, no key rotation choreography.

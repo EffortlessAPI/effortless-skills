@@ -1,9 +1,9 @@
 # Magic Links — Reference (long-tail)
 
 This is the long-tail companion to [SKILL.md](SKILL.md). The core flow
-(axiom, checklist, Steps 0–3, RLS Pattern A, Common Mistakes) lives in
-SKILL.md. Anything below is reference-only — only load it when you are
-actually doing the thing it describes.
+(axiom, checklist, Steps 0–5, RLS, Common Mistakes) lives in SKILL.md.
+Anything below is reference-only — only load it when you are actually
+doing the thing it describes.
 
 ## Python / FastAPI middleware
 
@@ -26,47 +26,31 @@ def require_auth(authorization: str = Header(...)):
         raise HTTPException(401, "invalid_token")
 ```
 
-## Pattern B — verify the JWT inside Postgres
+## In-DB JWT verification (the canonical v2 path)
 
-Heavier than Pattern A — requires the `pgjwt` extension (or a custom
-plpgsql function that does RS256 verification). Only worth it if you
-cannot trust the caller to set the GUC, e.g. direct DB access. For most
-app-fronted DBs, **Pattern A in SKILL.md is correct.**
+The canonical `install-magic-links.sql` ships an in-DB verifier already:
+`auth.set_jwt(token text)` does the RS256 check against
+`auth.trusted_tenants` and writes `app.jwt_*` as transaction-local GUCs.
+Read it via the helpers (`app.jwt_email()`, `app.jwt_claims()`,
+`app.jwt_tenant_id()`, `app.has_role(role)`) — never `current_setting()`
+directly. The full contract surface lives at
+`magiclink.effortlessapi.com/AUTH_API_REFERENCE.md`.
 
-If you do need it, the shape:
+Per-request shape (replaces the old "Pattern A vs Pattern B" choice):
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS pgjwt;
-
--- Verify and return claims, or NULL on failure.
-CREATE OR REPLACE FUNCTION app.jwt_claims_from_header(hdr text)
-RETURNS jsonb
-LANGUAGE plpgsql STABLE
-AS $$
-DECLARE
-  pem text;
-  token text;
-  v jsonb;
-BEGIN
-  IF hdr IS NULL OR hdr NOT LIKE 'Bearer %' THEN RETURN NULL; END IF;
-  token := substring(hdr from 8);
-
-  SELECT public_key_pem INTO pem
-    FROM auth.trusted_tenants
-   WHERE tenant_id = (extensions.jwt_decode(token)->>'tenant_id')
-     AND is_active;
-
-  IF pem IS NULL THEN RETURN NULL; END IF;
-  -- Real implementation must RS256-verify against pem; pgjwt's verify_*()
-  -- helpers don't ship RS256 out of the box, so this typically wraps
-  -- plpython3 + cryptography. Treat the snippet as a sketch.
-  v := extensions.jwt_decode(token);
-  RETURN v;
-END $$;
+BEGIN;
+SELECT auth.set_jwt($1);          -- $1 = the bearer token
+SELECT * FROM documents;          -- RLS reads app.jwt_email()
+COMMIT;
 ```
 
-Most teams pick Pattern A, set the GUC at the connection-pool boundary,
-and skip pgjwt entirely.
+The middleware in the SKILL.md and "Sharing one tenant" sections shows
+this in JS. There is no longer a separate "Pattern B" to install — the
+in-DB verifier *is* the canonical path. The legacy Pattern A
+(`set_config('app.jwt_email', …)` from app code, RLS reading
+`current_setting(...)` directly) is preserved in SKILL.md only behind
+anti-pattern banners so cold readers can recognize it in old code.
 
 ## Gotcha: recursion when the role resolver reads an RLS-protected table
 
@@ -138,33 +122,40 @@ key in its registry.
 ### The pattern
 
 Pick (or mint) **one** tenant, then in **every** Postgres that should
-honor its JWTs:
+honor its JWTs, install the canonical auth contract:
 
-```sql
-CREATE SCHEMA IF NOT EXISTS auth;
-
-CREATE TABLE IF NOT EXISTS auth.trusted_tenants (
-  tenant_id      text PRIMARY KEY,
-  public_key_pem text NOT NULL,
-  is_active      boolean NOT NULL DEFAULT true,
-  added_at       timestamptz NOT NULL DEFAULT now()
-);
-
-INSERT INTO auth.trusted_tenants (tenant_id, public_key_pem)
-VALUES ('<shared-tenant-id>', '<public_key_pem>')
-ON CONFLICT (tenant_id) DO UPDATE
-  SET public_key_pem = EXCLUDED.public_key_pem,
-      is_active = true;
+```bash
+# Per-tenant install — auth schema + helpers + the trusted_tenants
+# row already inlined as the final stanza. Idempotent.
+curl -fSL https://magiclink.effortlessapi.com/api/tenants/<shared-tenant-id>/install.sql \
+  | psql "$DATABASE_URL"
 ```
+
+That single script creates `auth.trusted_tenants`, the `auth.set_jwt`
+function, the `app.jwt_email()` / `app.jwt_claims()` / `app.jwt_tenant_id()` /
+`app.has_role()` helpers, and inserts the shared tenant's row. Re-running
+it picks up `public_key_pem` rotations via `ON CONFLICT DO UPDATE`. To
+add a *second* shared tenant later, just fetch `/api/tenants/<other-id>/install.sql`
+and re-run — the schema/helper bits are no-ops, only the new
+`auth.trusted_tenants` row gets inserted.
+
+Do **not** hand-author the schema or the helpers; that's what put the v1
+GUC-cache anti-pattern into circulation. The canonical script is the
+single source of truth (see `MAGIC_LINKS_REFACTOR.md` §2).
 
 Per request, the app middleware:
 
-1. Reads the Bearer JWT, decodes the header + `iss` claim **without**
-   verifying.
-2. Looks up `auth.trusted_tenants` by `tenant_id = iss AND is_active`.
-3. RS256-verifies the JWT against that row's `public_key_pem`, with
-   `issuer: tenant_id`.
-4. Sets `app.jwt_email` / `app.jwt_claims` GUCs (Pattern A) so RLS fires.
+1. Reads the Bearer JWT, decodes the header + `iss`/`tenant_id` claim
+   **without** verifying.
+2. Looks up `auth.trusted_tenants` by `tenant_id` (the bare UUID — not
+   the URL-shaped `iss` claim) and confirms `is_active`.
+3. RS256-verifies the JWT against that row's `public_key_pem`, passing
+   the unverified `iss` as the expected issuer.
+4. Opens a transaction and calls `SELECT auth.set_jwt($1)` with the raw
+   token. The helper validates again against `auth.trusted_tenants`,
+   then writes `app.jwt_*` as transaction-local GUCs. RLS policies that
+   call `app.jwt_email()` / `app.has_role()` see the verified identity
+   for the rest of the transaction.
 
 ```js
 import jwt from 'jsonwebtoken';
@@ -174,35 +165,48 @@ export async function requireAuth(req, res, next) {
   if (!auth?.startsWith('Bearer ')) return res.status(401).end();
   const token = auth.slice(7);
 
-  // Peek at iss without verifying.
+  // Peek at the JWT to find which trusted_tenants row to verify against.
   const unverified = jwt.decode(token);
-  if (!unverified?.iss) return res.status(401).end();
+  if (!unverified?.tenant_id || !unverified?.iss) return res.status(401).end();
 
   const { rows } = await pool.query(
     `SELECT public_key_pem FROM auth.trusted_tenants
      WHERE tenant_id = $1 AND is_active = true`,
-    [unverified.iss],
+    [unverified.tenant_id],
   );
   if (!rows.length) return res.status(401).end();
 
   try {
-    req.user = jwt.verify(token, rows[0].public_key_pem, {
+    jwt.verify(token, rows[0].public_key_pem, {
       algorithms: ['RS256'],
       issuer: unverified.iss,
     });
-    next();
   } catch {
-    res.status(401).end();
+    return res.status(401).end();
   }
+
+  // Hand the (now signature-verified) token to the database. auth.set_jwt
+  // re-validates against auth.trusted_tenants and populates app.jwt_*
+  // GUCs as transaction-local — RLS reads them via app.jwt_email() etc.
+  req.dbTx = await pool.connect();
+  await req.dbTx.query('BEGIN');
+  await req.dbTx.query('SELECT auth.set_jwt($1)', [token]);
+  res.on('finish', async () => {
+    try { await req.dbTx.query('COMMIT'); } finally { req.dbTx.release(); }
+  });
+  next();
 }
 ```
 
 ### Adding a second tenant later (zero downtime)
 
-Just `INSERT` another row. Existing JWTs keep verifying against their
-issuer's row; new JWTs from the new tenant verify against theirs. To
-revoke, set `is_active = false` — outstanding JWTs from that issuer stop
-being honored on the next request.
+Re-run `curl …/api/tenants/<other-id>/install.sql | psql …` against the
+same database. The schema/helper bits no-op; the new tenant's row gets
+inserted into `auth.trusted_tenants`. Existing JWTs keep verifying
+against their issuer's row; new JWTs from the new tenant verify against
+theirs. To revoke, `UPDATE auth.trusted_tenants SET is_active = false
+WHERE tenant_id = '<id>'` — outstanding JWTs from that issuer stop being
+honored on the next request (auth.set_jwt rejects them).
 
 ### Anti-pattern
 

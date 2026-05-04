@@ -48,7 +48,7 @@ If the user gives you only an Airtable **base id** (e.g. `appXXXXXXXX`) and noth
 
 ## Prerequisites
 
-- `effortless` CLI installed and logged in (`effortless -login`) — see `effortless-install-cli` skill
+- `effortless` CLI installed and logged in (`effortless -login`) — see `effortless-cli` skill
 - Airtable API key configured (`effortless -setAccountAPIKey airtable=pat...`)
 - PostgreSQL running locally
 - Docker (optional — only required if the user wants the containerized postgres path)
@@ -392,7 +392,7 @@ something goes sideways.
 ## See also
 
 - `effortless-orchestrator` — for the canonical Token Discipline + the bigger mental model.
-- `effortless-install-cli` — for installing the `effortless` CLI binary if it's missing in preflight.
+- `effortless-cli` — for installing / updating / using the `effortless` CLI binary if it's missing in preflight.
 - `effortless-cli` / `effortless-pipeline` — for the install / build commands this skill drives.
 - `effortless-leopold-loop` — for the iterative cycle once setup is done.
 - `effortless-bases` — switch to this skill instead if the Postgres database is hosted on `bases.effortlessapi.com`.

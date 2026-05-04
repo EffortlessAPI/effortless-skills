@@ -110,7 +110,7 @@ Before `omni-send.mjs` will run end-to-end, all of these must be true:
 
 1. **Node 18+ on PATH.** The script uses ESM (`.mjs`) and modern syntax.
    `node --version` should report ≥ 18. If the user is still on Node 16,
-   point them at `effortless-install-cli` — the same Node 20 guidance applies.
+   point them at `effortless-cli` — the same Node 20 guidance applies.
 2. **Playwright + a Chromium browser.** Project-local install is preferred so
    the script runs reliably from `~/.claude/skills/effortless-airtable-omni/`:
    ```bash

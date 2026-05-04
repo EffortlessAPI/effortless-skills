@@ -30,11 +30,10 @@ This skill is the **generic** flow: any project, any Postgres database. For
 the bases-specific flow (auto-RLS templates, `auth.trusted_tenants`,
 `/auth/generate-policy`), use the `effortless-bases` skill instead.
 
-> Long-tail material — Pattern B (in-DB JWT verification), the recursion
-> gotcha for `app.jwt_role()`, the multi-DB tenant-sharing pattern, the
-> FastAPI middleware flavor, the full refresh flow, and the cheat sheet —
-> lives in [REFERENCE.md](REFERENCE.md). The core flow (Steps 0–3, RLS
-> Pattern A, Common Mistakes) stays here.
+> Long-tail material — the recursion gotcha for `app.jwt_role()`, the
+> multi-DB tenant-sharing pattern, the FastAPI middleware flavor, the full
+> refresh flow, and the cheat sheet — lives in [REFERENCE.md](REFERENCE.md).
+> The core flow (Steps 0–5, RLS, Common Mistakes) stays here.
 
 ## "AppUsers" / "Roles" / "Profiles" tables belong in the consuming app, NOT in `app.*`
 
@@ -295,112 +294,97 @@ All subsequent API calls send `Authorization: Bearer ${jwt}`.
 
 ### Step 4 (optional) — push the verified email into Postgres
 
-> **Anti-pattern alert (v1 GUC-cache).** The Pattern A example below
-> (raw `set_config('app.jwt_email', …)` from app code + RLS reading
-> `current_setting('app.jwt_email', true)` directly) is the v1 shape.
-> It still works, but it bypasses the canonical contract.
->
-> The v2 shape per
-> [`MAGIC_LINKS_REFACTOR.md §2`](../../MAGIC_LINKS_REFACTOR.md) is:
->
-> ```sql
-> BEGIN;
-> SELECT auth.set_jwt($1);          -- $1 = the bearer token
-> SELECT * FROM documents;          -- RLS reads app.jwt_email()
-> COMMIT;
-> ```
->
-> RLS policies use `app.jwt_email()` (a SECURITY DEFINER helper),
-> never `current_setting(...)` directly. The v1 pattern below is kept
-> here for the cold-reader who's reading old code and needs to
-> recognize it; new projects must use the v2 shape.
-
-#### Pattern A (LEGACY v1 — anti-pattern; use v2 above instead)
-
 If you want **the database** to filter rows by the JWT email (RLS),
-simplest is to have the app set a session GUC per request, then write
-policies that read it:
+install the canonical `install-magic-links.sql` once (per `MAGIC_LINKS_REFACTOR.md`
+§1), then per request hand the bearer token to `auth.set_jwt(token)`
+inside a transaction. The helper RS256-verifies against
+`auth.trusted_tenants` and writes `app.jwt_*` as transaction-local GUCs;
+RLS policies read them via the `app.jwt_*()` helpers.
 
 ```sql
--- LEGACY v1 anti-pattern. Use auth.set_jwt() + app.jwt_email() instead.
--- Run once after connecting (or per request, before the query):
-SELECT set_config('app.jwt_email',  $1, true);  -- true = LOCAL to txn
+BEGIN;
+SELECT auth.set_jwt($1);          -- $1 = the raw bearer token (TEXT)
+SELECT * FROM documents;          -- RLS reads app.jwt_email()
+COMMIT;
+```
+
+That's the entire wire-up — no `set_config` from app code, no manual
+GUC threading, no second JWT-decode step. The token is verified once,
+inside the database, against the registry. Connection-pool friendly:
+the GUCs are transaction-local, so a checked-in connection cannot leak
+identity to the next request.
+
+#### Anti-pattern: v1 GUC-cache
+
+If you see this shape in old code, it's the **v1 anti-pattern**. RLS
+still fires, but the database trusts whatever the app put in the GUC
+without verifying. Migrate it to the v2 shape above:
+
+```sql
+-- DO NOT WRITE THIS. Recognize it in legacy code, then migrate.
+SELECT set_config('app.jwt_email',  $1, true);
 SELECT set_config('app.jwt_claims', $2, true);
+-- ... and policies that read current_setting('app.jwt_email', true) directly.
 ```
 
-```sql
--- In RLS policies:
-CREATE POLICY "owner_access" ON documents
-  FOR ALL
-  USING (
-    owner_email = current_setting('app.jwt_email', true)
-  );
-```
-
-`current_setting('...', true)` returns NULL when unset → policy fails
-closed.
-
-For Pattern B (verify the JWT inside Postgres with `pgjwt` /
-`plpython`), see [REFERENCE.md → Pattern B](REFERENCE.md#pattern-b--verify-the-jwt-inside-postgres).
+Migration recipe: install `install-magic-links.sql`, replace each Node
+`requireAuth` middleware that called `set_config(...)` with `BEGIN; SELECT
+auth.set_jwt($token); …; COMMIT;`, and rewrite RLS policies to call
+`app.jwt_email()` instead of `current_setting(...)`. See `effortless-conventions/SKILL.md`
+"v1 GUC-cache pattern" for the audit checklist.
 
 ### Step 5 — write RLS policies (skip if the DB doesn't need to filter)
 
-> **Anti-pattern alert.** The example below uses the v1 `current_setting`
-> shape. The v2 shape is `app.jwt_email()` (a SECURITY DEFINER helper
-> installed by `install-magic-links.sql`). Use the v2 shape for new
-> policies; the v1 shape below is preserved so cold readers recognize
-> it in legacy code.
+Policies call the `app.jwt_*()` helpers — never `current_setting()`
+directly. The helpers fail closed when no JWT has been set.
 
 ```sql
--- v2 (RECOMMENDED): policies call app.jwt_email() — see MAGIC_LINKS_REFACTOR.md §3.
--- CREATE POLICY "owner_select_v2" ON documents
---   FOR SELECT TO magiclink_consumer
---   USING (owner_email = app.jwt_email());
-
--- v1 (LEGACY anti-pattern; kept for recognition):
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "deny_all" ON documents FOR ALL USING (false);
 
 CREATE POLICY "owner_select" ON documents
-  FOR SELECT
-  USING (owner_email = current_setting('app.jwt_email', true));
+  FOR SELECT TO magiclink_consumer
+  USING (owner_email = app.jwt_email());
 
 CREATE POLICY "owner_modify" ON documents
-  FOR ALL
-  USING (owner_email = current_setting('app.jwt_email', true))
-  WITH CHECK (owner_email = current_setting('app.jwt_email', true));
+  FOR ALL TO magiclink_consumer
+  USING (owner_email = app.jwt_email())
+  WITH CHECK (owner_email = app.jwt_email());
+
+-- Admin sees everything (role comes from the JWT's additional_claims).
+CREATE POLICY "admin_select" ON documents
+  FOR SELECT TO magiclink_consumer
+  USING (app.has_role('admin'));
 ```
 
-Test with a JWT email vs without:
+Smoke-test with a real token (no shortcuts via `SET LOCAL`):
+
 ```sql
-SET LOCAL app.jwt_email = 'alice@example.com';
-SELECT * FROM documents;  -- only Alice's rows
-RESET app.jwt_email;
-SELECT * FROM documents;  -- empty (deny_all wins)
+BEGIN;
+  SELECT auth.set_jwt('<paste a real bearer token>');
+  SELECT app.jwt_email(), app.jwt_tenant_id(), app.has_role('admin');
+  SET LOCAL ROLE app_anon;
+  SELECT count(*) FROM documents;        -- filtered by RLS
+COMMIT;
 ```
 
-> If `app.jwt_role()` reads an RLS-protected table, you can hit a
-> recursion bug — `stack depth limit exceeded` on every authenticated
-> request. The fix (mark the resolver `SET row_security = off`) is in
+Without the surrounding `BEGIN`/`COMMIT` the GUCs evaporate between
+statements and the test reads NULL — so always wrap.
+
+> If `app.jwt_role()` (or any helper) reads an RLS-protected table, you
+> can hit a recursion bug — `stack depth limit exceeded` on every
+> authenticated request. The fix (mark the resolver `SECURITY DEFINER` +
+> `SET row_security = off`) is in
 > [REFERENCE.md → Recursion gotcha](REFERENCE.md#gotcha-recursion-when-the-role-resolver-reads-an-rls-protected-table).
 
 ## "It started up" is not "it works"
 
 `200 /healthz` proves a process bound a port. It does not prove JWT
 verification, RLS, role lookup, or view grants work. Before declaring an
-auth/RLS change done, run an actual role-aware smoke test:
-
-```sql
-BEGIN;
-  SELECT set_config('app.jwt_claims', '{"email":"<admin>","tenant_id":"..."}', true);
-  SELECT app.jwt_email(), app.jwt_role(), app.jwt_is_admin();
-  SET LOCAL ROLE app_anon;
-  SELECT count(*) FROM <protected_view>;
-COMMIT;
-```
-
-`set_config(..., true)` is transaction-local — without `BEGIN`/`COMMIT`
-each statement gets a fresh GUC and your test reads NULL.
+auth/RLS change done, run the smoke test in Step 5 with a real bearer
+token — the `auth.set_jwt` round-trip is what catches a missing
+`auth.trusted_tenants` row, a wrong role grant, or a policy that
+references a column that no longer exists.
 
 ---
 
@@ -425,15 +409,18 @@ each statement gets a fresh GUC and your test reads NULL.
 - **Putting bases-side knowledge into magic-links via a custom endpoint.**
   Use `additional_claims` instead — they bake straight into the JWT, and
   reserved claims always win.
-- **Persisting `app.jwt_email` as a session-wide setting.** Use `SET
-  LOCAL` (txn-scoped) so it cannot leak across requests on a pooled
-  connection.
+- **Setting `app.jwt_email` from app code at all.** That's the v1
+  GUC-cache anti-pattern — the database trusts whatever you wrote.
+  Hand the raw token to `SELECT auth.set_jwt($1)` inside a transaction
+  and let the helper validate + populate the GUCs. It's transaction-local
+  by construction, so a pooled connection cannot leak identity to the
+  next request.
 
 ---
 
 ## See also
 
-- [REFERENCE.md](REFERENCE.md) — long-tail material kept out of the core: Python/FastAPI middleware, Pattern B (in-DB JWT verification), the role-resolver recursion gotcha, refresh flow, multi-database tenant sharing, full cheat sheet.
+- [REFERENCE.md](REFERENCE.md) — long-tail material kept out of the core: Python/FastAPI middleware, the role-resolver recursion gotcha, refresh flow, multi-database tenant sharing, full cheat sheet.
 - `effortless-bases` — switch to this skill if the project's database lives on `bases.effortlessapi.com`. Bases-specific endpoints (`/auth/generate-policy`, `/auth/apply-privileges-template`) and pre-installed `app.jwt_*()` helpers replace much of Steps 4–5 here.
 - `effortless-orchestrator` — if this is an ERB project, `AppUsers` belongs in Airtable, not in `app.app_users` by hand.
 - `effortless-sql` — for `*b-customize-*.sql` placement of `auth.trusted_tenants` and `app.jwt_*()` helpers in ERB projects.

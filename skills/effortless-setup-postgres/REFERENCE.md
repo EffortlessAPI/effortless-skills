@@ -16,7 +16,7 @@ machine for years.
 
 ### `effortless` CLI
 
-- **Option A (recommended):** install via the `effortless-install-cli` skill — clones the repo and registers `effortless` globally via npm. Load that skill and follow it.
+- **Option A (recommended):** install via the `effortless-cli` skill — clones the repo and registers `effortless` globally via npm. Load that skill and follow it.
 - **Option B:** the user already has it under a different name (`ssotme` / `aicapture` / `aic`) — ask them to confirm and we'll alias.
 - After install: `effortless -login` and `effortless -setAccountAPIKey airtable=pat...` if not already configured.
 
@@ -142,7 +142,7 @@ invoking the skill.
 | `startIndex cannot be larger than length of string` during install | Silent registration failure (separate from cwd behavior — files were still written correctly). Append the transpiler entry to `effortless.json` by hand (see Steps 3 and 5 in SKILL.md). |
 | Generated SQL files at project root after install | `-install` was run from the wrong cwd (likely from project root instead of from inside `/postgres/`). Delete the misplaced files at root and redo the install from inside `/postgres/`. See "GOLDEN RULE" section in SKILL.md. |
 | Only `airtable-to-rulebook` registered in `effortless.json` | Silent registration failure on `rulebook-to-postgres` install. Manually append the `rulebook-to-postgres` and `initdb` entries (see Steps 3 and 5 in SKILL.md). |
-| `effortless: command not found` | See `effortless-install-cli` skill. |
+| `effortless: command not found` | See `effortless-cli` skill. |
 | `401 Unauthorized` | `effortless -setAccountAPIKey airtable=pat...` |
 | `database does not exist` | `createdb <db-name>` first. |
 | Empty rulebook | Verify baseId, verify API key has access. |
