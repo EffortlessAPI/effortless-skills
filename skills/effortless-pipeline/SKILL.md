@@ -154,6 +154,19 @@ postgres/            output.xlsx          README.SCHEMA.md
 Running PostgreSQL Database
 ```
 
+## Two deployment shapes — and only one of them uses migrations
+
+The pipeline above ends at the same generated SQL regardless of where it lands. What differs is **how that SQL is applied to a live DB**:
+
+| Shape | How schema is applied | Has `migrations/`? | Has migrations tracking table? |
+|-------|----------------------|--------------------|---------------------------------|
+| **Local-dev Postgres** (default) | `init-db.sh` drops + recreates the DB on every build | NO | NO |
+| **Bases** (`bases.effortlessapi.com`) | `postgres/apply-migration.sh` applies one delta file at a time | YES (`postgres/migrations/`) | YES (`.applied.log`) |
+
+**Schema still originates in Airtable on both paths.** Bases doesn't author schema in migration files — it *delivers* rulebook deltas to a DB that can't be dropped. Never author business entities directly in a migration file; never write a migration on a local-dev project.
+
+If the project has no `BASES_DATABASE_URL` and no "Bases is migration-only" block in CLAUDE.md, you're on the local-dev shape: **no migrations, ever.** See `effortless-workflow` "NO MIGRATIONS" for the canonical rule.
+
 ## Multi-Substrate Architecture
 
 The rulebook is **substrate-agnostic**. The same JSON generates equivalent implementations across:

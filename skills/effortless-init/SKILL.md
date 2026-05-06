@@ -77,6 +77,7 @@ This is an Effortless Rulebook (ERB) project. All development follows the effort
 5. **Ask permission** before modifying the rulebook, Airtable, or running `effortless build`.
 6. **Always run `effortless build`** after any Airtable schema or data change.
 7. **Never reimplement business logic** in app code — consume calculated fields from views as opaque truth.
+8. **NO MIGRATIONS on this project's local Postgres.** `init-db.sh` drops + recreates the DB on every build — there is no `migrations/` folder, no migrations tracking table, no incremental SQL deltas. Never run `ALTER TABLE` against the live DB, never write SQL into `postgres/migrations/`, never insert into a `migrations` log. If the answer feels like "write a migration," the answer is **"edit Airtable and rerun `effortless build`."** Bases-hosted DBs (`bases.effortlessapi.com`) are the lone exception — see `effortless-bases`.
 
 ## Airtable Base
 - Base ID: {baseId}

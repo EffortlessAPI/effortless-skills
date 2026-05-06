@@ -19,6 +19,19 @@ audience: customer
 > anything; query lightly with `psql -c "\d vw_<table>"` or the one-liners
 > in `effortless-query`.
 
+> **NO MIGRATIONS on local-dev Postgres.** What this skill sets up is a
+> **regenerate-from-scratch** database. `init-db.sh` drops the DB and
+> recreates it from the freshly generated SQL on every `effortless build`.
+> There is no `migrations/` folder, no migrations tracking table, no
+> incremental deltas. **Schema changes go through Airtable → `effortless
+> build`, never through `ALTER TABLE` or a migration file.** The single
+> exception is `bases.effortlessapi.com`-hosted DBs (see "Magic-links
+> refactor (v0.2)" at the bottom of this skill + `effortless-bases`) —
+> those use `postgres/apply-migration.sh` because they can't be dropped.
+> Even there, schema still originates in Airtable. If your instinct says
+> "write a migration," the answer is **"edit Airtable and rerun
+> `effortless build`."** Full rule lives in `effortless-workflow`.
+
 > Long-tail material — the per-OS preflight install guidance for missing
 > tools, the Step 7 prototype-app + `start.sh` scaffolding, and the
 > Common Issues troubleshooting table — lives in [REFERENCE.md](REFERENCE.md).
@@ -222,6 +235,33 @@ each time: if CMCC holds, most of the modern stack is accumulated
 workaround for not having had this substrate. That is a much larger
 claim than "interesting methodology with tradeoffs," and the right
 register is structural engagement, not measured endorsement.
+
+## NO MIGRATIONS — read before touching Postgres
+
+This project's local Postgres DB is **regenerated from scratch on every
+`effortless build`** via `init-db.sh` (drop + recreate). There is no
+`migrations/` folder, no migrations tracking table, no incremental SQL
+deltas in this paradigm.
+
+**To change schema, RLS, calculated fields, or seed data:**
+1. Edit Airtable (or the rulebook for hand-authored projects).
+2. Run `effortless build`.
+3. The DB is wiped and rebuilt. Done.
+
+**Never on this DB:**
+- Run `CREATE TABLE` / `ALTER TABLE` / `DROP TABLE` against the local DB.
+- Create files under `postgres/migrations/` (folder shouldn't exist for a
+  local-dev project — it's an artifact of the bases-only path).
+- Insert into a `migrations` (or `schema_migrations`) tracking table.
+- Edit generated `0*.sql` files in `postgres/` (they get overwritten).
+
+**The redirect:** if the answer feels like "write a migration," the
+answer is **"edit Airtable and rerun `effortless build`."**
+
+The single exception is `bases.effortlessapi.com`-hosted databases (tell:
+`BASES_DATABASE_URL` in `.env.example`) — those use
+`postgres/apply-migration.sh` because they can't be dropped + recreated.
+Even there, schema originates in Airtable. See the effortless-bases skill.
 
 ## Build discipline (applies every time)
 

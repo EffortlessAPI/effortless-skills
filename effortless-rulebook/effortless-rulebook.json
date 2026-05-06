@@ -1,8 +1,7 @@
 {
   "$schema": "https://example.com/cmcc-schema/v1",
   "Name": "Effortless Claude",
-  "Description": "Self-describing rulebook for the effortless-claude skill suite. The skills repo modeled with its own methodology — each skill is a row, each high-level attribute (category, scope gate, audience) is a parent table.",
-
+  "Description": "Self-describing rulebook for the effortless-claude skill suite. The skills repo modeled with its own methodology \u2014 each skill is a row, each high-level attribute (category, scope gate, audience) is a parent table.",
   "Audiences": {
     "Description": "Intended consumer of a skill's behavior. customer = end users of the suite; general = applicable beyond marked Effortless projects.",
     "schema": [
@@ -11,7 +10,7 @@
         "datatype": "string",
         "type": "calculated",
         "nullable": false,
-        "Description": "Logical PK — kebab-cased audience label.",
+        "Description": "Logical PK \u2014 kebab-cased audience label.",
         "formula": "=SUBSTITUTE(LOWER({{AudienceLabel}}), \" \", \"-\")"
       },
       {
@@ -48,7 +47,7 @@
     "data": [
       {
         "AudienceLabel": "customer",
-        "Description": "Default — skill is for users of the effortless-claude suite working in (or about to work in) Effortless projects."
+        "Description": "Default \u2014 skill is for users of the effortless-claude suite working in (or about to work in) Effortless projects."
       },
       {
         "AudienceLabel": "general",
@@ -56,7 +55,6 @@
       }
     ]
   },
-
   "SkillCategories": {
     "Description": "Functional grouping of skills as presented in the README. Categories are presentation/discovery groupings, not load-gate semantics (that's ScopeGateTypes).",
     "schema": [
@@ -65,7 +63,7 @@
         "datatype": "string",
         "type": "calculated",
         "nullable": false,
-        "Description": "Logical PK — kebab-cased category label.",
+        "Description": "Logical PK \u2014 kebab-cased category label.",
         "formula": "=SUBSTITUTE(LOWER({{CategoryLabel}}), \" \", \"-\")"
       },
       {
@@ -107,19 +105,58 @@
       }
     ],
     "data": [
-      { "CategoryLabel": "Orchestration",         "Description": "Top-level mental model and routing across the suite.",                                              "SortOrder": 1 },
-      { "CategoryLabel": "Project Lifecycle",     "Description": "Bootstrap, init, setup, iteration loop, and skill-set maintenance.",                                "SortOrder": 2 },
-      { "CategoryLabel": "CLI",                   "Description": "Install, update, and use the effortless command-line tool.",                                        "SortOrder": 3 },
-      { "CategoryLabel": "Schema and Conventions","Description": "Structure of effortless-rulebook.json, naming/DAG/FK rules, token-efficient queries.",              "SortOrder": 4 },
-      { "CategoryLabel": "Workflow and Build",    "Description": "Path A vs Path B change discipline and the build pipeline internals.",                              "SortOrder": 5 },
-      { "CategoryLabel": "Airtable Interaction",  "Description": "API-first scalar/CRUD changes and the OMNI escape hatch for formula/lookup/rollup fields.",         "SortOrder": 6 },
-      { "CategoryLabel": "Generated Code",        "Description": "Patterns for the generated SQL artifacts and where customizations belong.",                          "SortOrder": 7 },
-      { "CategoryLabel": "Auth and Deployment",   "Description": "Hosted-base flow and portable magic-link auth wiring.",                                              "SortOrder": 8 },
-      { "CategoryLabel": "Diagnostics",           "Description": "DAG validation, broken-FK checks, JOIN anti-pattern detection, legacy-code migration helpers.",      "SortOrder": 9 },
-      { "CategoryLabel": "Theory and Receipts",   "Description": "CMCC theory, runnable conformance proofs, skeptic-facing rationale, OSS ecosystem catalog.",         "SortOrder": 10 }
+      {
+        "CategoryLabel": "Orchestration",
+        "Description": "Top-level mental model and routing across the suite.",
+        "SortOrder": 1
+      },
+      {
+        "CategoryLabel": "Project Lifecycle",
+        "Description": "Bootstrap, init, setup, iteration loop, and skill-set maintenance.",
+        "SortOrder": 2
+      },
+      {
+        "CategoryLabel": "CLI",
+        "Description": "Install, update, and use the effortless command-line tool.",
+        "SortOrder": 3
+      },
+      {
+        "CategoryLabel": "Schema and Conventions",
+        "Description": "Structure of effortless-rulebook.json, naming/DAG/FK rules, token-efficient queries.",
+        "SortOrder": 4
+      },
+      {
+        "CategoryLabel": "Workflow and Build",
+        "Description": "Path A vs Path B change discipline and the build pipeline internals.",
+        "SortOrder": 5
+      },
+      {
+        "CategoryLabel": "Airtable Interaction",
+        "Description": "API-first scalar/CRUD changes and the OMNI escape hatch for formula/lookup/rollup fields.",
+        "SortOrder": 6
+      },
+      {
+        "CategoryLabel": "Generated Code",
+        "Description": "Patterns for the generated SQL artifacts and where customizations belong.",
+        "SortOrder": 7
+      },
+      {
+        "CategoryLabel": "Auth and Deployment",
+        "Description": "Hosted-base flow and portable magic-link auth wiring.",
+        "SortOrder": 8
+      },
+      {
+        "CategoryLabel": "Diagnostics",
+        "Description": "DAG validation, broken-FK checks, JOIN anti-pattern detection, legacy-code migration helpers.",
+        "SortOrder": 9
+      },
+      {
+        "CategoryLabel": "Theory and Receipts",
+        "Description": "CMCC theory, runnable conformance proofs, skeptic-facing rationale, OSS ecosystem catalog.",
+        "SortOrder": 10
+      }
     ]
   },
-
   "ScopeGateTypes": {
     "Description": "When the harness loads a skill into context. The four patterns referenced in the skill-writing conventions (project-only / entry-point / tooling / theory).",
     "schema": [
@@ -128,7 +165,7 @@
         "datatype": "string",
         "type": "calculated",
         "nullable": false,
-        "Description": "Logical PK — kebab-cased gate label.",
+        "Description": "Logical PK \u2014 kebab-cased gate label.",
         "formula": "=SUBSTITUTE(LOWER({{GateLabel}}), \" \", \"-\")"
       },
       {
@@ -143,7 +180,7 @@
         "datatype": "string",
         "type": "raw",
         "nullable": false,
-        "Description": "When this gate fires — paraphrased from the skill description's Scope (load gate) clause."
+        "Description": "When this gate fires \u2014 paraphrased from the skill description's Scope (load gate) clause."
       },
       {
         "name": "RequiresMarker",
@@ -203,7 +240,6 @@
       }
     ]
   },
-
   "Skills": {
     "Description": "One row per SKILL.md under skills/. The 23 currently live skills in the suite. Deprecation history is in DEPRECATED_SKILLS.md, not here.",
     "schema": [
@@ -212,7 +248,7 @@
         "datatype": "string",
         "type": "calculated",
         "nullable": false,
-        "Description": "Logical PK — equals the kebab-cased Slug, which equals the directory name.",
+        "Description": "Logical PK \u2014 equals the kebab-cased Slug, which equals the directory name.",
         "formula": "=SUBSTITUTE(LOWER({{Slug}}), \" \", \"-\")"
       },
       {
@@ -220,21 +256,21 @@
         "datatype": "string",
         "type": "raw",
         "nullable": false,
-        "Description": "Skill folder name under skills/ — also the value of the name: field in SKILL.md frontmatter."
+        "Description": "Skill folder name under skills/ \u2014 also the value of the name: field in SKILL.md frontmatter."
       },
       {
         "name": "Description",
         "datatype": "string",
         "type": "raw",
         "nullable": false,
-        "Description": "Short pitch — one sentence on what the skill is for."
+        "Description": "Short pitch \u2014 one sentence on what the skill is for."
       },
       {
         "name": "WhyItExists",
         "datatype": "string",
         "type": "raw",
         "nullable": false,
-        "Description": "The 'why' answer — what failure mode this skill prevents, paraphrased from the README."
+        "Description": "The 'why' answer \u2014 what failure mode this skill prevents, paraphrased from the README."
       },
       {
         "name": "Category",
@@ -296,8 +332,8 @@
     "data": [
       {
         "Slug": "effortless-orchestrator",
-        "Description": "Top-level mental model and router. Defines what an Effortless project is, the load-bearing axioms, the schema-change decision tree, the Token Discipline rule, and the routing table to every other skill.",
-        "WhyItExists": "Without a top-level frame, Claude improvises — and improvisation in ERB means editing generated SQL and reimplementing business logic in app code. The orchestrator keeps the model coherent across whatever sub-skill is loaded next.",
+        "Description": "Top-level mental model and router. Defines what an Effortless project is, the load-bearing axioms, the schema-change decision tree, the Token Discipline rule, the no-migrations guardrail, and the routing table to every other skill.",
+        "WhyItExists": "Without a top-level frame, Claude improvises \u2014 and improvisation in ERB means editing generated SQL and reimplementing business logic in app code. The orchestrator keeps the model coherent across whatever sub-skill is loaded next.",
         "Category": "orchestration",
         "ScopeGate": "project-or-explicit-request",
         "Audience": "customer"
@@ -320,7 +356,7 @@
       },
       {
         "Slug": "effortless-setup-postgres",
-        "Description": "First-run setup for Postgres-targeted projects: preflight tool checks, install transpilers, pull the rulebook, generate SQL, init the local DB.",
+        "Description": "First-run setup for Postgres-targeted projects: preflight tool checks, install transpilers, pull the rulebook, generate SQL, init the local DB. Sets up the regenerate-from-scratch shape (init-db.sh drops + recreates), not an incremental-migrations shape.",
         "WhyItExists": "Gets you from 'I have an Airtable base' to 'I have a working local DB + generated views' without remembering the per-step cd discipline that makes the build work. This is the only step where commits without asking are appropriate (it's a known-good bootstrap sequence).",
         "Category": "project-lifecycle",
         "ScopeGate": "project-or-explicit-request",
@@ -328,8 +364,8 @@
       },
       {
         "Slug": "effortless-leopold-loop",
-        "Description": "The iterative ERB development cycle: CHANGE-RULE in Airtable, then effortless build, then CONSUME generated views in app code, repeat.",
-        "WhyItExists": "Without it you regress to 'naked Claude' — hand-maintaining schema in three places (DB migration, ORM model, API serializer) and breaking sync every time something changes. The loop is what makes ERB feel effortless instead of redundant.",
+        "Description": "The iterative ERB development cycle: CHANGE-RULE in Airtable, then effortless build, then CONSUME generated views in app code, repeat. Includes the migration anti-pattern (the #1 way the loop gets bypassed).",
+        "WhyItExists": "Without it you regress to 'naked Claude' \u2014 hand-maintaining schema in three places (DB migration, ORM model, API serializer) and breaking sync every time something changes. The loop is what makes ERB feel effortless instead of redundant.",
         "Category": "project-lifecycle",
         "ScopeGate": "project-only",
         "Audience": "customer"
@@ -337,7 +373,7 @@
       {
         "Slug": "effortless-claude-updates",
         "Description": "Everything about the skill set itself: check whether your local clone is behind upstream, apply updates, add/edit/deprecate skills.",
-        "WhyItExists": "The skill set is its own moving target — new skills get added, old ones get merged, conventions drift. This skill is the maintenance interface for the suite (separate from the CLI binary, which is effortless-cli).",
+        "WhyItExists": "The skill set is its own moving target \u2014 new skills get added, old ones get merged, conventions drift. This skill is the maintenance interface for the suite (separate from the CLI binary, which is effortless-cli).",
         "Category": "project-lifecycle",
         "ScopeGate": "explicit-request-only",
         "Audience": "customer"
@@ -352,8 +388,8 @@
       },
       {
         "Slug": "effortless-mcp",
-        "Description": "Install and use the always-on Effortless MCP server — the streamable-HTTP endpoint that exposes ~54 transpiler tools plus the effortless-claude skill set as MCP Resources to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.).",
-        "WhyItExists": "The CLI binary is not the only way to drive the catalog — MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally. Without this skill, Claude improvises wiring instructions and tells users to paste handcrafted JSON into the wrong config file.",
+        "Description": "Install and use the always-on Effortless MCP server \u2014 the streamable-HTTP endpoint that exposes ~54 transpiler tools plus the effortless-claude skill set as MCP Resources to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.).",
+        "WhyItExists": "The CLI binary is not the only way to drive the catalog \u2014 MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally. Without this skill, Claude improvises wiring instructions and tells users to paste handcrafted JSON into the wrong config file.",
         "Category": "cli",
         "ScopeGate": "explicit-request-only",
         "Audience": "customer"
@@ -377,14 +413,14 @@
       {
         "Slug": "effortless-query",
         "Description": "Targeted, token-efficient one-liners against effortless-rulebook.json: list tables, extract schema for one table, find FK relationships, inspect calculated fields and formulas.",
-        "WhyItExists": "The rulebook can be megabytes once it has data. Reading it whole burns your context window for nothing — you only ever needed the schema fragment for one table. This skill keeps you in the lightweight-query habit.",
+        "WhyItExists": "The rulebook can be megabytes once it has data. Reading it whole burns your context window for nothing \u2014 you only ever needed the schema fragment for one table. This skill keeps you in the lightweight-query habit.",
         "Category": "schema-and-conventions",
         "ScopeGate": "project-only",
         "Audience": "customer"
       },
       {
         "Slug": "effortless-workflow",
-        "Description": "The two valid paths for making changes: Path A (Airtable-first, preferred) and Path B (rulebook-first reverse sync via build -id). Permission checkpoints.",
+        "Description": "The two valid paths for making changes: Path A (Airtable-first, preferred) and Path B (rulebook-first reverse sync via build -id). Permission checkpoints. Carries the canonical NO-MIGRATIONS rule for local-dev (regenerate from scratch via init-db.sh; never write SQL migrations).",
         "WhyItExists": "Most 'this didn't work' stories in ERB are someone editing the rulebook JSON directly when Path A would have been right, then effortless build overwriting their edits. This skill is the discipline that prevents that.",
         "Category": "workflow-and-build",
         "ScopeGate": "project-only",
@@ -392,8 +428,8 @@
       },
       {
         "Slug": "effortless-pipeline",
-        "Description": "How effortless.json, ProjectTranspilers, and effortless build actually work: the catalog of transpilers, the -id flag, multi-substrate architecture.",
-        "WhyItExists": "When the build does something surprising — a transpiler doesn't run, a generated file lands in the wrong directory, -id does something different than build — this skill is the 'how does the pipeline actually work' reference.",
+        "Description": "How effortless.json, ProjectTranspilers, and effortless build actually work: the catalog of transpilers, the -id flag, multi-substrate architecture, and the two deployment shapes (local-dev = regenerate via init-db.sh; bases = migrations via apply-migration.sh).",
+        "WhyItExists": "When the build does something surprising \u2014 a transpiler doesn't run, a generated file lands in the wrong directory, -id does something different than build \u2014 this skill is the 'how does the pipeline actually work' reference.",
         "Category": "workflow-and-build",
         "ScopeGate": "project-only",
         "Audience": "customer"
@@ -401,7 +437,7 @@
       {
         "Slug": "effortless-airtable",
         "Description": "The default for Airtable changes: scalar field add/modify/rename, table creation (without formulas), and all CRUD operations via the REST API.",
-        "WhyItExists": "About 80% of Airtable changes are scalar fields or CRUD — the API handles them in a few seconds. Falling back to OMNI (Playwright) for these is wasteful.",
+        "WhyItExists": "About 80% of Airtable changes are scalar fields or CRUD \u2014 the API handles them in a few seconds. Falling back to OMNI (Playwright) for these is wasteful.",
         "Category": "airtable-interaction",
         "ScopeGate": "project-only",
         "Audience": "customer"
@@ -416,7 +452,7 @@
       },
       {
         "Slug": "effortless-sql",
-        "Description": "Patterns for the generated SQL: read from vw_* views (never base tables), never edit 00–05 files, customize via *b-customize-*.sql and the ERBCustomizations table only when the rulebook can't express the rule.",
+        "Description": "Patterns for the generated SQL: read from vw_* views (never base tables), never edit 00\u201305 files, customize via *b-customize-*.sql and the ERBCustomizations table only when the rulebook can't express the rule. Local-dev has no migrations folder \u2014 init-db.sh regenerates from scratch.",
         "WhyItExists": "This is where most 'fixes' go wrong: someone edits 02-create-functions.sql to 'patch' a behavior, the next build erases it, the bug comes back, and now there's a phantom commit history with no surviving code. This skill prevents that whole class of incident.",
         "Category": "generated-code",
         "ScopeGate": "project-only",
@@ -424,7 +460,7 @@
       },
       {
         "Slug": "effortless-bases",
-        "Description": "End-to-end 'create a base + magic-links tenant + RLS-secured app in 5 minutes' flow on bases.effortlessapi.com.",
+        "Description": "End-to-end 'create a base + magic-links tenant + RLS-secured app in 5 minutes' flow on bases.effortlessapi.com. The lone ERB deployment shape that uses migrations (via postgres/apply-migration.sh) because bases-hosted DBs can't be dropped.",
         "WhyItExists": "When you want a hosted Postgres + auth without setting up a backend, this is the shortest path from zero to 'users can log in and only see their own data'. The skill encodes the gotchas that aren't in the docs.",
         "Category": "auth-and-deployment",
         "ScopeGate": "explicit-request-only",
@@ -433,7 +469,7 @@
       {
         "Slug": "effortless-magic-links",
         "Description": "Add passwordless email-code (magic-link) auth to any Postgres-backed app, not just bases.effortlessapi.com. Mints a tenant on magiclink.effortlessapi.com, wires Authorization: Bearer middleware, optionally installs app.jwt_*() SQL helpers for RLS.",
-        "WhyItExists": "Magic-links is a notary, not a referee — it just verifies 'we sent code C to email E, the holder returned it.' That clean separation means you can layer it onto any existing app without rewriting your user model. This skill encodes the wiring.",
+        "WhyItExists": "Magic-links is a notary, not a referee \u2014 it just verifies 'we sent code C to email E, the holder returned it.' That clean separation means you can layer it onto any existing app without rewriting your user model. This skill encodes the wiring.",
         "Category": "auth-and-deployment",
         "ScopeGate": "explicit-request-only",
         "Audience": "general"
@@ -449,7 +485,7 @@
       {
         "Slug": "effortless-cmcc",
         "Description": "The conceptual floor: SDLAF, the bitemporal ACID DAG, the 5 primitives, what the Conceptual Model Completeness Conjecture predicts and forbids.",
-        "WhyItExists": "When someone asks 'WHY is ERB structured this way? Isn't this overkill?' — improvising the answer makes it sound arbitrary. This skill grounds the answer in the conjecture, so the response is consistent across sessions.",
+        "WhyItExists": "When someone asks 'WHY is ERB structured this way? Isn't this overkill?' \u2014 improvising the answer makes it sound arbitrary. This skill grounds the answer in the conjecture, so the response is consistent across sessions.",
         "Category": "theory-and-receipts",
         "ScopeGate": "theory-no-marker",
         "Audience": "customer"
@@ -457,7 +493,7 @@
       {
         "Slug": "effortless-rulebooks",
         "Description": "The empirical demonstration: 11+ substrates (including ARM64, COBOL, OWL/SHACL, English), the conformance suite, ExplainDAG, answer-key.json. Pointer into github.com/effortlessapi/effortless-rulebooks.",
-        "WhyItExists": "When the response to 'does this actually work?' needs to be 'yes, here's the runnable proof' — this skill is the catalog of runnable proofs.",
+        "WhyItExists": "When the response to 'does this actually work?' needs to be 'yes, here's the runnable proof' \u2014 this skill is the catalog of runnable proofs.",
         "Category": "theory-and-receipts",
         "ScopeGate": "theory-no-marker",
         "Audience": "customer"
@@ -480,13 +516,17 @@
       }
     ]
   },
-
   "_meta": {
     "_CMCC_Summary": "Self-describing rulebook for the effortless-claude skill suite. Hand-authored (no Airtable source). Models the 23 currently-live skills against their three high-level attributes (Category, ScopeGate, Audience). Deprecation history lives in DEPRECATED_SKILLS.md, not in the rulebook.",
     "_conversion_metadata": {
       "source": "hand-authored from skills/*/SKILL.md frontmatter and README.md",
       "table_count": 4,
-      "row_counts": { "Audiences": 2, "SkillCategories": 10, "ScopeGateTypes": 4, "Skills": 23 },
+      "row_counts": {
+        "Audiences": 2,
+        "SkillCategories": 10,
+        "ScopeGateTypes": 4,
+        "Skills": 23
+      },
       "tool_version": "n/a (hand-authored)",
       "export_mode": "manual",
       "airtable_backed": false

@@ -17,6 +17,20 @@ audience: customer
 
 # Effortless Bases + Magic Links Quickstart
 
+## CRITICAL DISTINCTION — bases vs. local-dev (read before applying any pattern from this skill)
+
+This skill applies **only** to `bases.effortlessapi.com`-hosted databases. Bases is the **one and only ERB deployment shape that uses migrations** — because the DB is shared/persistent and cannot be dropped + recreated. Migration files go through `postgres/apply-migration.sh`.
+
+**Local-dev ERB projects work the opposite way.** Local Postgres is regenerated from scratch on every `effortless build` via `init-db.sh`. They have **no `migrations/` folder, no migrations tracking table, no incremental deltas**. Schema changes there go through Airtable → `effortless build` — see `effortless-workflow` "NO MIGRATIONS" section.
+
+**Tell which path you're on before doing anything:**
+- `BASES_DATABASE_URL` in `.env.example` OR a `## Bases is migration-only` block in CLAUDE.md → bases path, this skill applies.
+- Neither marker present → local-dev path, **do not** apply patterns from this skill. Use Airtable + `effortless build`.
+
+**Even on the bases path, schema still originates in Airtable / the rulebook.** A migration file is a *delivery mechanism* for a rulebook delta against a DB you can't drop — it is never a place to author schema from scratch. If you find yourself composing fresh `CREATE TABLE` or business logic inside a `postgres/migrations/*.sql` file, you've taken a wrong turn — go back to Airtable.
+
+---
+
 ## The axiom (load-bearing — read first)
 
 > **Magic-links is a notary, not a referee.** It makes one claim per JWT:

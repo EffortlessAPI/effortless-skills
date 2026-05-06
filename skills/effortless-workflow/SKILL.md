@@ -15,6 +15,31 @@ audience: customer
 
 **Before modifying `effortless-rulebook.json`, Airtable schema/data, or running `effortless build`, ALWAYS ask the user for permission.** These are consequential operations that affect the single source of truth and trigger code regeneration.
 
+## NO MIGRATIONS — read this before writing any SQL
+
+This is an ERB project. The local Postgres DB is **regenerated from scratch on every `effortless build`** via `init-db.sh` (drop + recreate). **There is no `migrations/` folder, no migrations tracking table, no incremental SQL deltas in this paradigm.** That entire pattern belongs to a different deployment shape (`bases.effortlessapi.com` — the only exception, covered below).
+
+**To change schema, RLS, calculated fields, or seed data, the answer is always one of these — never a migration:**
+
+1. **Edit Airtable → `effortless build`** (Path A, below).
+2. **Edit `effortless-rulebook.json` → push back via `build -id` → normal `effortless build`** (Path B, below — requires permission).
+3. **Edit a `*b-customize-*.sql` file** ONLY for infrastructure the rulebook genuinely cannot model (auth tenants, JWT helpers, role GRANTs) — never for business entities. See `effortless-sql`.
+
+**If you find yourself about to do any of these, stop and reread the rule:**
+
+- Running `CREATE TABLE` / `ALTER TABLE` / `DROP TABLE` / `INSERT INTO ...` against the local DB by hand or via psql to "make a schema change persist."
+- Creating a file under `postgres/migrations/` (folder shouldn't exist for local-dev projects).
+- Inserting into a `migrations` (or `schema_migrations`, `_migrations`, `applied_migrations`, etc.) tracking table to "register" a change.
+- Editing a generated `0*.sql` file (they get overwritten on the next build).
+
+**The internalized redirect:** if the answer feels like "write a migration," the answer is **"edit Airtable and rerun `effortless build`."** Say that exact sentence to yourself before reaching for SQL.
+
+### Bases is the only exception
+
+`bases.effortlessapi.com`-hosted databases (tell: `BASES_DATABASE_URL` in `.env.example`, or the project's CLAUDE.md has the "Bases is migration-only" block) cannot be dropped + recreated, so they DO use migrations — applied via `postgres/apply-migration.sh`, never `psql` directly. **Even there, schema still originates in Airtable / the rulebook**; the migration file is a delivery mechanism for a rulebook delta, not a place to author schema from scratch. See `effortless-bases` for the full bases pattern.
+
+**Tell which path you're on before touching Postgres:** no `BASES_DATABASE_URL` and no "Bases is migration-only" block in CLAUDE.md → you are on the local-dev path and the rule is **no migrations, ever**.
+
 ## Two Paths for Making Schema/Data Changes
 
 There are exactly two valid workflows. **Always prefer Path A** when possible.
@@ -71,7 +96,7 @@ These are not routine file edits — they affect the source of truth and trigger
 
 ## "Just add a small table" is the #1 trap
 
-When the user says "make a Foo table" / "add a Bar entity" / "I need an X table" — that is a Path A change. The entity goes in Airtable; `effortless build` regenerates `public.foo` + `vw_foo`. Do NOT hand-write the table in `01b-customize-schema.sql`. The `01b-05b` files are for infrastructure the rulebook cannot model (auth tenants, JWT helpers, role GRANTs) — never for business entities. If you're typing `CREATE TABLE app.users (...)` or similar, you've taken a wrong turn.
+When the user says "make a Foo table" / "add a Bar entity" / "I need an X table" — that is a Path A change. The entity goes in Airtable; `effortless build` regenerates `public.foo` + `vw_foo`. Do NOT hand-write the table in `01b-customize-schema.sql`, do NOT write a migration file, and do NOT `CREATE TABLE` against the local DB. The `01b-05b` files are for infrastructure the rulebook cannot model (auth tenants, JWT helpers, role GRANTs) — never for business entities. If you're typing `CREATE TABLE app.users (...)` or anything that looks like a migration, you've taken a wrong turn — see the "NO MIGRATIONS" section above.
 
 ## Don't drive git on the user's behalf
 

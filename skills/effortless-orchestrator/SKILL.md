@@ -104,6 +104,7 @@ If `effortless-rulebook.json` ever appears at the project root: bug — delete i
 3. **Always read from `vw_*` views; always write to base tables directly.**
 4. **Always ask permission** before modifying the rulebook JSON directly.
 5. **`effortless build` is usually the final step**, except when reverse-syncing rulebook → Airtable (build would overwrite HEAD JSON).
+6. **NEVER write SQL migrations on local-dev projects.** Local Postgres is regenerated from scratch by `init-db.sh` on every build — there is no `migrations/` folder, no migrations tracking table, no incremental deltas. Schema changes go through Airtable → `effortless build`. If the answer feels like "write a migration / `ALTER TABLE` / insert into a migrations log," the answer is **"edit Airtable and rerun `effortless build`."** The lone exception is `bases.effortlessapi.com`-hosted databases, which use `postgres/apply-migration.sh` because the DB can't be dropped — see `effortless-bases`. Even there, schema still originates in the rulebook. See `effortless-workflow` "NO MIGRATIONS" section for the full rule.
 
 ## Token Discipline (CANONICAL — leaf skills reference this)
 

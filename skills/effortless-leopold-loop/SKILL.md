@@ -76,7 +76,7 @@ All of these mean: **propagate the current Airtable state through every downstre
    **Do NOT commit the output yourself.** The user will commit when they choose to. You may proceed with the
    rest of the loop on the dirty tree the build just produced — but do not run `git add`, `git commit`, or
    any other git write command.
-2. **Run `init-db.sh`** if the project has a postgres target — this reloads the database.
+2. **Run `init-db.sh`** if the project has a postgres target — this **drops and recreates the database from scratch** using the freshly generated SQL. This is a full regeneration, not an incremental migration; it's also why ERB local-dev projects don't have a `migrations/` folder. (Bases-hosted DBs are the exception; never run `init-db.sh` against bases.)
 3. **Query the rulebook for schema changes** — use a lightweight one-liner to see what
    tables/fields exist now (see `effortless-query`). Do NOT read generated SQL files.
    Or use `psql -c "\d vw_tablename"` to see the current view columns.
@@ -91,6 +91,7 @@ All of these mean: **propagate the current Airtable state through every downstre
 
 ## Anti-patterns (these BREAK the loop — never do them)
 
+- **Writing a migration to "make a schema change persist."** This is the #1 way the loop gets bypassed. ERB has no `migrations/` folder, no migrations table, no incremental SQL deltas — `init-db.sh` drops and recreates the whole DB on every build. If the answer feels like "write a migration / `ALTER TABLE` / insert into a migrations log," the answer is **"edit Airtable and rerun `effortless build`."** Migrations only exist on `bases.effortlessapi.com`-hosted DBs, and even there schema still originates in Airtable — see `effortless-workflow` "NO MIGRATIONS" section + `effortless-bases`.
 - **Reimplementing rule logic in the client** — e.g. computing `isStopped = customer.color === 'Red'` in JS instead of using `customer.is_stopped` from the view. This duplicates the rule in two places. When the rule changes in Airtable next time, the client silently goes wrong because nobody updated the duplicated copy. **The whole point of the loop is that the rule lives in exactly one place.**
 - **Hand-editing generated files** — `postgres/01-05*.sql`, `dotnet/.../BaseClasses/*.cs`, etc. They get blown away on the next build. If you need to override generated SQL, use the `*b-customize-*` files (see `effortless-sql` skill), and only after exhausting Airtable as the source of the change.
 - **Adding columns/fields directly in SQL or C#** — changes must originate in Airtable so they survive `effortless build`. Use the `effortless-airtable` skill for scalar fields and `effortless-airtable-omni` for formulas/lookups/rollups.
