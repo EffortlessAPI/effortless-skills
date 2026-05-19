@@ -280,6 +280,17 @@ before moving on.
    - `effortless.json` (transpilers: `rulebook-to-postgres → /postgres`,
      then `execute ./init-db.sh`).
    - `CLAUDE.md` (project conventions — Path B, no migrations, etc.).
+     **The first line under the H1 MUST explicitly mark this as an
+     Effortless demo project** so future Claude sessions auto-load
+     the `effortless-demo-app` skill (and the standard ERB skills)
+     when working in this directory. Use exactly this marker line:
+     `> **Project type:** Effortless demo app (rulebook-first
+     Postgres POC). Use the \`effortless-demo-app\` skill for any
+     work in this repo — schema edits, Leopold loops, new pages,
+     mock data, README updates.`
+     Also include the standard ERB marker sentence ("This project
+     follows the Effortless Rulebook (ERB) methodology…") so the
+     project-only effortless-* skills load via their scope gate.
    - `start.sh` (interactive launcher with subcommands
      `all|server|web|db|build`).
 5. Pick ports unlikely to collide with other demos.
@@ -420,6 +431,22 @@ Example shape (illustrative, not domain-specific):
 After writing the README, the assistant's hand-back message should
 include this list inline and explicitly ask which loops to run
 next.
+
+### G2. (Optional) Explainer DAG — final polish
+
+After the app is verifiably working end-to-end, offer to wire in the
+**React Explainer DAG** — a generated, embedded visualization that
+makes every calculated/lookup/aggregated cell clickable and shows the
+full inference graph behind it. This is the canonical "show how it's
+derived" UI for ERB demos and dramatically improves the wow-factor of
+the walkthrough.
+
+- Default: ask the user once ("Want the explainer DAG wired in?") and
+  if yes, follow the `effortless-react-explainer-dag` skill.
+- On-demand: load `effortless-react-explainer-dag` any time later when
+  the user asks to "show the DAG" or "explain a calculated field".
+- Skip until the app boots and reads/writes work — debugging two
+  things at once wastes time.
 
 ### H. Smoke test before declaring done
 
