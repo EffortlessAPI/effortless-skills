@@ -96,6 +96,48 @@ Skip entirely for demos: `effortless-airtable*`, `effortless-bootstrap`
 (Shadle steps), `effortless-magic-links`, `effortless-bases`,
 `effortless-orchestrator` (its content is summarized inline here).
 
+## Commit cadence is the demo (non-negotiable)
+
+The pedagogical point of this skill is to **show the Leopold loop
+turning**. A 20-minute monolithic commit destroys that. You MUST
+commit at every major step so the git log itself reads like a
+walkthrough. This is the **one place the global "don't auto-commit"
+rule is explicitly overridden** — the user invoked the demo flow,
+which means commits are part of the deliverable.
+
+Required commits, in order, each as its own commit:
+
+1. `chore: scaffold <project> (effortless.json, CLAUDE.md, start.sh)`
+   — after step B (scaffold), **before** the first `effortless build`.
+2. `feat(rulebook): initial schema + mock data for <domain>`
+   — after writing `effortless-rulebook.json`, **before** running
+   `effortless build`. The rulebook is committed standalone so the
+   diff against the generated `postgres/` output is legible later.
+3. `build: generate postgres/ from rulebook`
+   — immediately after the first successful `effortless build`.
+   Generated SQL committed as its own commit so future rebuilds show
+   clean DAG diffs.
+4. `feat(server): express api with X-User-Email auth + CRUD on vw_*`
+   — after step E.
+5. `feat(web): vite + react SPA with dev login and dashboard`
+   — after step F.
+6. `docs: README with try-this walkthrough and next-10-loops`
+   — after step G.
+
+Then for **each Leopold loop the user picks to run**, two commits:
+
+- `feat(rulebook): <one-line loop description>` (rulebook edit only)
+- `build: regenerate postgres/` (and, if UI-touching,
+  `feat(web): <UI change>` as a third commit)
+
+Rules:
+
+- Use `git add <specific paths>`, never `git add -A`.
+- Don't skip hooks. Don't amend. New commit per step.
+- If the tree is dirty when the user invokes the demo, stop and
+  ask before doing anything — don't pile demo commits on top of
+  unrelated work.
+
 ## Invariants (do these, don't ask about them)
 
 1. Postgres + rulebook-first (Path B). SSoT is
