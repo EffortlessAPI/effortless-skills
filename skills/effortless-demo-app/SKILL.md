@@ -291,6 +291,36 @@ before moving on.
      Also include the standard ERB marker sentence ("This project
      follows the Effortless Rulebook (ERB) methodology…") so the
      project-only effortless-* skills load via their scope gate.
+
+     **CLAUDE.md MUST also include a `## Git hygiene` section that
+     promotes the commit-cadence rules from this skill into the
+     project itself**, so every future Claude session in this repo
+     follows them without needing to reload this skill. Use this
+     wording (verbatim, adapt entity names as needed):
+
+     ```
+     ## Git hygiene (non-negotiable)
+
+     This is a demo. The git log IS the demo. Commit at every
+     meaningful step — never bundle six things into one commit.
+
+     - One logical change per commit. Rulebook edits, generated
+       SQL, server changes, web changes, README updates, mock-data
+       tweaks: each gets its own commit.
+     - **Always commit before `effortless build`** (snapshot the
+       rulebook), then commit the generated `postgres/` output as
+       its own follow-up commit.
+     - For each Leopold loop: (1) `feat(rulebook): …`,
+       (2) `build: regenerate postgres/`, (3) optional
+       `feat(web): …` if the UI changed.
+     - Use `git add <specific paths>`. Never `git add -A` /
+       `git add .`.
+     - Don't skip hooks. Don't amend. New commit per step.
+     - Don't wait to be told to commit. Commit as you go.
+     ```
+
+     Do NOT bury this in a sub-bullet — it goes in as a top-level
+     section so it's impossible to miss.
    - `start.sh` (interactive launcher with subcommands
      `all|server|web|db|build`).
 5. Pick ports unlikely to collide with other demos.
@@ -310,11 +340,25 @@ before moving on.
 ### D. Build the DB
 
 7. `effortless build` (regenerates `postgres/`).
-8. Drop+create the DB:
+8. **Immediately patch `postgres/init-db.sh` to use this project's DB
+   name.** The transpiler ships a sensible generic default
+   (`DEFAULT_CONN=postgresql://postgres@localhost:5432/demo` + header
+   `# demo - Database Initialization Script`) — that default is fine
+   for the transpiler but WRONG once it lands in a named project.
+   Leaving `demo` in place means anyone running `./init-db.sh` with no
+   `DATABASE_URL` set will silently target a `demo` DB unrelated to
+   this project. This skill *creates* a named project, so it is THIS
+   skill's job to overwrite the default — do not file a bug against
+   the transpiler. Before doing anything else:
+   - `sed`/Edit `DEFAULT_CONN` → `postgresql://postgres@localhost:5432/<db>`
+   - Update the header comment line to `# <db> - Database Initialization Script`
+   Re-apply on every regeneration if the transpiler stomps it back.
+   Same `<db>` should be the `DATABASE_URL` default in `start.sh`.
+9. Drop+create the DB:
    `psql -U postgres -h localhost -c "DROP DATABASE IF EXISTS <db>"`
    then `CREATE DATABASE`.
-9. `chmod +x postgres/init-db.sh && DATABASE_URL=... ./postgres/init-db.sh`.
-10. Quick verification: one `psql -c "SELECT … FROM vw_<table>"` that
+10. `chmod +x postgres/init-db.sh && DATABASE_URL=... ./postgres/init-db.sh`.
+11. Quick verification: one `psql -c "SELECT … FROM vw_<table>"` that
     shows a calculated field rendering with the seed data — cheap
     proof the DAG works.
 

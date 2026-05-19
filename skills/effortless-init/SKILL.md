@@ -41,6 +41,20 @@ project-root/
   docs/                     # rulebook-to-docs output (optional)
 ```
 
+## Step 2.5 — `.gitignore`
+
+Every Effortless project must gitignore CLI scratch state. Create
+(or append to) `.gitignore` in the project root:
+
+```
+.ssotme/
+```
+
+`.ssotme/` is per-machine CLI working state (caches, transient
+build artifacts, key references). It is never source and must
+never be committed. Add this on every `effortless -init`, before
+the first commit.
+
 ## Step 3 — Connect to Airtable
 
 ```bash

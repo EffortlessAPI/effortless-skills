@@ -334,9 +334,22 @@ If the install printed a `startIndex cannot be larger than length of string` err
 
 ### Step 4: Configure DB name and run init
 
-Edit `postgres/init-db.sh` → set `DEFAULT_CONN`:
+**CRITICAL — do this before the first `./init-db.sh` run, not after.**
+The `rulebook-to-postgres` transpiler ships a generic default
+(`DEFAULT_CONN=postgresql://postgres@localhost:5432/demo` + header
+`# demo - Database Initialization Script`) — fine as a transpiler
+default, wrong the moment it lands in a real project. Leaving `demo`
+in place means anyone running `./init-db.sh` with no `DATABASE_URL`
+set will silently drop+recreate a `demo` DB unrelated to this project.
+Overwriting the default is THIS skill's job, not a transpiler bug —
+patch both the `DEFAULT_CONN` line AND the header comment to the
+actual DB name now, and re-apply on any future regeneration.
+
+Edit `postgres/init-db.sh`:
 
 ```bash
+# <your-db-name> - Database Initialization Script
+...
 DEFAULT_CONN="postgresql://postgres@localhost:5432/<your-db-name>"
 ```
 
