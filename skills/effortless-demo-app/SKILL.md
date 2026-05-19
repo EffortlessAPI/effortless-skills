@@ -23,180 +23,268 @@ functional demo app: rulebook-first Postgres, Express + Vite SPA, dev login
 for 2-3 roles, multi-hop calculated-field DAG, mock data that "flexes"
 every inference, and deep routing so F5 always works.
 
-This skill is for **demos and POCs**, not production. No Airtable, no
-magic-links, no Shadle steps, no migration tooling. The goal is shortest
-possible loop from idea to "here, click around".
+For **demos and POCs**, not production. No Airtable, no magic-links, no
+Shadle steps, no migration tooling.
 
 ## Load these skills first
 
 Before doing any work, load (in this order):
 
 1. `effortless-orchestrator` — mental model + token discipline
-2. `effortless-setup-postgres` — postgres pipeline setup (the parts that
-   apply to Path B; skip the Airtable-pull steps)
-3. `effortless-conventions` — naming rules, DAG structure, PascalCase tables,
-   Name field formula, why no M:N
+2. `effortless-setup-postgres` — postgres pipeline setup (skip the
+   Airtable-pull steps; this is Path B)
+3. `effortless-conventions` — naming rules, DAG structure, PascalCase
+   tables, Name field formula, why no M:N
 4. `effortless-schema` — JSON shape of `effortless-rulebook.json`
 5. `effortless-pipeline` — `effortless.json`, transpiler catalog, build flow
 6. `effortless-sql` — read views, write base tables, calculated functions
 7. `effortless-leopold-loop` — the edit-rulebook → build → consume loop
 
-You do NOT need: `effortless-airtable*`, `effortless-bootstrap` (Shadle
-steps), `effortless-magic-links`, `effortless-bases`. This is a local-only
-demo.
+Skip: `effortless-airtable*`, `effortless-bootstrap` (Shadle steps),
+`effortless-magic-links`, `effortless-bases`.
 
-## The invariants — never ask about these
+## Invariants (do these, don't ask about them)
 
-These are baked in. Don't waste a question on them:
+1. Postgres + rulebook-first (Path B). SSoT is
+   `effortless-rulebook/effortless-rulebook.json`.
+2. Stack: Express (`server/`) + Vite + React + React Router (`web/`).
+3. Dev login: `X-User-Email` stub auth, login page reads `/api/dev-users`
+   and lets the user click any seeded identity. 2-3 roles.
+4. Every page has its own route — F5 always lands the user on the same
+   page. Role-guarded routes use `<Navigate replace />`, never
+   conditional rendering.
+5. The first role listed is the **fully-wired primary** role. Other
+   roles get a labeled placeholder page that describes what they'd see.
+6. README first, with a short narrative + a "try this" walkthrough.
+7. The rulebook MUST include 3–5 entities, 1–2 inferences per entity
+   minimum, and at least one **2–3 hop inference chain** (raw →
+   1st-order calc → 2nd-order calc → optional 3rd-order).
+8. The raw fields that feed the DAG must be editable in the UI, so the
+   user can watch cascading recomputation live.
+9. Mock data flexes every inference. For every boolean/threshold rule
+   (e.g. `IsFoo = TotalBar > 100`), seed at least one row on each side
+   of the threshold. For every enum-producing rule, seed one row per
+   enum value.
 
-1. **Postgres + rulebook-first (Path B).** No Airtable. SSoT is
-   `effortless-rulebook/effortless-rulebook.json` in the new project repo.
-2. **Stack: Express + Vite + React + React Router.** Single-file Express
-   server (`server/src/index.ts`), Vite SPA in `web/`.
-3. **Dev login for 2-3 roles.** Email-only `X-User-Email` stub auth.
-   Login page reads `/api/dev-users` and lets the user pick any seeded
-   identity. **No magic links.**
-4. **Every page has its own route** — F5 always lands you on the same
-   page. Role-guarded routes use `<Navigate replace />` instead of
-   conditional rendering. Deep links to detail pages work cold-load.
-5. **Admin role is fully wired; other roles get a placeholder page** that
-   describes what they'd see and links back to admin. (User can iterate
-   per-role later.)
-6. **README first.** Write a brief narrative-style README before/while
-   coding so the human and the agent both understand what's being built.
-7. **Multi-hop calculated DAG.** Rulebook MUST include at least one
-   inference chain of 2–3 hops (raw → 1st-order → 2nd-order → optional
-   3rd-order). Total: 3–5 entities, 1–2 inferences per entity minimum.
-8. **Key fields are editable.** The UI must let the user edit the raw
-   fields that feed the DAG, so they can watch cascading recomputation
-   live. (`PATCH /api/<table>/:id`, then re-read the view.)
-9. **Mock data flexes every inference.** For every boolean/threshold
-   inference (e.g. `IsVIP = TotalSales > 100`), seed at least one row
-   on each side of the threshold so the UI shows both states. For
-   every enum-producing inference, seed one row per enum value.
+## If the user didn't give you a domain
 
-## Questions to ask (and only these)
+Offer to pick. Use `AskUserQuestion` with four options — three concrete
+one-sentence POC suggestions plus a "type your own" option. The
+suggestions should be small, distinct domains with obvious multi-hop
+inference chains. Vary them across runs; examples of the *shape* of a
+good suggestion (don't reuse these verbatim):
 
-Ask in a single `AskUserQuestion` batch up front, then go. Don't ask
-mid-build — make judgment calls and note them in the README.
+- "A small auto-body shop tracking parts and basic inventory transactions."
+- "A neighborhood library tracking books, borrowers, and overdue fees."
+- "A community garden tracking plots, plantings, and harvest yields."
 
-The four questions:
+Anything where you can sketch a 2–3 hop DAG in your head works.
 
-1. **Project directory name?** Suggest 2–3 kebab-case options derived
-   from the user's description; mark the most natural one as
-   "(Recommended)". Always include a "type my own" implicit option
-   (AskUserQuestion gives the user "Other" automatically).
+## Questions to ask
 
-2. **The 2-3 roles?** Propose role names + a one-line description of
-   what each does. The first role listed becomes the **fully-wired
-   admin/primary** role; the others are placeholder pages.
+There is **no cap**. Ask as many questions as you genuinely need to make
+the rulebook concrete. Ask in a single `AskUserQuestion` batch up front
+when possible; only return for follow-ups if something later turns out
+to be ambiguous.
 
-3. **Domain-specific scope choices** — 1–2 questions, max. Things that
-   *meaningfully shape the rulebook* and can't be reasonably guessed.
-   For an autobody shop: "track labor hours too, or just parts?";
-   "should we model multiple physical locations or one shop?". Skip
-   anything you can reasonably default — never ask about UI library,
-   styling, build tooling, port numbers, etc.
+What you typically need to nail down:
 
-4. **(Optional, only if ambiguous) Calendar/scheduling?** If the domain
-   plausibly has a time dimension (appointments, classes, jobs), ask
-   whether the demo needs a calendar view. Otherwise skip.
+- **Project directory name** — propose 2-3 kebab-case options from
+  the description, mark one as "(Recommended)".
+- **The 2-3 roles** — propose role names and a one-line description of
+  each. Confirm which is the primary/admin role (fully wired).
+- **Entities + the inference chain** — list the entities you intend to
+  model and, in plain English, the chain you intend to encode (e.g.
+  "raw `Quantity` and `UnitPrice` → calc `LineTotal` → aggregated to
+  parent → `OrderTotal` → thresholded → `IsLargeOrder`"). Ask the user
+  to confirm or adjust.
+- **Scope choices the domain makes ambiguous** — e.g. is there a time
+  dimension (do we need a calendar)? Are there multiple physical
+  locations or just one? Are there sub-types within a main entity?
+  Don't ask about things you can default reasonably; do ask about
+  things that meaningfully shape the schema.
 
-That's it. **No more than 4 questions total.** Anything else, decide
-yourself and note the decision in the README's "Choices made" section.
+Skip questions about UI library, styling, ports, test framework, build
+tooling — those are decided by the defaults table below.
+
+## The FK / lookup pattern (canonical)
+
+Foreign keys store the **Name (PK)** of the referenced row, *not* a
+synthetic numeric id, and *not* a column called `*Id`.
+
+- `Widgets.Thing` holds the **value** of the related Thing's `Name`
+  (e.g. `"blue-thing"`). This is the FK field itself.
+- For every other Thing field you want visible on Widget rows, add a
+  **lookup** that references `Widgets.Thing`:
+  - `Widgets.ThingName`  — looks up Thing.Name through `Widgets.Thing`
+  - `Widgets.ThingColor` — looks up Thing.Color
+  - `Widgets.ThingPrice` — looks up Thing.Price
+
+So the FK column and its lookups are all prefixed with the related
+entity's singular name. No `ThingId`. No `thing_id`. Just `Thing`
+(the FK value) plus `Thing<Field>` lookups for any field you want on
+the Widget side.
+
+Aggregations go the **other** way: on `Things` you might have
+`TotalWidgetSpend = SUMIFS(Widgets!{{LineTotal}}, Widgets!{{Thing}}, {{Name}})`.
+
+This is the pattern every entity uses. Calculated fields on `Widgets`
+that need a related field do it through a lookup — they reference
+`{{ThingPrice}}` (the lookup on Widgets), not Thing directly.
+
+## Pitfalls baked into the rulebook generator
+
+These are non-obvious things that will bite if you don't plan for them:
+
+1. **Field-name inference can override declared `datatype`.** Names
+   containing tokens like `*Time`, `*Date`, `*Period`, `*HHMM`, `*_at`
+   may be coerced to `DATE` or `TIMESTAMPTZ` in the generated SQL even
+   if you wrote `datatype: "string"`. If you need a free-text
+   time-like field, use a neutral name (e.g. `ClockLabel`,
+   `StartsAt` for a real datetime, `BillingTag` instead of
+   `BillingPeriod`).
+
+2. **`Name` is calculated; base tables don't have a `name` column.**
+   The PK column on the base table is `<table>_id`. INSERT/UPDATE/
+   DELETE must target `<table>_id`. The view re-derives `name` from
+   its formula every read. Application writes only touch raw columns.
+
+3. **Calculated PK formulas must compose from TEXT.** If `Name` uses
+   `CONCAT(...)` of fields where one is coerced to DATE/TIMESTAMPTZ,
+   the resulting string in the view won't match string FK values
+   stored elsewhere (`CONCAT` on a timestamp emits
+   `"2026-05-01 00:00:00-05"`, not `"2026-05-01"`). Workaround: add
+   a raw `<Thing>Key` field, set it server-side to the desired slug,
+   and make `Name = ={{<Thing>Key}}`.
+
+4. **No native VLOOKUP in calculated formulas.** Cross-table reads
+   happen via the FK/lookup pattern above (lookups follow the
+   relationship FK) or via `SUMIFS`/`COUNTIFS` aggregations going the
+   other direction. Calculated fields on a row only see fields on
+   that same row (including lookups).
 
 ## Process — A through Z
 
-After the questions, work the list. Use `TodoWrite` to track these:
+Use `TodoWrite` to track these. Stop and verify at each checkpoint
+before moving on.
 
-1. **Scaffold the project**
-   - Create `~/<your-projects-dir>/<name>/` with:
-     - `effortless.json` (transpilers: `rulebook-to-postgres` → `/postgres`,
-       then `execute ./init-db.sh`)
-     - `CLAUDE.md` (project conventions — Path B, no migrations, etc.)
-     - `start.sh` (interactive launcher: `all|server|web|db|build`)
-   - Pick unique ports (avoid 3000/3030/5173 collisions with other demos).
+### A. Plan
 
-2. **Author `effortless-rulebook/effortless-rulebook.json`**
-   - 3–5 entities. Each table: PascalCase, has a `Name` calculated PK
-     formula derived from a raw field, and a few raw fields.
-   - **DAG order matters** — leaf tables first, dependents after.
-   - At least one **2-3 hop inference chain**, e.g.:
-     - raw `Quantity` + raw `UnitPrice` → calc `LineTotal` (1st hop)
-     - calc `LineTotal` aggregated to parent → `OrderTotal` (2nd hop)
-     - calc `OrderTotal` thresholded → `IsLargeOrder` (3rd hop)
-   - Seed data MUST flex every inference (see invariant #9).
-   - **Avoid the transpiler's date-name inference trap.** Field names
-     containing `*Time`, `*Date`, `*Period`, `*HHMM`, `*_at` will be
-     forced to DATE/TIMESTAMPTZ regardless of declared `datatype`. If
-     you need a free-text time-like field, name it something neutral
-     (e.g. `ClockLabel` not `StartTime`).
-   - **Calculated keys must compose from TEXT.** If `Name` uses
-     `CONCAT(...)` of fields, one of which is forced-to-DATE, the
-     resulting PK string won't match FK references. Workaround: add
-     a raw `<Thing>Key` field the server fills with the slug, and
-     make `Name = ={{<Thing>Key}}`. (See gym-trainer-invoicing.)
+1. Read the user's description; if missing, offer the "pick for me"
+   options described above.
+2. Sketch the entities (3–5) and the inference chain on paper /
+   internally. Confirm the chain has 2–3 hops.
+3. Ask the questions you need (see "Questions to ask").
 
-3. **Build & init DB**
-   - `effortless build` (regenerates `postgres/`).
-   - Create DB: `psql -U postgres -h localhost -c "CREATE DATABASE <db_name>"`
-     (drop first if it exists).
-   - `chmod +x postgres/init-db.sh && DATABASE_URL=... ./postgres/init-db.sh`.
-   - Verify with one `psql -c "SELECT ... FROM vw_<key_table>"` showing
-     a calculated field — cheap proof the DAG works.
+### B. Scaffold
 
-4. **Server (`server/`)**
-   - Single-file `src/index.ts`. Express + `pg`. Dev auth middleware
-     reads `X-User-Email`, looks up the user in `vw_users`, attaches
-     `req.me`.
-   - Public: `GET /api/dev-users` for the login picker.
-   - For each table: `GET /api/<table>s`, `GET /api/<table>s/:id`,
-     and `PATCH /api/<table>s/:id` for the editable raw fields.
-   - **Read views (`vw_*`), write base tables.** Base tables don't have
-     a `name` column (it's calculated) — PK column is `<table>_id`.
-   - Role-filter in-route based on `req.me.role`.
-   - Single `package.json`, `tsconfig.json`, `tsx` for dev.
+4. Create `<project-dir>/` with:
+   - `effortless.json` (transpilers: `rulebook-to-postgres → /postgres`,
+     then `execute ./init-db.sh`).
+   - `CLAUDE.md` (project conventions — Path B, no migrations, etc.).
+   - `start.sh` (interactive launcher with subcommands
+     `all|server|web|db|build`).
+5. Pick ports unlikely to collide with other demos.
 
-5. **Web (`web/`)**
-   - Vite + React + React Router + (FullCalendar if scheduling).
-   - `App.tsx`: top-level role check, then a `<Routes>` block with one
-     `<Route>` per page. Role-guarded routes redirect via
-     `<Navigate to="/" replace />` — never conditional render.
-   - `Shell.tsx`: nav sidebar; `nav.ts` exports a `navFor(role)`
-     function returning grouped links.
-   - `Login.tsx`: fetch `/api/dev-users`, render clickable identities
-     grouped by role.
-   - `pages/`:
-     - Admin role gets the fully-wired pages: dashboard with
-       calculated-field stats, list pages, detail pages, **edit forms
-       for the raw fields that drive the DAG**.
-     - Other roles get a single `Placeholder.tsx` page describing
-       what they'd see, with a "go to admin" link (for the demo).
-   - `lib/api.ts`: thin `fetch` wrapper that adds `X-User-Email`.
-   - `lib/useApi.ts`: simple `useEffect` + state hook with a
-     `reload()` callback (so edits can refresh the view).
+### C. Rulebook
 
-6. **README (write early, finalize last)**
-   - Two-paragraph narrative: what the app does and who uses it.
-   - The DAG explained in plain English — point at the 2-3 hop chain
-     and what fields cascade.
-   - Quick-start (`./start.sh`).
-   - Dev-login table (emails + roles).
-   - "Try this" walkthrough: a 3-step path that exercises the cascade.
-     E.g. "log in as Admin → open Customer X → edit TotalSales from
-     50 to 150 → watch IsVIP flip and the dashboard count change".
-   - Repo layout + Leopold loop instructions.
-   - Known limitations (always include: stub auth, no RLS, placeholder
-     roles, no tests).
+6. Author `effortless-rulebook/effortless-rulebook.json`:
+   - Entities in **DAG order** — leaf tables first, then dependents.
+   - For each entity: `Name` calculated PK formula derived from a raw
+     field; the raw fields; the FK fields + their lookups (see
+     pattern above); calculated fields (1st/2nd/3rd-order); any
+     aggregations from related tables.
+   - Mock data: for every boolean/threshold/enum rule, seed rows that
+     produce each possible output. The dashboard for the primary role
+     should show a mix of states out of the box.
 
-7. **Smoke test end-to-end before declaring done**
-   - Boot server + web.
-   - Hit `/healthz`, `/api/dev-users`, `/api/me` (with header).
-   - Verify one read of a calculated field via the view.
-   - Verify one PATCH on a raw field cascades through the DAG (re-read
-     the view, confirm the dependent calc changed).
-   - Verify the role-redirect: log in as non-admin, hit an
-     admin-only route, confirm bounce to `/`.
+### D. Build the DB
+
+7. `effortless build` (regenerates `postgres/`).
+8. Drop+create the DB:
+   `psql -U postgres -h localhost -c "DROP DATABASE IF EXISTS <db>"`
+   then `CREATE DATABASE`.
+9. `chmod +x postgres/init-db.sh && DATABASE_URL=... ./postgres/init-db.sh`.
+10. Quick verification: one `psql -c "SELECT … FROM vw_<table>"` that
+    shows a calculated field rendering with the seed data — cheap
+    proof the DAG works.
+
+### E. Server
+
+11. `server/package.json` (express, pg, tsx, typescript).
+12. `server/src/index.ts` (single file):
+    - `pg` Pool connecting as `postgres` (no RLS for demos).
+    - Auth middleware: read `X-User-Email`, look up `vw_users`,
+      attach `req.me`.
+    - Public route: `GET /api/dev-users` (the login picker).
+    - For each table: `GET /api/<table>s`, `GET /api/<table>s/:id`,
+      `PATCH /api/<table>s/:id` for the editable raw fields.
+    - Reads hit `vw_*` views (with calculated/aggregated columns).
+      Writes hit base tables, only touching raw columns, keyed on
+      `<table>_id`.
+    - Role-filter in the route handlers from `req.me.role`.
+13. Boot it; curl `/healthz` and one read+patch+read cycle showing the
+    cascade.
+
+### F. Web
+
+14. `web/package.json` (react, react-router-dom, vite,
+    `@vitejs/plugin-react`, plus FullCalendar packages if scheduling).
+15. `web/vite.config.ts` (proxy `/api` to the server port).
+16. `web/src/`:
+    - `main.tsx` → `<BrowserRouter><App /></BrowserRouter>`.
+    - `App.tsx`: load `/api/me` once, render `<Login>` if 401, else
+      `<Shell>` with a `<Routes>` block — one `<Route>` per page.
+      Role-guarded routes redirect via `<Navigate to="/" replace />`.
+    - `Shell.tsx` + `nav.ts`: sidebar nav, grouped, role-specific via
+      `navFor(role)`.
+    - `Login.tsx`: fetch `/api/dev-users`, render clickable identities
+      grouped by role.
+    - `lib/api.ts`: `fetch` wrapper that adds `X-User-Email`.
+    - `lib/useApi.ts`: `useEffect`-based hook with a `reload()`
+      callback so edits can refresh the view.
+    - `pages/`:
+      - **Primary role**: dashboard with calculated/aggregated stats,
+        list pages, detail pages, and **edit forms for the raw
+        fields that drive the DAG**.
+      - **Other roles**: a single `Placeholder.tsx` page that
+        describes the role's intended view and links back to the
+        primary role's home for the demo.
+    - `styles.css`: hand-rolled, minimal.
+17. `npx tsc --noEmit` to confirm typecheck.
+18. Boot both server and web; load the SPA, log in as primary role,
+    edit a raw field, watch the dependent calculated field update.
+
+### G. README
+
+19. Write `README.md` with:
+    - Two-paragraph narrative: what the app does and who uses it.
+    - A plain-English explanation of the DAG, pointing at the 2-3
+      hop chain.
+    - Quick-start (`./start.sh`).
+    - Dev-login table (emails + roles).
+    - **"Try this" walkthrough**: a 3-step path that exercises the
+      cascade end-to-end. e.g. "log in as primary role → open Thing
+      X → edit its `Quantity` from 5 to 50 → watch `LineTotal` and
+      the rolled-up `OrderTotal` update, and the threshold flag flip".
+    - Repo layout.
+    - Leopold loop instructions ("to add a field: edit the rulebook,
+      `./start.sh build`, `./start.sh db`").
+    - Known limitations (stub auth, no RLS, placeholder roles, no
+      tests).
+
+### H. Smoke test before declaring done
+
+20. `./start.sh all` boots cleanly.
+21. Login picker shows all seeded identities; signing in as the
+    primary role lands on a populated dashboard.
+22. Editing one raw field that feeds the DAG visibly updates the
+    dependent calculated field on the next read.
+23. Hitting a primary-only route as a placeholder role redirects to
+    `/`.
+24. Hard-refresh (F5) on a deep URL re-renders the same page.
+
+If any check fails, fix it before reporting back.
 
 ## Decision defaults (don't ask, just do)
 
@@ -204,35 +292,28 @@ After the questions, work the list. Use `TodoWrite` to track these:
 |---|---|
 | Ports | server :3032+, web :5175+ (pick unused) |
 | DB name | snake_case of project name |
-| Node test runner | none — manual `curl` smoke tests are enough for a demo |
+| Test runner | none — manual smoke tests are enough for a demo |
 | Styling | hand-rolled CSS in `web/src/styles.css`, no UI framework |
-| State management | React `useState` + the `useApi` hook, no Redux/zustand |
-| Forms | uncontrolled-ish: local `useState`, `PATCH` on submit |
-| Money/date formatting | small `lib/fmt.ts` helpers |
-| Calendar | FullCalendar React (only if scheduling is in scope) |
-| FK enforcement | leave the `99-fk-constraints.sql` skip in place |
-| RLS | enabled by generator but no policies; server connects as `postgres` |
+| State management | React `useState` + the `useApi` hook |
+| Forms | local `useState`, `PATCH` on submit |
+| Number/date formatting | small `lib/fmt.ts` helpers |
+| Calendar | FullCalendar React (only if the domain has a time dimension) |
+| FK enforcement | leave `99-fk-constraints.sql` skipped |
+| RLS | enabled by generator but no policies; server connects as superuser |
 | TypeScript `strict` | yes |
-
-## Reference implementation
-
-The `gym-trainer-invoicing` project is the canonical worked example of this
-skill. If you're unsure how something should look (rulebook shape, server
-route style, page layout, the `InvoiceKey` workaround, etc.), open it and
-copy the pattern.
 
 ## What success looks like
 
 When you hand back to the user, they should be able to:
 
-1. `./start.sh all` and have a working app open at the web URL.
-2. Sign in as the admin role and see a dashboard with at least one
-   calculated/aggregated number.
+1. Run one command and have a working app open in the browser.
+2. Sign in as the primary role and see a dashboard with at least one
+   calculated/aggregated number derived from the DAG.
 3. Edit a raw field on some row and see a downstream calculated field
-   change without refreshing (or with one obvious refresh button).
+   change on the next read (or with one obvious refresh).
 4. Sign in as a placeholder role and see a labeled stub page with a
-   working role switch.
+   working role switch back.
 5. Read the README and understand the domain, the DAG, and the
    "try this" walkthrough in under two minutes.
 
-If any of those don't work, you're not done. Fix it before reporting back.
+If any of those don't work, you're not done.
