@@ -26,22 +26,75 @@ every inference, and deep routing so F5 always works.
 For **demos and POCs**, not production. No Airtable, no magic-links, no
 Shadle steps, no migration tooling.
 
-## Load these skills first
+## Speed discipline (read this first)
 
-Before doing any work, load (in this order):
+This skill exists because demos should be FAST. Target: first
+`effortless build` invocation within ~30 seconds of the user request,
+working app within a few minutes. The most common failure mode is
+noodling — exploring, re-reading skills, re-checking the same directory,
+authoring the rulebook in two passes, retrying `init-db.sh` four times
+with incremental tweaks. Don't.
 
-1. `effortless-orchestrator` — mental model + token discipline
-2. `effortless-setup-postgres` — postgres pipeline setup (skip the
-   Airtable-pull steps; this is Path B)
-3. `effortless-conventions` — naming rules, DAG structure, PascalCase
-   tables, Name field formula, why no M:N
-4. `effortless-schema` — JSON shape of `effortless-rulebook.json`
-5. `effortless-pipeline` — `effortless.json`, transpiler catalog, build flow
-6. `effortless-sql` — read views, write base tables, calculated functions
-7. `effortless-leopold-loop` — the edit-rulebook → build → consume loop
+**The bootstrap path is deterministic. Just run it:**
 
-Skip: `effortless-airtable*`, `effortless-bootstrap` (Shadle steps),
-`effortless-magic-links`, `effortless-bases`.
+1. `mkdir <project>/effortless-rulebook` (one shot)
+2. `effortless -init` (in the project dir)
+3. Write `effortless-rulebook/effortless-rulebook.json` **completely in one
+   Write call** — full schema, mock data, all entities. Do not write a
+   partial version and revise.
+4. Write `effortless.json`, `CLAUDE.md`, `start.sh`.
+5. `./start.sh build` (or the documented equivalent). **Run it the
+   moment you've decided to.** Do not pre-flight with `ls`, `cat
+   ssotme.json`, `effortless -list`, `effortless --help`, ToolSearch,
+   or "let me first check…". The build is the check.
+
+**Don't do** (specific noodling patterns observed in real sessions):
+
+- Repeated `ls` / `head` / `wc` / `cat` of the parent project dir
+  "looking for patterns" — you already have the patterns in this skill
+- Loading the seven prerequisite skills sequentially in seven separate
+  turns. If you need them, load in parallel; better, only load the
+  ones a specific step actually requires
+- AskUserQuestion to "confirm scope" before doing anything — if the
+  user gave you a domain, start; if they didn't, ask ONCE with the
+  pick-for-me options and proceed
+- Writing the rulebook, pausing to "think", then rewriting it. Hold
+  the design in your head, then emit it once
+- Running `effortless -install <transpiler>` more than once. If it
+  fails, read the error before re-running with tweaks
+- `chmod +x init-db.sh` defensively — the transpiler emits it
+  executable. Only chmod if the actual error says permission denied
+- Loading the `effortless-demo-app` skill twice
+- Running ToolSearch for transpiler names or React explainer features
+  during bootstrap — irrelevant to first-build
+
+**Ask-before-building exception:** outside this demo skill, you should
+generally confirm before running `effortless build` (it drops the DB).
+**Inside this skill, do not ask** — the user invoked the demo flow,
+which means they want the build to happen. Only ask if a non-default
+choice (e.g. wiping an existing DB with the same name) actually needs
+their input.
+
+A single brief "running build now" status line is fine. A paragraph
+of deliberation is not.
+
+## Load supporting skills lazily, not up front
+
+Do NOT preload all seven supporting skills before starting. The bootstrap
+path in "Speed discipline" above doesn't need them. Load on demand:
+
+- `effortless-schema` — only if you're unsure of the rulebook JSON shape
+- `effortless-conventions` — only if you hit a naming/DAG question you
+  can't answer from this skill
+- `effortless-sql` — only when wiring server-side queries
+- `effortless-setup-postgres` / `effortless-pipeline` — only if the
+  build fails in a way that needs pipeline-level debugging
+- `effortless-leopold-loop` — only when documenting the edit→build
+  loop in the README
+
+Skip entirely for demos: `effortless-airtable*`, `effortless-bootstrap`
+(Shadle steps), `effortless-magic-links`, `effortless-bases`,
+`effortless-orchestrator` (its content is summarized inline here).
 
 ## Invariants (do these, don't ask about them)
 
@@ -82,10 +135,13 @@ Anything where you can sketch a 2–3 hop DAG in your head works.
 
 ## Questions to ask
 
-There is **no cap**. Ask as many questions as you genuinely need to make
-the rulebook concrete. Ask in a single `AskUserQuestion` batch up front
-when possible; only return for follow-ups if something later turns out
-to be ambiguous.
+Default to **zero questions** if the user gave you a domain. Pick
+reasonable defaults for everything in the "Decision defaults" table
+and infer the entities + inference chain from the domain. Only ask
+when a choice meaningfully changes the schema AND you can't pick a
+sensible default. If you must ask, do it in a **single**
+`AskUserQuestion` batch up front, then proceed without further
+prompts unless something is later truly ambiguous.
 
 What you typically need to nail down:
 
@@ -270,8 +326,58 @@ before moving on.
     - Repo layout.
     - Leopold loop instructions ("to add a field: edit the rulebook,
       `./start.sh build`, `./start.sh db`").
+    - **"Next 10 Leopold loops" section** (see below).
     - Known limitations (stub auth, no RLS, placeholder roles, no
       tests).
+
+### G.1 The "Next 10 Leopold loops" suggestions
+
+The first-build demo is just the **top of the loop for the first
+time**. The README must end with a numbered list of 10 concrete,
+*suggested* next-turn changes the user could pick from. Don't
+implement them — list them. After the README is written, surface
+this list to the user and ask which (one, several, or all in order)
+they want to actually crank through.
+
+Rules for the list:
+
+- Each item is one additional inference (or small cluster of
+  inferences) the current model doesn't yet have but obviously
+  *could*. Phrase it as the rule change, not the implementation.
+- **Alternate / mix two flavors**, roughly half and half:
+  - **Rulebook-only loops** — change a formula, threshold, tax
+    rate, weighting, add a derived flag, add an aggregation. The
+    UI keeps working unchanged because it just reads `vw_*` and
+    the new/changed column rides along (or the changed value
+    flows through existing columns). Call these out as
+    "rulebook-only — no UI change needed".
+  - **Rulebook + UI loops** — introduce a new entity, a new raw
+    field that needs an editor, a new role-visible concept (e.g.
+    Discounts, Refunds, Categories, Tiers). Call these out as
+    "rulebook + UI — new editor / page / column".
+- Order them from smallest blast radius to largest, so the user
+  can see the loop tighten before it widens.
+- Each entry: one-line title + one sentence describing the
+  inference change + the `[rulebook-only]` or `[rulebook + UI]`
+  tag.
+- These are *suggestions*, not a roadmap. The user picks. Be
+  confident about each one — by the time you've built the first
+  pass you should know the domain well enough that all 10 are
+  plausible next turns, not speculation.
+
+Example shape (illustrative, not domain-specific):
+
+```
+1. Round LineTotal to 2 decimals  — change the formula to use ROUND. [rulebook-only]
+2. Add a TaxRate constant and a Tax calc on each line. [rulebook-only]
+3. Flag any Order whose Total exceeds $1000 as IsLargeOrder. [rulebook-only]
+4. Add a Discount entity with a percent applied per Order. [rulebook + UI]
+...
+```
+
+After writing the README, the assistant's hand-back message should
+include this list inline and explicitly ask which loops to run
+next.
 
 ### H. Smoke test before declaring done
 
@@ -315,5 +421,8 @@ When you hand back to the user, they should be able to:
    working role switch back.
 5. Read the README and understand the domain, the DAG, and the
    "try this" walkthrough in under two minutes.
+6. See a list of the **next 10 Leopold loops** at the bottom of the
+   README — a mix of rulebook-only and rulebook+UI changes — and
+   pick which one(s) to run next.
 
 If any of those don't work, you're not done.
