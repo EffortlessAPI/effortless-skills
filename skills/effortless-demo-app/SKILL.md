@@ -195,28 +195,46 @@ tooling — those are decided by the defaults table below.
 
 ## The FK / lookup pattern (canonical)
 
-Foreign keys store the **Name (PK)** of the referenced row, *not* a
-synthetic numeric id, and *not* a column called `*Id`.
+The `rulebook-to-postgres` transpiler uses **the first raw field of
+each entity as its literal PK column** (named `<table>_id` in the
+generated SQL). Foreign keys store the value of that PK field. This
+is what every generated `vw_*` view, every `calc_*` lookup function,
+and every aggregation actually joins on. The Name-as-PK pattern (FK
+column holding a calculated `Name` value) does **not** work — the
+transpiler's emitted lookups will join on `<table>_id`, which won't
+match the Name-derived FK value, and every lookup will silently
+return NULL.
 
-- `Widgets.Thing` holds the **value** of the related Thing's `Name`
-  (e.g. `"blue-thing"`). This is the FK field itself.
-- For every other Thing field you want visible on Widget rows, add a
-  **lookup** that references `Widgets.Thing`:
-  - `Widgets.ThingName`  — looks up Thing.Name through `Widgets.Thing`
-  - `Widgets.ThingColor` — looks up Thing.Color
-  - `Widgets.ThingPrice` — looks up Thing.Price
+So every entity has the same shape:
 
-So the FK column and its lookups are all prefixed with the related
-entity's singular name. No `ThingId`. No `thing_id`. Just `Thing`
-(the FK value) plus `Thing<Field>` lookups for any field you want on
-the Widget side.
+- First raw field: `<Table>Id` (PascalCase singular `<Entity>` + `Id`,
+  e.g. `ThingsId`, `WidgetsId`, `UsersId`). Holds the slug / email /
+  natural key.
+- `Name = ={{<Table>Id}}` as the calculated PK (so the view still has
+  a friendly `name` column for display).
+- FK columns are named after the related entity (singular). E.g.
+  `Widgets.Thing` holds the value of `Things.ThingsId`. No
+  `Widgets.ThingId`, no `Widgets.thing_id` — just `Widgets.Thing`.
+- Lookups follow the FK: `Widgets.ThingName`, `Widgets.ThingColor`,
+  etc. The lookup formula is
+  `=INDEX(Things!{{Color}}, MATCH(Widgets!{{Thing}}, Things!{{ThingsId}}, 0))`
+  — **match against `<Table>Id`, never against `Name`.**
+- Chained lookups work too: a lookup on Widgets can pull a lookup from
+  Things (e.g. `Widgets.ThingCategoryName` pulls
+  `Things.CategoryName`, which is itself a lookup). The transpiler
+  resolves them transparently.
 
-Aggregations go the **other** way: on `Things` you might have
-`TotalWidgetSpend = SUMIFS(Widgets!{{LineTotal}}, Widgets!{{Thing}}, {{Name}})`.
+Aggregations go the **other** way: on `Things` you might write
+`TotalWidgetSpend = SUMIFS(Widgets!{{LineTotal}}, Widgets!{{Thing}}, {{ThingsId}})`.
 
-This is the pattern every entity uses. Calculated fields on `Widgets`
-that need a related field do it through a lookup — they reference
-`{{ThingPrice}}` (the lookup on Widgets), not Thing directly.
+Calculated fields on Widgets that need a related field reference the
+lookup (`{{ThingPrice}}`), not the related entity directly.
+
+**Cross-table SQL is forbidden in customize files.** If a relationship
+you need isn't expressible as a rulebook lookup, the answer is to add
+the lookup to the rulebook — never to write a `LEFT JOIN` in
+`03b-customize-views.sql` or a cross-table subquery in app code. The
+whole point of `vw_*` is that it's join-free.
 
 ## Pitfalls baked into the rulebook generator
 
@@ -243,7 +261,18 @@ These are non-obvious things that will bite if you don't plan for them:
    a raw `<Thing>Key` field, set it server-side to the desired slug,
    and make `Name = ={{<Thing>Key}}`.
 
-4. **No native VLOOKUP in calculated formulas.** Cross-table reads
+4. **Don't put `LEFT JOIN` in `*b-customize-views.sql`.** If a lookup
+   isn't resolving, the bug is in the rulebook FK pattern (almost
+   always: FK column holds a `Name` value instead of a `<Table>Id`
+   value), not something to paper over with a JOIN view. The
+   `customize-*` files are for additive views/columns/functions that
+   honor the join-free `vw_*` discipline — not an escape hatch for
+   broken lookups. Same goes for cross-table subqueries in app code:
+   if you're writing `WHERE x IN (SELECT y FROM other_view)` to scope
+   results, add a (possibly chained) lookup column instead and filter
+   on that.
+
+5. **No native VLOOKUP in calculated formulas.** Cross-table reads
    happen via the FK/lookup pattern above (lookups follow the
    relationship FK) or via `SUMIFS`/`COUNTIFS` aggregations going the
    other direction. Calculated fields on a row only see fields on
