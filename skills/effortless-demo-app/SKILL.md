@@ -96,44 +96,32 @@ Skip entirely for demos: `effortless-airtable*`, `effortless-bootstrap`
 (Shadle steps), `effortless-magic-links`, `effortless-bases`,
 `effortless-orchestrator` (its content is summarized inline here).
 
-## Commit cadence is the demo (non-negotiable)
+## Commit cadence: one commit per Leopold loop
 
 The pedagogical point of this skill is to **show the Leopold loop
-turning**. A 20-minute monolithic commit destroys that. You MUST
-commit at every major step so the git log itself reads like a
-walkthrough. This is the **one place the global "don't auto-commit"
-rule is explicitly overridden** — the user invoked the demo flow,
-which means commits are part of the deliverable.
+turning**. The git log should read like a walkthrough of loop
+turns, not one giant blob and not a flood of micro-commits.
 
-Required commits, in order, each as its own commit:
+**The rule: one commit per Leopold loop.** A loop is a single
+coherent feature — the initial scaffold-to-running-app is loop
+zero (one commit), and each suggested next-10-loops item the user
+picks is its own single commit covering rulebook + regenerated
+`postgres/` + any UI changes that loop required.
 
-1. `chore: scaffold <project> (effortless.json, CLAUDE.md, start.sh)`
-   — after step B (scaffold), **before** the first `effortless build`.
-2. `feat(rulebook): initial schema + mock data for <domain>`
-   — after writing `effortless-rulebook.json`, **before** running
-   `effortless build`. The rulebook is committed standalone so the
-   diff against the generated `postgres/` output is legible later.
-3. `build: generate postgres/ from rulebook`
-   — immediately after the first successful `effortless build`.
-   Generated SQL committed as its own commit so future rebuilds show
-   clean DAG diffs.
-4. `feat(server): express api with X-User-Email auth + CRUD on vw_*`
-   — after step E.
-5. `feat(web): vite + react SPA with dev login and dashboard`
-   — after step F.
-6. `docs: README with try-this walkthrough and next-10-loops`
-   — after step G.
+So the typical demo git log looks like:
 
-Then for **each Leopold loop the user picks to run**, two commits:
-
-- `feat(rulebook): <one-line loop description>` (rulebook edit only)
-- `build: regenerate postgres/` (and, if UI-touching,
-  `feat(web): <UI change>` as a third commit)
+1. `feat: initial <domain> demo — rulebook, postgres, server, web, README`
+2. `feat: round LineTotal to 2 decimals` (rulebook-only loop)
+3. `feat: add Discount entity` (rulebook + UI loop)
+4. …
 
 Rules:
 
-- Use `git add <specific paths>`, never `git add -A`.
-- Don't skip hooks. Don't amend. New commit per step.
+- Commit at the end of each loop, not in the middle. Don't pile
+  multiple loops into one commit — that's what drives the user
+  crazy.
+- Use `git add <specific paths>`, never `git add -A` / `git add .`.
+- Don't skip hooks. Don't amend.
 - If the tree is dirty when the user invokes the demo, stop and
   ask before doing anything — don't pile demo commits on top of
   unrelated work.
@@ -293,34 +281,26 @@ before moving on.
      project-only effortless-* skills load via their scope gate.
 
      **CLAUDE.md MUST also include a `## Git hygiene` section that
-     promotes the commit-cadence rules from this skill into the
-     project itself**, so every future Claude session in this repo
-     follows them without needing to reload this skill. Use this
-     wording (verbatim, adapt entity names as needed):
+     promotes the commit cadence into the project itself**, so
+     every future Claude session in this repo follows it without
+     needing to reload this skill. Use this wording (verbatim):
 
      ```
-     ## Git hygiene (non-negotiable)
+     ## Git hygiene
 
-     This is a demo. The git log IS the demo. Commit at every
-     meaningful step — never bundle six things into one commit.
+     One commit per Leopold loop. A loop = one coherent feature
+     (rulebook change + regenerated postgres/ + any UI changes
+     that loop needs), committed together at the end.
 
-     - One logical change per commit. Rulebook edits, generated
-       SQL, server changes, web changes, README updates, mock-data
-       tweaks: each gets its own commit.
-     - **Always commit before `effortless build`** (snapshot the
-       rulebook), then commit the generated `postgres/` output as
-       its own follow-up commit.
-     - For each Leopold loop: (1) `feat(rulebook): …`,
-       (2) `build: regenerate postgres/`, (3) optional
-       `feat(web): …` if the UI changed.
+     - Don't bundle multiple loops into one commit.
+     - Don't split a single loop across many micro-commits.
      - Use `git add <specific paths>`. Never `git add -A` /
        `git add .`.
-     - Don't skip hooks. Don't amend. New commit per step.
-     - Don't wait to be told to commit. Commit as you go.
+     - Don't wait to be told to commit at the end of a loop —
+       just do it.
      ```
 
-     Do NOT bury this in a sub-bullet — it goes in as a top-level
-     section so it's impossible to miss.
+     Top-level section, not a sub-bullet.
    - `start.sh` (interactive launcher with subcommands
      `all|server|web|db|build`).
 5. Pick ports unlikely to collide with other demos.
