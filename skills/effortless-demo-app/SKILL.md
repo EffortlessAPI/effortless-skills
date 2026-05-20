@@ -342,10 +342,51 @@ before moving on.
     shows a calculated field rendering with the seed data — cheap
     proof the DAG works.
 
-### E. Server
+### E. Hello-world web app (BEFORE the server)
 
-11. `server/package.json` (express, pg, tsx, typescript).
-12. `server/src/index.ts` (single file):
+The point of doing the web app first — even as a stub — is so the
+user sees *something running in a browser* very early in the demo,
+and so the explainer DAG can be wired in before any real UI exists.
+This means as soon as the real UI is built, every calculated cell
+is already explainer-aware from the first render. No retrofit.
+
+12. Scaffold `web/`:
+    - `web/package.json` (react, react-router-dom, vite,
+      `@vitejs/plugin-react`).
+    - `web/vite.config.ts` (proxy `/api` to the planned server port
+      — the proxy can 502 for now, that's fine).
+    - `web/index.html`, `web/src/main.tsx`, `web/src/App.tsx` that
+      renders a literal **"<Project Name> — coming soon"** placeholder
+      with a one-line description of the domain. No routing, no
+      data fetching, no auth. Just text.
+    - Add `node_modules/`, `dist/`, `.vite/` to `.gitignore` (append
+      to the project-root `.gitignore` that already has `.ssotme/`).
+13. `start.sh` (if not already present) — interactive launcher with
+    subcommands `all | server | web | db | build`. The `web`
+    subcommand runs `cd web && npm install && npm run dev`.
+14. Run `./start.sh web`, then **open the URL in the browser** (the
+    assistant should print the URL and, where possible, open it).
+    Confirm the "coming soon" placeholder renders before moving on.
+    This is the first time the user sees *anything* — make it count.
+
+### F. Explainer DAG (BEFORE real UI)
+
+15. Load the `effortless-react-explainer-dag` skill and wire it into
+    the hello-world `web/` app *now*, while the UI is trivial. The
+    explainer reads from `effortless-rulebook.json` and exposes
+    `<DagCell>`, `<DagToggle>`, `<FieldDag>` (or equivalent — defer
+    to that skill for exact API). Goal: by the time the real UI
+    pages get built, every calculated value is already wrapped in a
+    `<DagCell>` so the inference graph is visible from the first
+    render. Don't bolt it on later.
+
+### G. Server
+
+16. `server/package.json` (express, pg, tsx, typescript). Use
+    `tsx watch src/index.ts` (not plain `tsx`) so the server
+    auto-restarts on edits — there's no reason to manually bounce
+    it during a demo.
+17. `server/src/index.ts` (single file):
     - `pg` Pool connecting as `postgres` (no RLS for demos).
     - Auth middleware: read `X-User-Email`, look up `vw_users`,
       attach `req.me`.
@@ -356,15 +397,17 @@ before moving on.
       Writes hit base tables, only touching raw columns, keyed on
       `<table>_id`.
     - Role-filter in the route handlers from `req.me.role`.
-13. Boot it; curl `/healthz` and one read+patch+read cycle showing the
-    cascade.
+18. Boot it via `./start.sh server`; curl `/healthz` and one
+    read+patch+read cycle showing the cascade.
 
-### F. Web
+### H. Flesh out the real UI (with explainer tokens from the start)
 
-14. `web/package.json` (react, react-router-dom, vite,
-    `@vitejs/plugin-react`, plus FullCalendar packages if scheduling).
-15. `web/vite.config.ts` (proxy `/api` to the server port).
-16. `web/src/`:
+Replace the "coming soon" placeholder with the real app. Because the
+explainer was wired in step F, every calculated value rendered here
+should already use `<DagCell>` / `<FieldDag>` — not as a follow-up
+pass.
+
+19. `web/src/`:
     - `main.tsx` → `<BrowserRouter><App /></BrowserRouter>`.
     - `App.tsx`: load `/api/me` once, render `<Login>` if 401, else
       `<Shell>` with a `<Routes>` block — one `<Route>` per page.
@@ -377,20 +420,21 @@ before moving on.
     - `lib/useApi.ts`: `useEffect`-based hook with a `reload()`
       callback so edits can refresh the view.
     - `pages/`:
-      - **Primary role**: dashboard with calculated/aggregated stats,
-        list pages, detail pages, and **edit forms for the raw
-        fields that drive the DAG**.
+      - **Primary role**: dashboard with calculated/aggregated stats
+        (each wrapped in `<DagCell>`), list pages, detail pages, and
+        **edit forms for the raw fields that drive the DAG**.
       - **Other roles**: a single `Placeholder.tsx` page that
         describes the role's intended view and links back to the
         primary role's home for the demo.
     - `styles.css`: hand-rolled, minimal.
-17. `npx tsc --noEmit` to confirm typecheck.
-18. Boot both server and web; load the SPA, log in as primary role,
-    edit a raw field, watch the dependent calculated field update.
+20. `npx tsc --noEmit` to confirm typecheck.
+21. Confirm the SPA: log in as primary role, edit a raw field, watch
+    the dependent calculated field update — and watch the DAG popover
+    explain *why* it changed.
 
-### G. README
+### I. README
 
-19. Write `README.md` with:
+22. Write `README.md` with:
     - Two-paragraph narrative: what the app does and who uses it.
     - A plain-English explanation of the DAG, pointing at the 2-3
       hop chain.
@@ -456,23 +500,7 @@ After writing the README, the assistant's hand-back message should
 include this list inline and explicitly ask which loops to run
 next.
 
-### G2. (Optional) Explainer DAG — final polish
-
-After the app is verifiably working end-to-end, offer to wire in the
-**React Explainer DAG** — a generated, embedded visualization that
-makes every calculated/lookup/aggregated cell clickable and shows the
-full inference graph behind it. This is the canonical "show how it's
-derived" UI for ERB demos and dramatically improves the wow-factor of
-the walkthrough.
-
-- Default: ask the user once ("Want the explainer DAG wired in?") and
-  if yes, follow the `effortless-react-explainer-dag` skill.
-- On-demand: load `effortless-react-explainer-dag` any time later when
-  the user asks to "show the DAG" or "explain a calculated field".
-- Skip until the app boots and reads/writes work — debugging two
-  things at once wastes time.
-
-### H. Smoke test before declaring done
+### J. Smoke test before declaring done
 
 20. `./start.sh all` boots cleanly.
 21. Login picker shows all seeded identities; signing in as the
