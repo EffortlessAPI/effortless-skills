@@ -83,7 +83,8 @@ of deliberation is not.
 Do NOT preload all seven supporting skills before starting. The bootstrap
 path in "Speed discipline" above doesn't need them. Load on demand:
 
-- `effortless-schema` — only if you're unsure of the rulebook JSON shape
+- `effortless-schema` — **required** before authoring the rulebook
+  (step C); it defines the JSON shape, field types, and formula syntax
 - `effortless-conventions` — only if you hit a naming/DAG question you
   can't answer from this skill
 - `effortless-sql` — only when wiring server-side queries
@@ -336,7 +337,16 @@ before moving on.
 
 ### C. Rulebook
 
-6. Author `effortless-rulebook/effortless-rulebook.json`:
+6. **Load `effortless-schema` before writing the rulebook.** That
+   skill is the canonical source for the JSON structure — top-level
+   keys, table objects, field schema, field types (raw / calculated
+   / lookup / relationship / aggregation), datatypes, formula
+   syntax, and the `_meta` section. Don't author the rulebook from
+   memory or by pattern-matching another project — load the schema
+   skill and follow it. This is the one supporting skill that
+   actually *is* required for the rulebook step.
+
+7. Author `effortless-rulebook/effortless-rulebook.json`:
    - Entities in **DAG order** — leaf tables first, then dependents.
    - For each entity: `Name` calculated PK formula derived from a raw
      field; the raw fields; the FK fields + their lookups (see
