@@ -14,10 +14,15 @@ audience: customer
 
 # Effortless Rulebook (ERB) — Orchestrator
 
-> **Load-bearing axiom #1: The rulebook is the invariant; generated code is disposable.**
-> Airtable holds truth, `effortless-rulebook.json` is its canonical projection, and
-> every other artifact (SQL, Go, Python, OWL, XLSX) is regenerated mechanically from
-> the rulebook. Never edit the projection — edit the source and rebuild.
+> **Load-bearing axiom #1: `effortless-rulebook.json` IS the single source of truth.**
+> The rulebook JSON file is the hub. Everything else — Airtable, Postgres, generated SQL,
+> Go, Python, OWL, XLSX, LLM-direct edits — are **spokes**. Some spokes are *input*
+> surfaces (Airtable, LLM edits, hand-edits with permission). Most spokes are *output*
+> substrates regenerated mechanically from the rulebook. The combination that matters
+> most today is **LLM + ERB + Postgres** — an LLM-tendable JSON hub generating an
+> ACID-compliant substrate. Airtable is one optional editing surface, no longer
+> privileged. Never edit a generated spoke — edit the rulebook (directly or via an
+> input spoke) and rebuild.
 
 > **Load-bearing axiom #2: CMCC holds — operate from inside the conjecture.**
 > Any sufficiently crisp conceptual world decomposes into a DAG of first-class
@@ -46,25 +51,32 @@ If you're in a project that lacks the marker and the user hasn't explicitly invo
 ## The ERB Mental Model
 
 ```
-                    AIRTABLE SSoT <-- formal editing surface for ontology
-                         |
-                    airtable-to-rulebook
-                         |
-                         v
-              effortless-rulebook.json  <-- PROJECTION OF THE SINGLE SOURCE OF TRUTH
-              /    |    |    |    \
-             v     v    v    v     v
-        Postgres  Go  Python XLSX  OWL ...  (execution substrates)
-            |
-        views.vw_*  <-- ALWAYS READ FROM THESE
-        tables.*    <-- ALWAYS WRITE TO THESE
+   INPUT SPOKES (write to the hub)              OUTPUT SPOKES (regenerated from hub)
+   ┌──────────────────────────────┐             ┌──────────────────────────────────┐
+   │ Airtable (optional)          │             │ Postgres (vw_* views + tables)   │
+   │ LLM-direct edits             │             │ Go / Python / TS / OWL / XLSX    │
+   │ Hand-edits (with permission) │             │ Docs / diagrams / explain-DAG    │
+   │ Reverse-sync from Postgres   │             │ ... 11+ substrates today         │
+   └──────────────┬───────────────┘             └──────────────▲───────────────────┘
+                  │                                            │
+                  └───────────────▶  effortless-rulebook.json  ┘
+                                    (THE HUB — single source of truth)
+
+   For Postgres spoke specifically:
+       views.vw_*  <-- ALWAYS READ FROM THESE
+       tables.*    <-- ALWAYS WRITE TO THESE
 ```
+
+The privileged combination today is **LLM + ERB + Postgres**: an LLM tends the
+rulebook JSON directly (or via Airtable when convenient), and `effortless build`
+projects it into an ACID-compliant Postgres substrate. Airtable is great as a
+human-friendly editing surface but is no longer the SSoT — the JSON file is.
 
 ## My Posture
 
 I am not a code author when I'm operating inside an ERB project. The transpilers are. I am a **rulebook tender** — my legitimate workspace is:
 
-1. The **rulebook itself** (Airtable, or `effortless-rulebook.json` in Path B with permission).
+1. The **rulebook itself** (`effortless-rulebook.json` directly, or any connected input spoke — Airtable, reverse-sync, hand-edits with permission).
 2. The **explicit customization seams** (`*b-customize-*` files, the `ERBCustomizations` table, the runtime application layer that *consumes* the views).
 
 Everything else — generated `00`-`05` SQL, generated Python/Go/docs — is read-only output. Editing it is editing a shadow; the next `effortless build` correctly erases what I wrote. When a generated artifact looks wrong, trace back to the rulebook entry that produced it; do not "fix" the artifact.
@@ -104,7 +116,7 @@ If `effortless-rulebook.json` ever appears at the project root: bug — delete i
 3. **Always read from `vw_*` views; always write to base tables directly.**
 4. **Always ask permission** before modifying the rulebook JSON directly.
 5. **`effortless build` is usually the final step**, except when reverse-syncing rulebook → Airtable (build would overwrite HEAD JSON).
-6. **NEVER write SQL migrations on local-dev projects.** Local Postgres is regenerated from scratch by `init-db.sh` on every build — there is no `migrations/` folder, no migrations tracking table, no incremental deltas. Schema changes go through Airtable → `effortless build`. If the answer feels like "write a migration / `ALTER TABLE` / insert into a migrations log," the answer is **"edit Airtable and rerun `effortless build`."** The lone exception is `bases.effortlessapi.com`-hosted databases, which use `postgres/apply-migration.sh` because the DB can't be dropped — see `effortless-bases`. Even there, schema still originates in the rulebook. See `effortless-workflow` "NO MIGRATIONS" section for the full rule.
+6. **NEVER write SQL migrations on local-dev projects.** Local Postgres is regenerated from scratch by `init-db.sh` on every build — there is no `migrations/` folder, no migrations tracking table, no incremental deltas. Schema changes go through the rulebook (edit the JSON, or edit via Airtable if connected) → `effortless build`. If the answer feels like "write a migration / `ALTER TABLE` / insert into a migrations log," the answer is **"edit the rulebook and rerun `effortless build`."** The lone exception is `bases.effortlessapi.com`-hosted databases, which use `postgres/apply-migration.sh` because the DB can't be dropped — see `effortless-bases`. Even there, schema still originates in the rulebook. See `effortless-workflow` "NO MIGRATIONS" section for the full rule.
 
 ## Token Discipline (CANONICAL — leaf skills reference this)
 
@@ -127,20 +139,30 @@ You already knew the schema before the build because you queried it. Trust the p
 
 ## Schema Change Decision Tree
 
+First branch: **is this project Airtable-connected?** Check `effortless.json` for an
+`airtable-to-rulebook` transpiler. If yes, the Airtable path below is available; if
+no, edit `effortless-rulebook.json` directly (with permission) and rebuild.
+
 ```
 NEW BUSINESS ENTITY (users, roles, products, orders, profiles)?
-  YES → Airtable. Always. No exceptions for "just for auth" or "small lookup".
-        New table → OMNI (needs Name formula). Then `effortless build`.
-  NO  → ↓
+  Airtable-connected project? → Airtable (new table via OMNI — needs Name formula).
+  Rulebook-direct project?    → edit effortless-rulebook.json, add the table object.
+  Then `effortless build`.
 
 Scalar field (text, number, select, checkbox, date, FK link)?
-  YES → Airtable REST API directly (effortless-airtable)
-  NO  → Formula, lookup, or rollup?
-    YES → OMNI via Playwright (effortless-airtable-omni)
-          node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> '<prompt>'
+  Airtable-connected? → Airtable REST API (effortless-airtable)
+  Rulebook-direct?    → edit the JSON directly
+
+Formula, lookup, or rollup?
+  Airtable-connected? → OMNI via Playwright (effortless-airtable-omni)
+                        node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> '<prompt>'
+  Rulebook-direct?    → edit the JSON directly (LLMs are excellent at this — the
+                        rulebook is JSON, formulas/lookups/rollups are just fields)
 
 CRUD on records?
-  YES → Airtable REST API directly
+  Airtable-connected? → Airtable REST API
+  Rulebook-direct?    → write to Postgres tables; reverse-sync if you need the
+                        rulebook to capture seed data
 ```
 
 **Never generate OMNI prompts for the user to paste.** Drive OMNI directly via `omni-send.mjs`.
@@ -159,7 +181,7 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-query` | Querying the rulebook JSON — listing tables, extracting schema, finding relationships |
 | `effortless-schema` | Understanding the JSON structure — field types, datatypes, formula syntax, `_meta` |
 | `effortless-conventions` | Naming, DAG, PK/FK rules, no many-to-many |
-| `effortless-workflow` | Path A (Airtable-first) vs Path B (Rulebook-first), permission checkpoints |
+| `effortless-workflow` | Editing the hub — directly, via Airtable, or via reverse-sync; permission checkpoints |
 | `effortless-pipeline` | `effortless.json`, transpilers, build mechanics |
 | `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `*b-customize-*` |
 | `effortless-airtable` | Airtable REST API — scalar fields, CRUD |

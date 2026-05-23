@@ -216,7 +216,7 @@ Workflow:
 3. **Selectors will break** — the script dumps debug info when they do; adapt accordingly
 4. **Leave the browser open** — the user may want to inspect
 5. **Rate limits** — kill and re-launch between prompts; 2-3 second natural delay
-6. **Always run `effortless build` after Airtable changes** — after any OMNI operation that modifies Airtable schema, run `effortless build` to sync the rulebook and regenerate code. **Exception:** skip the build if you are in the middle of a batch of changes pushing rulebook updates back to Airtable (Path B reverse sync) — in that case, wait until all Airtable changes are complete, then build once at the end.
+6. **Always run `effortless build` after Airtable changes** — after any OMNI operation that modifies Airtable schema, run `effortless build` so the Airtable spoke is pulled into the rulebook hub and downstream output spokes are regenerated. **Exception:** skip the build if you are in the middle of a batch of changes mirroring rulebook updates back to Airtable (reverse-sync) — in that case, wait until all Airtable changes are complete, then build once at the end.
 
 ---
 

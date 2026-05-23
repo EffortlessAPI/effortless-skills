@@ -9,15 +9,21 @@ description: >
 audience: customer
 ---
 
-# Airtable as Single Source of Truth
+# Airtable as One Input Spoke
 
-ERB projects use Airtable as the authoritative source of truth for schema definitions. The local `effortless-rulebook.json` file is normally generated FROM Airtable.
+In ERB, **`effortless-rulebook.json` is the hub / single source of truth.** Airtable is one
+optional input spoke — a human-friendly editing surface for projects that opt into it.
+The rulebook can equally well be edited directly (LLM-direct or hand-edits) or fed from
+other input spokes. Airtable is great, but no longer privileged.
 
-**Preferred flow (Path A):** Edit Airtable, then `effortless build` to regenerate the JSON and all downstream files.
+This skill covers the **Airtable spoke** specifically: how to read/write Airtable via its
+API so that `effortless build` picks up your changes into the hub.
 
-**Reverse-sync flow (Path B):** When necessary, you CAN edit `effortless-rulebook.json` directly, then push back to Airtable via `effortless build -id` from the `push-to-airtable/` subfolder.
+**Airtable-spoke flow:** Edit Airtable → `effortless build` → `airtable-to-rulebook` updates the hub → downstream transpilers regenerate every output spoke (Postgres, etc.).
 
-**In either case, always ask the user for permission before modifying the rulebook or Airtable.**
+**Reverse-sync flow:** Edit `effortless-rulebook.json` directly, then push back to Airtable via `effortless build -id` from the `push-to-airtable/` subfolder. Use when the hub is being edited directly but you still want Airtable mirrored.
+
+**In either direction, always ask the user for permission before modifying the rulebook or Airtable.**
 
 ## Getting the API Key
 
@@ -80,9 +86,11 @@ cat effortless.json | python3 -c "import sys,json; d=json.load(sys.stdin); print
 
 This base ID is shared across all airtable-facing tools and should always be read from here.
 
-## Making Schema Changes
+## Making Schema Changes via the Airtable Spoke
 
-**ALL schema changes must go through Airtable, then regenerate:**
+When this project is Airtable-connected AND you're choosing to use that spoke, schema
+changes flow Airtable → hub → output spokes. (If the project isn't Airtable-connected,
+or rulebook-direct is more practical, see `effortless-workflow`.)
 
 1. **Get the base ID** from `effortless.json` (the `baseId` setting)
 2. **Get the API key** using the priority order above
@@ -184,6 +192,6 @@ Some operations (like modifying formula fields) cannot be done via API. When you
 ## See also
 
 - `effortless-airtable-omni` — load this instead when the change is a formula, lookup, rollup, or new table (the API can't do those).
-- `effortless-workflow` — for Path A vs Path B decisions and permission checkpoints around schema changes.
+- `effortless-workflow` — for choosing between input spokes (rulebook-direct, Airtable, reverse-sync) and permission checkpoints around schema changes.
 - `effortless-conventions` — for the naming / DAG rules that any new field or table must follow.
 - `effortless-cli` — for `effortless -setAccountAPIKey airtable=...` and `~/.ssotme/ssotme.key` mechanics.

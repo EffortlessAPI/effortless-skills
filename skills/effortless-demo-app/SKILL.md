@@ -129,8 +129,10 @@ Rules:
 
 ## Invariants (do these, don't ask about them)
 
-1. Postgres + rulebook-first (Path B). SSoT is
-   `effortless-rulebook/effortless-rulebook.json`.
+1. Postgres + rulebook-direct (no Airtable). The SSoT is
+   `effortless-rulebook/effortless-rulebook.json` — the hub. Demo apps are
+   the canonical **LLM + ERB + Postgres** shape: an LLM tends the JSON hub
+   directly, `effortless build` generates the Postgres substrate.
 2. Stack: Express (`server/`) + Vite + React + React Router (`web/`).
 3. Dev login: `X-User-Email` stub auth, login page reads `/api/dev-users`
    and lets the user click any seeded identity. 2-3 roles.
@@ -297,7 +299,7 @@ before moving on.
 4. Create `<project-dir>/` with:
    - `effortless.json` (transpilers: `rulebook-to-postgres → /postgres`,
      then `execute ./init-db.sh`).
-   - `CLAUDE.md` (project conventions — Path B, no migrations, etc.).
+   - `CLAUDE.md` (project conventions — rulebook-direct, no Airtable, no migrations, etc.).
      **The first line under the H1 MUST explicitly mark this as an
      Effortless demo project** so future Claude sessions auto-load
      the `effortless-demo-app` skill (and the standard ERB skills)

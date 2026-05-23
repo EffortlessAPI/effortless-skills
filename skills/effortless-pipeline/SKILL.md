@@ -90,7 +90,7 @@ one-liner (see `effortless-query`) or run `psql -c "\d vw_tablename"`.
 
 - **From project root**: `effortless build` reads `effortless.json` and runs each enabled transpiler in its `RelativePath` directory. Disabled transpilers (`"IsDisabled": true`) are skipped.
 - **From a subfolder**: `effortless build` can also be run from any subfolder that contains its own `effortless.json` or is referenced as a `RelativePath`. This is how you run a specific transpiler in isolation.
-- **The `-id` flag** (include disabled): Forces execution of all transpilers, even those marked `"IsDisabled": true`. This is essential for the reverse-sync workflow (Path B), where `rulebook-to-airtable` is intentionally disabled during normal builds but needs to run when pushing local changes back to Airtable.
+- **The `-id` flag** (include disabled): Forces execution of all transpilers, even those marked `"IsDisabled": true`. This is essential for the reverse-sync workflow (rulebook → Airtable), where `rulebook-to-airtable` is intentionally disabled during normal builds but needs to run when mirroring hub edits back to Airtable.
 
 **Example: Pushing rulebook changes back to Airtable:**
 ```bash
@@ -132,17 +132,17 @@ effortless -install rulebook-to-postgres -i ../effortless-rulebook/effortless-ru
 effortless -install rulebook-to-docs
 ```
 
-**Critical:** The `rulebook-to-airtable` tool in `push-to-airtable/` must be disabled (`"IsDisabled": true`) so it is NOT run during a normal `effortless build`. It is only invoked explicitly with `effortless build -id` for reverse-sync (Path B).
+**Critical:** The `rulebook-to-airtable` tool in `push-to-airtable/` must be disabled (`"IsDisabled": true`) so it is NOT run during a normal `effortless build`. It is only invoked explicitly with `effortless build -id` for reverse-sync (rulebook hub → Airtable mirror).
 
 Every airtable-facing tool MUST include `-account airtable` so the CLI sends the API key from `~/.ssotme/ssotme.key`.
 
 ## Pipeline Flow
 
 ```
-Airtable Base (SSoT)
+Airtable Base (optional input spoke)
     |  airtable-to-rulebook
     v
-effortless-rulebook.json (Intermediate Representation)
+effortless-rulebook.json  ← THE HUB / SSoT
     |                    |                    |
     |  rulebook-to-      |  rulebook-to-      |  json-hbars-
     |  postgres          |  xlsx              |  transform
@@ -153,6 +153,10 @@ postgres/            output.xlsx          README.SCHEMA.md
     v
 Running PostgreSQL Database
 ```
+
+Other input spokes can also write to the hub — LLM-direct edits, hand edits, or
+reverse-sync — and any of them feed the same downstream transpilers. Airtable is one
+optional input, not the source of truth.
 
 ## Two deployment shapes — and only one of them uses migrations
 
@@ -261,7 +265,7 @@ For the catalog of public transpilers and their source repos, see `effortless-ec
 - `effortless-orchestrator` — canonical Token Discipline (atomic builds); this skill restates the rule from the pipeline angle.
 - `effortless-cli` — for the CLI flags and command surface that drive the pipeline.
 - `effortless-setup-postgres` — for the canonical first-run install order (which transpiler from which directory).
-- `effortless-workflow` — for Path A vs Path B and when `-id` is appropriate.
+- `effortless-workflow` — for choosing input spokes (rulebook-direct, Airtable, reverse-sync) and when `-id` is appropriate.
 - `effortless-leopold-loop` — for the iterative dev cycle the pipeline supports.
 - `effortless-cmcc` — the conjecture that justifies the substrate-equivalence stance.
 - `effortless-rulebooks` — the empirical demonstration of multi-substrate equivalence.

@@ -59,7 +59,7 @@ API: Populate with mock data
 Extend model with 1st, 2nd, higher-order inferences (comprehensive DAG)
     |
     v
-airtable-to-rulebook officially designates Airtable as SSoT
+airtable-to-rulebook syncs the Airtable spoke into the rulebook hub (SSoT)
     |
     v
 Now in the Leopold Loop
@@ -144,16 +144,16 @@ Extend the model with:
 
 This builds out the full analytical power of the rulebook.
 
-### Step 13: Designate Airtable as SSoT
+### Step 13: Sync the Airtable spoke into the hub
 
-Run the airtable-to-rulebook transpiler to officially make Airtable the single source of truth:
+Run the airtable-to-rulebook transpiler to pull the now-fully-seeded Airtable base into the rulebook hub (the SSoT). This establishes Airtable as a *connected input spoke*, not as the SSoT itself — `effortless-rulebook.json` is the SSoT, and Airtable is one editing surface for it.
 
 ```bash
 cd effortless-rulebook/
 effortless airtable-to-rulebook -account airtable -o effortless-rulebook.json
 ```
 
-At this point, we are fully in the **Leopold loop** — all future changes go through Airtable first, then `effortless build`.
+At this point, we are fully in the **Leopold loop** — future changes can flow in via Airtable, via direct edits to the rulebook JSON (LLM-direct), or via reverse-sync, followed by `effortless build`.
 
 ## CLI Tool for Bootstrap
 
@@ -186,7 +186,7 @@ This output is a **starting point** — it needs to be reviewed, normalized, and
 - `effortless-schema` — JSON structure the rulebook must conform to.
 - `effortless-airtable-omni` — OMNI automation for creating tables (Step 9).
 - `effortless-airtable` — API calls for descriptions and data (Steps 10–11).
-- `effortless-leopold-loop` — what you enter at Step 13 once Airtable is the SSoT.
+- `effortless-leopold-loop` — what you enter at Step 13 once the rulebook hub is seeded and synced.
 - `effortless-setup-postgres` — for projects that target Postgres, run after Step 13.
 
 ## LOCALHOST MODE — read before doing anything

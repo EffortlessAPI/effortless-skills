@@ -39,9 +39,9 @@ audience: customer
 
 ---
 
-## Base ID is the SSoT — derive everything else from the rulebook
+## When the only seed is a base id — pull it into the rulebook hub, then derive everything
 
-If the user gives you only an Airtable **base id** (e.g. `appXXXXXXXX`) and nothing else, treat that base as the **single source of truth** for the project. Do NOT ask the user for a project name, table list, or description — pull the rulebook first, then derive everything you need from it.
+`effortless-rulebook.json` is the SSoT. If the user gives you only an Airtable **base id** (e.g. `appXXXXXXXX`) and nothing else, use the base as the **seed input spoke** for that hub: pull the rulebook first, then derive everything you need from the rulebook (not from Airtable directly). Do NOT ask the user for a project name, table list, or description — those all live in the rulebook once you've pulled it.
 
 **Order of operations when only a base id is given:**
 

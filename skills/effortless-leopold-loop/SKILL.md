@@ -23,14 +23,16 @@ The "Leopold loop" is the user's name for the iterative ERB development cycle. I
 ## The Loop
 
 ```
-   1. CHANGE THE RULE (once, in Airtable — the SSoT)
+   1. CHANGE THE RULE (once, in the hub — effortless-rulebook.json, the SSoT)
+      via whichever input spoke fits: rulebook-direct (LLM/hand-edit),
+      Airtable (if connected), or reverse-sync.
             |
             v
    2. effortless build  (one command)
             |
             v
    3. EVERY DOWNSTREAM LAYER UPDATES AUTOMATICALLY
-      - effortless-rulebook.json (canonical projection)
+      - effortless-rulebook.json (the hub, now updated)
       - postgres/01-05*.sql (tables, functions, views, seed data)
       - ODXML schema
       - C#/Go/Python/etc. base classes, ORM context, sync services
@@ -47,7 +49,7 @@ The "Leopold loop" is the user's name for the iterative ERB development cycle. I
 
 ## Why it's "effortless"
 
-A single rule change propagates through every layer with **zero hand-written migrations, DTOs, ORM updates, API serializers, or client types**. The business logic ("a customer is stopped when CurrentColor is Red") lives in **exactly one place** — the Airtable formula → generated SQL function → exposed in the view as `is_stopped`. The app just reads `is_stopped`. If the rule flips ("now Green means stopped"), the loop runs once and *no app code changes*.
+A single rule change propagates through every layer with **zero hand-written migrations, DTOs, ORM updates, API serializers, or client types**. The business logic ("a customer is stopped when CurrentColor is Red") lives in **exactly one place** — the rulebook hub (authored directly or via Airtable) → generated SQL function → exposed in the view as `is_stopped`. The app just reads `is_stopped`. If the rule flips ("now Green means stopped"), the loop runs once and *no app code changes*.
 
 Compare to **naked Claude** (defined above — hand-coding every layer): the same change requires editing a migration, seed data, DTO, ORM model, API serializer, client type, and client logic — and probably missing one and shipping a bug. The Leopold loop exists specifically to eliminate that class of failure.
 
@@ -62,7 +64,7 @@ When the user says any of these, they expect the same sequence of actions:
 - *"Push the rule change through"*
 - *"Make the app reflect the new schema"*
 
-All of these mean: **propagate the current Airtable state through every downstream layer, then update only the app's schema-surface code.**
+All of these mean: **propagate the current rulebook state through every downstream layer, then update only the app's schema-surface code.** (If the project is Airtable-connected, the build pulls Airtable into the rulebook first.)
 
 ## What "do a turn of the Leopold loop" actually entails
 
@@ -85,26 +87,26 @@ All of these mean: **propagate the current Airtable state through every downstre
 4. **Update the app code only where it touches the schema surface** — column names that changed, new fields the UI now needs to display, removed tables to clean up references to. **Never reimplement** rule logic in the app; consume the calculated fields from the view as opaque truth.
 5. **Restart the app** — run `./start.sh` from the project root.
 
-## MANDATORY: Always Build After Airtable Changes
+## MANDATORY: Always Build After Hub Changes
 
-**Every time** Airtable schema or data is modified (via API, OMNI, or manual UI changes), an `effortless build` MUST follow. No exceptions. The build is what propagates the change through the entire stack. Without it, the generated code is stale and the app is out of sync with the SSoT.
+**Every time** the rulebook hub is modified — directly, via Airtable (API/OMNI/UI), or via reverse-sync — an `effortless build` MUST follow. No exceptions. The build is what propagates the change through every output spoke. Without it, the generated code is stale and the app is out of sync with the SSoT.
 
 ## Anti-patterns (these BREAK the loop — never do them)
 
-- **Writing a migration to "make a schema change persist."** This is the #1 way the loop gets bypassed. ERB has no `migrations/` folder, no migrations table, no incremental SQL deltas — `init-db.sh` drops and recreates the whole DB on every build. If the answer feels like "write a migration / `ALTER TABLE` / insert into a migrations log," the answer is **"edit Airtable and rerun `effortless build`."** Migrations only exist on `bases.effortlessapi.com`-hosted DBs, and even there schema still originates in Airtable — see `effortless-workflow` "NO MIGRATIONS" section + `effortless-bases`.
+- **Writing a migration to "make a schema change persist."** This is the #1 way the loop gets bypassed. ERB has no `migrations/` folder, no migrations table, no incremental SQL deltas — `init-db.sh` drops and recreates the whole DB on every build. If the answer feels like "write a migration / `ALTER TABLE` / insert into a migrations log," the answer is **"edit the rulebook (directly or via Airtable if connected) and rerun `effortless build`."** Migrations only exist on `bases.effortlessapi.com`-hosted DBs, and even there schema still originates in the rulebook — see `effortless-workflow` "NO MIGRATIONS" section + `effortless-bases`.
 - **Reimplementing rule logic in the client** — e.g. computing `isStopped = customer.color === 'Red'` in JS instead of using `customer.is_stopped` from the view. This duplicates the rule in two places. When the rule changes in Airtable next time, the client silently goes wrong because nobody updated the duplicated copy. **The whole point of the loop is that the rule lives in exactly one place.**
 - **Hand-editing generated files** — `postgres/01-05*.sql`, `dotnet/.../BaseClasses/*.cs`, etc. They get blown away on the next build. If you need to override generated SQL, use the `*b-customize-*` files (see `effortless-sql` skill), and only after exhausting Airtable as the source of the change.
-- **Adding columns/fields directly in SQL or C#** — changes must originate in Airtable so they survive `effortless build`. Use the `effortless-airtable` skill for scalar fields and `effortless-airtable-omni` for formulas/lookups/rollups.
+- **Adding columns/fields directly in SQL or C#** — changes must originate in the rulebook hub so they survive `effortless build`. Edit `effortless-rulebook.json` directly, or use the `effortless-airtable` skill for scalar fields and `effortless-airtable-omni` for formulas/lookups/rollups in Airtable-connected projects.
 - **Caching the rulebook output and forgetting to rebuild** — always rebuild before reasoning about the current state. Stale generated code is a common source of confusion.
 - **Skipping the build and editing generated SQL "just this once"** — there is no "just this once". The next build erases it and the bug returns. Always go around the loop.
-- **Treating `effortless-rulebook.json` as the SSoT** — it is a *projection* of the SSoT. Airtable is the SSoT. The only exception is the rare reverse-sync case (Path B in `effortless-workflow`), and that requires explicit permission.
+- **Editing generated output spokes as if they were the source** — postgres SQL, Go, Python, OWL, XLSX, etc. are *outputs*. The hub is `effortless-rulebook.json`. Edit the hub (directly, or via Airtable if connected, or via reverse-sync — all with permission), never the generated spokes.
 
 ## See also
 
 - `effortless-orchestrator` — the big-picture mental model; references this skill for the loop itself.
-- `effortless-workflow` — Path A (Airtable-first, the normal loop) vs Path B (Rulebook-first, reverse sync).
+- `effortless-workflow` — choosing among input spokes (rulebook-direct, Airtable, reverse-sync).
 - `effortless-pipeline` — the mechanics of `effortless build` itself.
-- `effortless-airtable` / `effortless-airtable-omni` — *how* to make the rule change in step 1.
+- `effortless-airtable` / `effortless-airtable-omni` — *how* to make the rule change via the Airtable spoke (when connected). For rulebook-direct, just edit the JSON.
 - `effortless-sql` — verifying step 3's generated output and using `*b-customize-*` overrides correctly.
 
 ## TL;DR for future-you
