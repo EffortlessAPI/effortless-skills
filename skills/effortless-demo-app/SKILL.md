@@ -26,6 +26,24 @@ every inference, and deep routing so F5 always works.
 For **demos and POCs**, not production. No Airtable, no magic-links, no
 Shadle steps, no migration tooling.
 
+## User-facing documentation discipline
+
+**README and user-facing docs lead with business value, not the ERB.**
+
+The README should open with what the app *does* — the domain, the primary
+user persona, the business outcomes. Mention ERB only as an implementation
+detail, far down or in a separate architecture section. Example:
+
+- ❌ *"This is an Effortless Rulebook project showcasing multi-hop
+  calculated fields and the Leopold loop..."*
+- ✅ *"An event planning system for community organizers, with automatic
+  conflict detection and capacity forecasting. See the 'Next 10 loops'
+  section for guided feature suggestions."*
+
+The rulebook DAG, inference chains, and transpiler plumbing are *why* the
+system works, not *what* it is. Keep them invisible to the end user in
+the README. They belong in CLAUDE.md and developer guides.
+
 ## Speed discipline (read this first)
 
 This skill exists because demos should be FAST. Target: first
@@ -476,9 +494,13 @@ pass.
 ### I. README
 
 22. Write `README.md` with:
-    - Two-paragraph narrative: what the app does and who uses it.
-    - A plain-English explanation of the DAG, pointing at the 2-3
-      hop chain.
+    - **Two-paragraph narrative opening with what the app does and who uses
+      it — the business angle, not the methodology.** (E.g., "An event
+      planning system for community organizers..." NOT "An Effortless
+      Rulebook demo showing multi-hop inferences...")
+    - A plain-English explanation of how the system computes key
+      outcomes, referencing the 2-3 hop chain (but keep ERB jargon
+      buried or in footnotes).
     - Quick-start (`./start.sh`).
     - Dev-login table (emails + roles).
     - **"Try this" walkthrough**: a 3-step path that exercises the
@@ -491,6 +513,8 @@ pass.
     - **"Next 10 Leopold loops" section** (see below).
     - Known limitations (stub auth, no RLS, placeholder roles, no
       tests).
+    - Optional: a "How This Was Built" section at the end explaining
+      the ERB infrastructure for developers interested in the internals.
 
 ### G.1 The "Next 10 Leopold loops" suggestions
 

@@ -15,6 +15,12 @@ audience: customer
 
 This skill describes the full bootstrap process for turning raw requirements or platform descriptions into a formal effortless rulebook connected to Airtable. This is how a new project goes from "here's what we're building" to "we're in the Leopold loop."
 
+## User-facing documentation discipline
+
+Throughout this bootstrap — especially in any README or narrative description generated for the client — **lead with what the system does, not how it was built.**
+
+The rulebook, Airtable integration, calculated fields, and DAG structure are implementation details. They belong in CLAUDE.md and developer guides, not in user-facing materials. When generating glossaries, narratives, or mockups, focus on the business vocabulary and workflows, not the ERB infrastructure.
+
 ## Overview
 
 The bootstrap is a structured pipeline that progressively formalizes raw input:

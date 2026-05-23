@@ -24,6 +24,12 @@ audience: customer
 > servers do not trust that tenant and reject those JWTs as
 > "Unknown tenant". Use the bases-api auth flow below.
 
+## User-facing documentation discipline
+
+When generating READMEs, deployment guides, or client-facing setup documentation for a bases-deployed app, **center the business outcomes and use workflows, not the infrastructure.** 
+
+The Effortless rulebook, the schema generation, the migration discipline, and the RLS machinery are the *how* — invisible to the end user. The *what* is the app's value proposition. Keep deployment and architecture docs separate from user guides.
+
 ## CRITICAL DISTINCTION — bases vs. local-dev
 
 This skill applies **only** to `bases.effortlessapi.com`-hosted databases. Bases is the **one and only ERB deployment shape that uses migrations** — because the DB is shared/persistent and cannot be dropped + recreated. Ongoing schema changes go through `postgres/apply-migration.sh`.
