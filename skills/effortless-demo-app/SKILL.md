@@ -153,36 +153,6 @@ Every feature change follows exactly this order. No exceptions.
 If the DB doesn't update after `effortless build`, the init-db exec tool
 wasn't installed in step B — fix that, don't run `init-db.sh` manually.
 
-## Commit cadence: one commit per Leopold loop
-
-The pedagogical point of this skill is to **show the Leopold loop
-turning**. The git log should read like a walkthrough of loop
-turns, not one giant blob and not a flood of micro-commits.
-
-**The rule: one commit per Leopold loop.** A loop is a single
-coherent feature — the initial scaffold-to-running-app is loop
-zero (one commit), and each suggested next-10-loops item the user
-picks is its own single commit covering rulebook + regenerated
-`postgres/` + any UI changes that loop required.
-
-So the typical demo git log looks like:
-
-1. `feat: initial <domain> demo — rulebook, postgres, server, web, README`
-2. `feat: round LineTotal to 2 decimals` (rulebook-only loop)
-3. `feat: add Discount entity` (rulebook + UI loop)
-4. …
-
-Rules:
-
-- Commit at the end of each loop, not in the middle. Don't pile
-multiple loops into one commit — that's what drives the user
-crazy.
-- Use `git add <specific paths>`, never `git add -A` / `git add .`.
-- Don't skip hooks. Don't amend.
-- If the tree is dirty when the user invokes the demo, stop and
-ask before doing anything — don't pile demo commits on top of
-unrelated work.
-
 ## Invariants (do these, don't ask about them)
 
 1. Postgres + rulebook-direct (no Airtable). The SSoT is
@@ -254,34 +224,23 @@ tooling — those are decided by the defaults table below.
 
 ## The FK / lookup pattern (canonical)
 
-The `rulebook-to-postgres` transpiler uses **the first raw field of
-each entity as its literal PK column** (named `<table>_id` in the
-generated SQL). Foreign keys store the value of that PK field. This
-is what every generated `vw_`* view, every `calc_`* lookup function,
-and every aggregation actually joins on. The Name-as-PK pattern (FK
-column holding a calculated `Name` value) does **not** work — the
-transpiler's emitted lookups will join on `<table>_id`, which won't
-match the Name-derived FK value, and every lookup will silently
-return NULL.
+Every entity in the rulebook follows this shape:
 
-So every entity has the same shape:
-
-- First raw field: `<Table>Id` (PascalCase singular `<Entity>` + `Id`,
-e.g. `ThingsId`, `WidgetsId`, `UsersId`). Holds the slug / email /
-natural key.
-- `Name = ={{<Table>Id}}` as the calculated PK (so the view still has
-a friendly `name` column for display).
-- FK columns are named after the related entity (singular). E.g.
-`Widgets.Thing` holds the value of `Things.ThingsId`. No
-`Widgets.ThingId`, no `Widgets.thing_id` — just `Widgets.Thing`.
-- Lookups follow the FK: `Widgets.ThingName`, `Widgets.ThingColor`,
-etc. The lookup formula is
-`=INDEX(Things!{{Color}}, MATCH(Widgets!{{Thing}}, Things!{{ThingsId}}, 0))`
-— **match against `<Table>Id`, never against `Name`.**
-- Chained lookups work too: a lookup on Widgets can pull a lookup from
-Things (e.g. `Widgets.ThingCategoryName` pulls
-`Things.CategoryName`, which is itself a lookup). The transpiler
-resolves them transparently.
+- **First raw field: `<Table>Id`** (PascalCase table name + `Id`, e.g. `ThingsId`,
+  `WidgetsId`, `UsersId`). This is the stored identity of the row. In mock data,
+  use human-friendly slug-style values (`"acme-corp"`, `"step-01"`) — they make
+  seed data readable and debuggable. In production the substrate may replace these
+  with UUIDs; the rulebook doesn't care.
+- **`Name` is a calculated display alias**, not the stored PK. Simple tables:
+  `Name = ={{<Table>Id}}`. Compound tables: `Name = ={{OrderNumber}} & "-" & {{Status}}`.
+  `Name` is available on every entity for display even if PKs are swapped to UUIDs.
+- **FK columns** are named after the related entity (singular, no "Id" suffix):
+  `Widgets.Thing` holds the value of `Things.ThingsId`. Not `Widgets.ThingId`.
+- **Lookups match on `<Table>Id`**, never on `Name`:
+  `=INDEX(Things!{{Color}}, MATCH(Widgets!{{Thing}}, Things!{{ThingsId}}, 0))`
+  Matching on `Name` silently returns NULL because `Name` is calculated, not stored.
+- **Chained lookups** work transparently: `Widgets.ThingCategoryName` can pull
+  `Things.CategoryName`, which is itself a lookup.
 
 Aggregations go the **other** way: on `Things` you might write
 `TotalWidgetSpend = SUMIFS(Widgets!{{LineTotal}}, Widgets!{{Thing}}, {{ThingsId}})`.
@@ -363,25 +322,7 @@ before moving on.
   when working in this directory. Use exactly this marker line:
   `> **Project type:** Effortless demo app (rulebook-first Postgres POC). Use the \`effortless-demo-app skill for any
   work in this repo — schema edits, Leopold loops, new pages,
-  mock data, README updates.`Also include the standard ERB marker sentence ("This project follows the Effortless Rulebook (ERB) methodology…") so the project-only effortless-* skills load via their scope gate. **CLAUDE.md MUST also include a`## Git hygiene` section that
-  promotes the commit cadence into the project itself**, so
-  every future Claude session in this repo follows it without
-  needing to reload this skill. Use this wording (verbatim):
-    ```
-    ## Git hygiene
-
-    One commit per Leopold loop. A loop = one coherent feature
-    (rulebook change + regenerated postgres/ + any UI changes
-    that loop needs), committed together at the end.
-
-    - Don't bundle multiple loops into one commit.
-    - Don't split a single loop across many micro-commits.
-    - Use `git add <specific paths>`. Never `git add -A` /
-      `git add .`.
-    - Don't wait to be told to commit at the end of a loop —
-      just do it.
-    ```
-    Top-level section, not a sub-bullet.
+  mock data, README updates.` Also include the standard ERB marker sentence ("This project follows the Effortless Rulebook (ERB) methodology…") so the project-only effortless-* skills load via their scope gate.
   - `start.sh` (interactive launcher with subcommands
   `all|server|web|db|build`).
 2. Pick ports unlikely to collide with other demos.
@@ -398,10 +339,10 @@ before moving on.
    actually *is* required for the rulebook step.
 2. Author `effortless-rulebook/effortless-rulebook.json`:
   - Entities in **DAG order** — leaf tables first, then dependents.
-  - For each entity: `Name` calculated PK formula derived from a raw
-  field; the raw fields; the FK fields + their lookups (see
-  pattern above); calculated fields (1st/2nd/3rd-order); any
-  aggregations from related tables.
+  - For each entity: a `<Table>Id` raw field (slug-style in mock data);
+  a `Name` calculated display alias (`={{<Table>Id}}` or compound formula);
+  the raw fields; the FK fields + their lookups (see pattern above);
+  calculated fields (1st/2nd/3rd-order); any aggregations from related tables.
   - Mock data: for every boolean/threshold/enum rule, seed rows that
   produce each possible output. The dashboard for the primary role
   should show a mix of states out of the box.

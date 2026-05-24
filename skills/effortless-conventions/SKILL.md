@@ -11,29 +11,29 @@ audience: customer
 
 # ERB Naming & Design Conventions
 
-> **Load-bearing axiom: `Name` is the primary key. Surrogates are the substrate's problem.**
-> Every table's first field is `Name` — a kebab-cased compound formula that
-> uniquely identifies a row in human-readable form. `{Entity}Id` columns
-> never appear in the rulebook; substrates (Postgres, Airtable, etc.) may
-> mint surrogate keys off-screen for referential integrity, but they are
-> invisible to the domain model.
-
 ## Table Names
 - **PascalCase**, no spaces, no symbols, no underscores
 - Plural for collections: `Customers`, `WorkflowSteps`, `TypesOfAgents`
 - Example: `ClientProgramSessions`, `DocumentCategories`, `ApprovalGates`
 
-## The Name Field (PRIMARY KEY)
-- **`Name` is ALWAYS the FIRST field in EVERY table. No exceptions.**
-- `Name` is ALWAYS a `formula`/`calculated` field that produces a lowercase, dash-separated compound key — the human-readable unique identifier for each row.
-- Formula pattern: `SUBSTITUTE(LOWER({{DisplayName}}), " ", "-")` for simple tables, or compound keys like `SUBSTITUTE(LOWER({{OrderNumber}} & "-" & {{Status}}), " ", "-")` for junction/child tables.
-- `Name` IS the primary key in the rulebook. It is query-friendly (no spaces), human-readable, and unique within the table.
-- In Airtable, this is the primary field (first column) that labels each record.
+## The `<Table>Id` Field (STORED IDENTIFIER)
 
-## Surrogate Keys (`{Entity}Id`) — NEVER in Schema
-- Surrogate keys (e.g., `CustomerId`, `WorkflowStepId`) are managed **by the execution substrate** (Airtable row IDs, Postgres UUIDs, etc.) — they are NEVER declared in omni prompts, schema definitions, or the rulebook's field list.
-- The `Name` formula IS the logical key. Substrates may add a surrogate key "off-screen" for referential integrity, but it is invisible to the domain model.
-- **Do NOT include `{Entity}Id` fields in omni prompts or table definitions. Ever.**
+Every table's **first raw field** is `<TableName>Id` — e.g. `CustomersId`, `WorkflowStepsId`. This is the stored identity of each row.
+
+- **Raw field**, not calculated.
+- In mock data, use human-friendly slug-style values (`"acme-corp"`, `"step-01"`, `"alice@example.com"`). These make mock data readable and debuggable.
+- FK fields in child tables hold the **value** of the parent's `<Table>Id` field.
+- In production, the execution substrate (Postgres, Airtable) may replace these slugs with UUIDs or surrogate keys — the rulebook doesn't care. The `<Table>Id` field is the rulebook's logical identity; what the substrate uses under the hood is its own concern.
+
+## The `Name` Field (DISPLAY ALIAS)
+
+Every table also has a `Name` **calculated** field. It is a human-readable display identifier derived from the raw fields — typically the same as `<Table>Id` for simple tables, or a compound formula for junction/child tables.
+
+- `Name` is **not** the stored PK. It is a computed display alias available on every entity.
+- Simple pattern: `Name = ={{<Table>Id}}` (just mirrors the stored id).
+- Compound pattern: `Name = ={{OrderNumber}} & "-" & {{Status}}` for tables where identity is composite.
+- Because `Name` is calculated, it works correctly even if the substrate swaps slug identifiers for UUIDs — the formula still produces a readable label from whatever raw fields are available.
+- In Airtable contexts, `Name` maps to the primary field (first column).
 
 ## Every Table and Field Must Have a Description
 - Descriptions form the semantic backbone of the DAG
@@ -49,6 +49,14 @@ Order.Customer     (FK to Customers table)    -- NOT Order.CustomerId
 Employee.Role      (FK to Roles table)        -- NOT Employee.RoleId
 Artifact.DerivedFrom (FK to Artifacts table)  -- NOT Artifact.DerivedFromId
 ```
+
+**FK fields hold the `<Table>Id` value of the related row** — the stored identifier, not the calculated `Name`. In mock data this is the slug string (e.g. `"acme-corp"`). Lookups match on `<Table>Id`:
+
+```
+=INDEX(Customers!{{Name}}, MATCH({{Customer}}, Customers!{{CustomersId}}, 0))
+```
+
+Never match on `Customers!{{Name}}` — that's the calculated alias, not the stored identity.
 
 **The reverse relationship uses the PLURAL name:**
 
