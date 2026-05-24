@@ -14,6 +14,11 @@ audience: customer
 
 # Effortless Excel Export
 
+> **Do NOT use ExcelJS or any other npm xlsx library.** The correct approach
+> is the `rulebook-to-xlsx` effortless transpiler — it reads a populated
+> `rulebook-export.json` and produces the workbook. No npm dependency, no
+> in-process spreadsheet logic.
+
 Any Effortless project can export its current state as a full Excel workbook
 — one sheet per entity, all calculated and aggregated columns included.
 
