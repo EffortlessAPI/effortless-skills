@@ -513,6 +513,14 @@
         "Category": "theory-and-receipts",
         "ScopeGate": "theory-no-marker",
         "Audience": "customer"
+      },
+      {
+        "Slug": "effortless-excel-export",
+        "Description": "Add Excel export to any Effortless Postgres project: populate a rulebook-export.json from live vw_* views, run rulebook-to-xlsx, and wire a download endpoint + link into the app.",
+        "WhyItExists": "Any ERB project can export its full current state — schema + live data + all calculated fields — as a multi-sheet Excel workbook. This skill makes it a single Leopold loop to add that capability.",
+        "Category": "data-and-export",
+        "ScopeGate": "project-or-explicit-request",
+        "Audience": "customer"
       }
     ]
   },

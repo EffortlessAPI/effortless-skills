@@ -430,14 +430,11 @@ is already explainer-aware from the first render. No retrofit.
 
 ### F. Explainer DAG (BEFORE real UI)
 
-15. Load the `effortless-react-explainer-dag` skill and wire it into
-    the hello-world `web/` app *now*, while the UI is trivial. The
-    explainer reads from `effortless-rulebook.json` and exposes
-    `<DagCell>`, `<DagToggle>`, `<FieldDag>` (or equivalent — defer
-    to that skill for exact API). Goal: by the time the real UI
-    pages get built, every calculated value is already wrapped in a
-    `<DagCell>` so the inference graph is visible from the first
-    render. Don't bolt it on later.
+15. Install the `effortless-react-explainer-dag` transpiler into this
+    project and integrate it into the hello-world `web/` app *now*,
+    while the UI is trivial. Load the `effortless-react-explainer-dag`
+    skill for exact installation and integration steps. Do it before
+    building the real UI — don't bolt it on later.
 
 ### G. Server
 
@@ -481,15 +478,16 @@ pass.
     - `pages/`:
       - **Primary role**: dashboard with calculated/aggregated stats
         (each wrapped in `<DagCell>`), list pages, detail pages, and
-        **edit forms for the raw fields that drive the DAG**.
+        **edit forms for the raw fields users actually change**.
       - **Other roles**: a single `Placeholder.tsx` page that
         describes the role's intended view and links back to the
         primary role's home for the demo.
     - `styles.css`: hand-rolled, minimal.
 20. `npx tsc --noEmit` to confirm typecheck.
-21. Confirm the SPA: log in as primary role, edit a raw field, watch
-    the dependent calculated field update — and watch the DAG popover
-    explain *why* it changed.
+21. Confirm the SPA: log in as primary role, make a business-meaningful
+    edit (change an amount, flip a status, update a quantity), watch the
+    dependent values update — and click a calculated value to see the
+    source values and rule that produced it.
 
 ### I. README
 
@@ -498,15 +496,19 @@ pass.
       it — the business angle, not the methodology.** (E.g., "An event
       planning system for community organizers..." NOT "An Effortless
       Rulebook demo showing multi-hop inferences...")
-    - A plain-English explanation of how the system computes key
-      outcomes, referencing the 2-3 hop chain (but keep ERB jargon
-      buried or in footnotes).
+    - A plain-English description of the domain — what the business
+      does, who the actors are, and how key values are derived. Include
+      at least 2–3 concrete examples of how one piece of data flows into
+      another (e.g. "submitting an expense automatically updates the
+      team's pending total, which determines whether the manager's
+      approval queue badge appears"). No ERB/rulebook jargon here.
     - Quick-start (`./start.sh`).
     - Dev-login table (emails + roles).
     - **"Try this" walkthrough**: a 3-step path that exercises the
-      cascade end-to-end. e.g. "log in as primary role → open Thing
-      X → edit its `Quantity` from 5 to 50 → watch `LineTotal` and
-      the rolled-up `OrderTotal` update, and the threshold flag flip".
+      cascade end-to-end using domain language. e.g. "log in as manager
+      → find Bob's hotel expense → change the amount from $150 to $650
+      → notice his pending total now exceeds the threshold and the High
+      Value badge appears on the approval queue".
     - Repo layout.
     - Leopold loop instructions ("to add a field: edit the rulebook,
       `./start.sh build`, `./start.sh db`").
@@ -570,8 +572,9 @@ next.
 20. `./start.sh all` boots cleanly.
 21. Login picker shows all seeded identities; signing in as the
     primary role lands on a populated dashboard.
-22. Editing one raw field that feeds the DAG visibly updates the
-    dependent calculated field on the next read.
+22. Making a business-meaningful edit (change an amount, approve a
+    request, update a quantity) visibly updates the dependent values
+    on the next read.
 23. Hitting a primary-only route as a placeholder role redirects to
     `/`.
 24. Hard-refresh (F5) on a deep URL re-renders the same page.
@@ -600,13 +603,14 @@ When you hand back to the user, they should be able to:
 
 1. Run one command and have a working app open in the browser.
 2. Sign in as the primary role and see a dashboard with at least one
-   calculated/aggregated number derived from the DAG.
-3. Edit a raw field on some row and see a downstream calculated field
-   change on the next read (or with one obvious refresh).
+   calculated/aggregated business value.
+3. Make a business-meaningful edit and see the downstream totals,
+   flags, and summaries reflect it (on the next read or one obvious
+   refresh).
 4. Sign in as a placeholder role and see a labeled stub page with a
    working role switch back.
-5. Read the README and understand the domain, the DAG, and the
-   "try this" walkthrough in under two minutes.
+5. Read the README and understand the domain, the key derived values,
+   and the "try this" walkthrough in under two minutes.
 6. See a list of the **next 10 Leopold loops** at the bottom of the
    README — a mix of rulebook-only and rulebook+UI changes — and
    pick which one(s) to run next.
