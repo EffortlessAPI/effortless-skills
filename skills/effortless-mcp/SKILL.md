@@ -13,7 +13,7 @@ description: >
   into the mcp image". For the **CLI binary**, use effortless-cli; for the
   **skill set source**, use effortless-claude-updates.
 
-  **Scope (load gate):** Loads on explicit user request. Does NOT require an Effortless-marked project — the MCP server is wire-compatible with any MCP client and useful even outside ERB projects (e.g. driving builds from Cursor in a non-ERB repo that just consumes a generated artifact).
+  **Scope (load gate):** Loads ONLY on explicit user request — never auto-load. Does NOT require an Effortless-marked project — the MCP server is wire-compatible with any MCP client and useful even outside ERB projects (e.g. driving builds from Cursor in a non-ERB repo that just consumes a generated artifact).
 audience: customer
 ---
 

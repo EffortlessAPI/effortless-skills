@@ -26,10 +26,22 @@ Any Effortless project can export its current state as a full Excel workbook
 
 1. Load `effortless-rulebook.json` and clear all `data` arrays (schema stays).
 2. Query each `vw_*` view in Postgres and populate the corresponding table's
-   `data` array with the live rows.
-3. Write the result to `rulebook-export.json`.
-4. Run `effortless rulebook-to-xlsx -i rulebook-export.json -o <project>.xlsx`.
-5. Stream the xlsx file back to the browser as a download.
+   `data` array with the live rows. Map snake_case column names back to PascalCase
+   field names (views use snake_case; the rulebook uses PascalCase).
+3. Write the result to `xlsx/exported-rulebook.json`.
+4. Run `rulebook-to-xlsx -i ./exported-rulebook.json -o rulebook.xlsx` from the
+   `xlsx/` directory.
+5. Stream `xlsx/rulebook.xlsx` back to the browser as a download.
+
+The real-world invocation (from customer-crm-demo's `effortless.json`):
+
+```json
+{
+  "Name": "rulebooktoxlsx",
+  "RelativePath": "/xlsx",
+  "CommandLine": "rulebook-to-xlsx -i ./exported-rulebook.json -o rulebook.xlsx"
+}
+```
 
 ## Server endpoint
 
@@ -76,19 +88,19 @@ app.get('/api/export/xlsx', async (req, res) => {
       }
     }
 
-    // 3. Write export file
-    const exportPath = '/tmp/rulebook-export.json'
+    // 3. Write exported-rulebook.json into the xlsx/ output directory
+    const xlsxDir = path.join(__dirname, '../../xlsx')
+    fs.mkdirSync(xlsxDir, { recursive: true })
+    const exportPath = path.join(xlsxDir, 'exported-rulebook.json')
+    const xlsxPath = path.join(xlsxDir, 'rulebook.xlsx')
     fs.writeFileSync(exportPath, JSON.stringify(rulebook, null, 2))
 
-    // 4. Run transpiler
-    const projectName = process.env.PROJECT_NAME ?? 'export'
-    const xlsxPath = `/tmp/${projectName}.xlsx`
-    execSync(`effortless rulebook-to-xlsx -i ${exportPath} -o ${xlsxPath}`)
+    // 4. Run transpiler (must be on PATH; installed via effortless -install rulebook-to-xlsx)
+    execSync(`rulebook-to-xlsx -i ./exported-rulebook.json -o rulebook.xlsx`, { cwd: xlsxDir })
 
     // 5. Stream download
-    res.download(xlsxPath, `${projectName}.xlsx`, () => {
-      fs.unlinkSync(xlsxPath)
-    })
+    const projectName = process.env.PROJECT_NAME ?? 'export'
+    res.download(xlsxPath, `${projectName}.xlsx`)
   } catch (err) {
     console.error('Export failed:', err)
     res.status(500).json({ error: 'Export failed' })
