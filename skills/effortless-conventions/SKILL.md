@@ -16,23 +16,23 @@ audience: customer
 - Plural for collections: `Customers`, `WorkflowSteps`, `TypesOfAgents`
 - Example: `ClientProgramSessions`, `DocumentCategories`, `ApprovalGates`
 
-## The `<Table>Id` Field (STORED IDENTIFIER)
+## The `<Entity>Id` Field (STORED IDENTIFIER)
 
-Every table's **first raw field** is `<TableName>Id` — e.g. `CustomersId`, `WorkflowStepsId`. This is the stored identity of each row.
+Every table's **first raw field** is `<Entity>Id` — the **singular** entity name + `Id`. E.g. the `Manufacturers` table has `ManufacturerId`; the `WorkflowSteps` table has `WorkflowStepId`. This is the stored identity of each row.
 
 - **Raw field**, not calculated.
 - In mock data, use human-friendly slug-style values (`"acme-corp"`, `"step-01"`, `"alice@example.com"`). These make mock data readable and debuggable.
-- FK fields in child tables hold the **value** of the parent's `<Table>Id` field.
-- In production, the execution substrate (Postgres, Airtable) may replace these slugs with UUIDs or surrogate keys — the rulebook doesn't care. The `<Table>Id` field is the rulebook's logical identity; what the substrate uses under the hood is its own concern.
+- FK fields in child tables hold the **value** of the parent's `<Entity>Id` field.
+- In production, the execution substrate (Postgres, Airtable) may replace these slugs with UUIDs or surrogate keys — the rulebook doesn't care. The `<Entity>Id` field is the rulebook's logical identity; what the substrate uses under the hood is its own concern.
 
 ## The `Name` Field (DISPLAY ALIAS)
 
-Every table also has a `Name` **calculated** field. It is a human-readable display identifier derived from the raw fields — typically the same as `<Table>Id` for simple tables, or a compound formula for junction/child tables.
+Every table also has a `Name` **calculated** field — a human-readable display label derived from raw fields.
 
-- `Name` is **not** the stored PK. It is a computed display alias available on every entity.
-- Simple pattern: `Name = ={{<Table>Id}}` (just mirrors the stored id).
+- `Name` is **not** the stored PK. It is a computed display alias, not used in lookups or matches.
+- Simple pattern: `Name = ={{<Entity>Id}}` (just mirrors the stored id).
 - Compound pattern: `Name = ={{OrderNumber}} & "-" & {{Status}}` for tables where identity is composite.
-- Because `Name` is calculated, it works correctly even if the substrate swaps slug identifiers for UUIDs — the formula still produces a readable label from whatever raw fields are available.
+- Because `Name` is calculated, it works correctly even if the substrate swaps slug identifiers for UUIDs.
 - In Airtable contexts, `Name` maps to the primary field (first column).
 
 ## Every Table and Field Must Have a Description
@@ -50,13 +50,14 @@ Employee.Role      (FK to Roles table)        -- NOT Employee.RoleId
 Artifact.DerivedFrom (FK to Artifacts table)  -- NOT Artifact.DerivedFromId
 ```
 
-**FK fields hold the `<Table>Id` value of the related row** — the stored identifier, not the calculated `Name`. In mock data this is the slug string (e.g. `"acme-corp"`). Lookups match on `<Table>Id`:
+**FK fields hold the `<Entity>Id` value of the related row** — the stored identifier. In mock data this is the slug string (e.g. `"acme-corp"`). Lookups always MATCH on `<Entity>Id`:
 
 ```
-=INDEX(Customers!{{Name}}, MATCH({{Customer}}, Customers!{{CustomersId}}, 0))
+=INDEX(Customers!{{Region}}, MATCH({{Customer}}, Customers!{{CustomerId}}, 0))
 ```
 
-Never match on `Customers!{{Name}}` — that's the calculated alias, not the stored identity.
+- The MATCH column is always `<Entity>Id` — never `Name` (that's a calculated alias, not the stored identity).
+- The INDEX column is whatever field you actually want to retrieve (`Region`, `Status`, `CompanyName`, etc.).
 
 **The reverse relationship uses the PLURAL name:**
 

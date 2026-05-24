@@ -226,24 +226,23 @@ tooling — those are decided by the defaults table below.
 
 Every entity in the rulebook follows this shape:
 
-- **First raw field: `<Table>Id`** (PascalCase table name + `Id`, e.g. `ThingsId`,
-  `WidgetsId`, `UsersId`). This is the stored identity of the row. In mock data,
-  use human-friendly slug-style values (`"acme-corp"`, `"step-01"`) — they make
-  seed data readable and debuggable. In production the substrate may replace these
-  with UUIDs; the rulebook doesn't care.
-- **`Name` is a calculated display alias**, not the stored PK. Simple tables:
-  `Name = ={{<Table>Id}}`. Compound tables: `Name = ={{OrderNumber}} & "-" & {{Status}}`.
-  `Name` is available on every entity for display even if PKs are swapped to UUIDs.
+- **First raw field: `<Entity>Id`** — the **singular** entity name + `Id`. E.g. `ThingId`
+  (not `ThingsId`), `WidgetId`, `UserId`. In mock data, use human-friendly slug-style
+  values (`"acme-corp"`, `"step-01"`) — they make seed data readable and debuggable.
+  In production the substrate may replace these with UUIDs; the rulebook doesn't care.
+- **`Name` is a calculated display alias**, not the stored PK and not used in lookups.
+  Simple tables: `Name = ={{<Entity>Id}}`. Compound tables: `Name = ={{OrderNumber}} & "-" & {{Status}}`.
 - **FK columns** are named after the related entity (singular, no "Id" suffix):
-  `Widgets.Thing` holds the value of `Things.ThingsId`. Not `Widgets.ThingId`.
-- **Lookups match on `<Table>Id`**, never on `Name`:
-  `=INDEX(Things!{{Color}}, MATCH(Widgets!{{Thing}}, Things!{{ThingsId}}, 0))`
-  Matching on `Name` silently returns NULL because `Name` is calculated, not stored.
+  `Widgets.Thing` holds the value of `Things.ThingId`. Not `Widgets.ThingId`.
+- **Lookups always MATCH on `<Entity>Id`** — never on `Name`:
+  `=INDEX(Things!{{Color}}, MATCH(Widgets!{{Thing}}, Things!{{ThingId}}, 0))`
+  The MATCH column is always the stored identifier. The INDEX column is whatever
+  field you want to retrieve. `Name` is never used in either position.
 - **Chained lookups** work transparently: `Widgets.ThingCategoryName` can pull
   `Things.CategoryName`, which is itself a lookup.
 
 Aggregations go the **other** way: on `Things` you might write
-`TotalWidgetSpend = SUMIFS(Widgets!{{LineTotal}}, Widgets!{{Thing}}, {{ThingsId}})`.
+`TotalWidgetSpend = SUMIFS(Widgets!{{LineTotal}}, Widgets!{{Thing}}, {{ThingId}})`.
 
 Calculated fields on Widgets that need a related field reference the
 lookup (`{{ThingPrice}}`), not the related entity directly.
@@ -278,7 +277,7 @@ These are non-obvious things that will bite if you don't plan for them:
    and make `Name = ={{<Thing>Key}}`.
 4. **Don't put `LEFT JOIN` in `*b-customize-views.sql`.** If a lookup
   isn't resolving, the bug is in the rulebook FK pattern (almost
-   always: FK column holds a `Name` value instead of a `<Table>Id`
+   always: FK column holds a `Name` value instead of a `<Entity>Id`
    value), not something to paper over with a JOIN view. The
    `customize-`* files are for additive views/columns/functions that
    honor the join-free `vw_`* discipline — not an escape hatch for
@@ -339,8 +338,8 @@ before moving on.
    actually *is* required for the rulebook step.
 2. Author `effortless-rulebook/effortless-rulebook.json`:
   - Entities in **DAG order** — leaf tables first, then dependents.
-  - For each entity: a `<Table>Id` raw field (slug-style in mock data);
-  a `Name` calculated display alias (`={{<Table>Id}}` or compound formula);
+  - For each entity: a `<Entity>Id` raw field (singular entity name + Id, slug-style in mock data);
+  a `Name` calculated display alias (`={{<Entity>Id}}` or compound formula);
   the raw fields; the FK fields + their lookups (see pattern above);
   calculated fields (1st/2nd/3rd-order); any aggregations from related tables.
   - Mock data: for every boolean/threshold/enum rule, seed rows that
