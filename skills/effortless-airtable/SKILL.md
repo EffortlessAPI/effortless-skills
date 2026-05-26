@@ -177,15 +177,21 @@ This pattern ensures linked records are established first, making lookups trivia
 4. **NEVER include `{Entity}Id` fields** — surrogate keys are managed by the substrate off-screen
 5. **Links use singular PascalCase**: `Schema | link:SDCSchemas`, `TargetClass | link:SDCTypes`
 
-## When Airtable API Has Limitations
+## When the Airtable API can't do something
 
-Some operations (like modifying formula fields) cannot be done via API. When you hit these limitations:
+Some operations (like creating or modifying formula fields) aren't exposed by
+the Airtable API. When you hit one, surface the blocker and let the user pick
+an input spoke — don't silently switch to editing generated files (those edits
+get overwritten on the next build, so the apparent fix would evaporate).
 
-1. **Tell the user** what you cannot do programmatically
-2. **Explain the options**:
-   - User can make the change manually in Airtable's UI
-   - User can add logic to a customization file (e.g., `02b-customize-functions.sql`)
-3. **Wait for user direction** - do not proceed with manual edits to generated files
+Options to present:
+
+- **Rulebook-direct** — edit `effortless-rulebook.json` to add the formula/lookup field, then `effortless build`. Often the most ergonomic path: the rulebook is JSON, LLMs edit it well, no Playwright/OMNI involved.
+- **OMNI via Playwright** — for changes that genuinely need to flow through Airtable, see `effortless-airtable-omni`.
+- **Airtable UI** — user makes the change manually in Airtable, then runs `effortless build`.
+- **Customization file** — appropriate for SQL that the hub can't model (auth, RLS helpers); usually not the right fit for a calculated business field.
+
+Wait for direction before proceeding.
 
 ---
 

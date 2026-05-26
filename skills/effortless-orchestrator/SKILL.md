@@ -74,16 +74,27 @@ human-friendly editing surface but is no longer the SSoT — the JSON file is.
 
 ## My Posture
 
-I am not a code author when I'm operating inside an ERB project. The transpilers are. I am a **rulebook tender** — my legitimate workspace is:
+Inside an ERB project, the transpilers are the code authors. I'm a **rulebook
+tender** — the places where my work persists are:
 
-1. The **rulebook itself** (`effortless-rulebook.json` directly, or any connected input spoke — Airtable, reverse-sync, hand-edits with permission).
-2. The **explicit customization seams** (`*b-customize-*` files, the `ERBCustomizations` table, the runtime application layer that *consumes* the views).
+1. The **hub** (`effortless-rulebook.json` directly, or via any connected input spoke — Airtable, reverse-sync, hand-edits with permission).
+2. The **customization seams** (`*b-customize-*` files, the `ERBCustomizations` table) and the **application layer** that consumes the generated views.
 
-Everything else — generated `00`-`05` SQL, generated Python/Go/docs — is read-only output. Editing it is editing a shadow; the next `effortless build` correctly erases what I wrote. When a generated artifact looks wrong, trace back to the rulebook entry that produced it; do not "fix" the artifact.
+Everything else — generated `00`-`05` SQL, generated Python/Go/docs — is
+mechanical output. It's fine to read or even edit those files to test a
+hypothesis, but the next `effortless build` rewrites them, so edits there
+don't persist. When a generated artifact looks wrong, the high-leverage move
+is to trace back to the rulebook entry that produced it and fix it there;
+patching the artifact directly is at best temporary.
 
-When a request feels like "write some imperative business logic," my first move is to ask whether it's actually a Lookup, Aggregation, or Formula in disguise (almost always: yes — see `effortless-cmcc`). Only if that genuinely fails do I escalate to a customization seam, with a short comment explaining why the rulebook can't express the rule.
+When a request feels like "write some imperative business logic," the first
+move is to ask whether it's actually a Lookup, Aggregation, or Formula in
+disguise (usually: yes — see `effortless-cmcc`). If that genuinely doesn't fit,
+a customization seam is the right escape hatch — with a short comment
+explaining why the rulebook can't express the rule.
 
-"Stay on the declarative side of the line" is not stylistic preference — it's what makes the substrate-equivalence guarantee hold across all targets. Break it and the conformance story breaks with it.
+Staying on the declarative side of the line isn't stylistic preference; it's
+what keeps the substrate-equivalence guarantee intact across every target.
 
 ## Evaluative Posture (when asked to assess the methodology itself)
 
@@ -101,22 +112,41 @@ The honest evaluative move under CMCC-as-axiom:
 
 The shorthand: **the user is asking me to think *with* the methodology, not *about* it from the outside.** If they want outside-view, they'll say so.
 
-## ORCHESTRATION RULE — `effortless-rulebook.json` LIVES IN `/effortless-rulebook/`
+## File-layout note — `effortless-rulebook.json` lives in `/effortless-rulebook/`
 
-**Always** at `/effortless-rulebook/effortless-rulebook.json`. NEVER at the project root.
+The expected path is `/effortless-rulebook/effortless-rulebook.json`, not the project root. Before running `effortless airtable-to-rulebook` or `effortless -install airtable-to-rulebook`, `cd effortless-rulebook` first — otherwise the rulebook lands at the root and subsequent builds resolve paths incorrectly.
 
-Before running ANY `effortless airtable-to-rulebook` or `effortless -install airtable-to-rulebook`, you MUST `cd effortless-rulebook` first. Running from the root dumps the rulebook in the wrong place AND poisons every subsequent build.
+If `effortless-rulebook.json` ends up at the project root, that's a bug worth fixing: remove the stray file, ensure `airtable-to-rulebook` in `effortless.json` has `RelativePath: /effortless-rulebook`, and redo the install from inside `/effortless-rulebook/`.
 
-If `effortless-rulebook.json` ever appears at the project root: bug — delete it, fix `effortless.json` so `airtable-to-rulebook` has `RelativePath: /effortless-rulebook`, redo the install from inside `/effortless-rulebook/`.
+## Operating Defaults
 
-## Critical Guardrails
+These are the defaults this skill suite assumes — the developer can override
+any of them, but Claude should default to the safe path unless told otherwise.
+The reasoning is mechanical, not moral:
 
-1. **Query the rulebook FIRST — NEVER read generated files.** Root nodes are entity names with `schema` and `data` sub-properties. Query for tables first, then fields from just those tables — never read the full file (can be MB). NEVER cat generated SQL (00-05) into context. If you need to know view columns, run `psql -c "\d vw_tablename"`.
-2. **NEVER edit generated files.** Files `00`-`05` in `postgres/` are overwritten on every build. `00b`-`05b` are the customization seams — and only after the rulebook genuinely can't express the rule.
-3. **Always read from `vw_*` views; always write to base tables directly.**
-4. **Always ask permission** before modifying the rulebook JSON directly.
-5. **`effortless build` is usually the final step**, except when reverse-syncing rulebook → Airtable (build would overwrite HEAD JSON).
-6. **NEVER write SQL migrations on local-dev projects.** Local Postgres is regenerated from scratch by `init-db.sh` on every build — there is no `migrations/` folder, no migrations tracking table, no incremental deltas. Schema changes go through the rulebook (edit the JSON, or edit via Airtable if connected) → `effortless build`. If the answer feels like "write a migration / `ALTER TABLE` / insert into a migrations log," the answer is **"edit the rulebook and rerun `effortless build`."** The lone exception is `bases.effortlessapi.com`-hosted databases, which use `postgres/apply-migration.sh` because the DB can't be dropped — see `effortless-bases`. Even there, schema still originates in the rulebook. See `effortless-workflow` "NO MIGRATIONS" section for the full rule.
+1. **Prefer the rulebook over generated files for both reads and writes.**
+   The hub is the only place a change persists across builds. Generated files
+   (`00`-`05` in `postgres/`, plus other output spokes) are rewritten on every
+   `effortless build`. Use `psql -c "\d vw_tablename"` or the rulebook
+   one-liners in `effortless-query` instead of `cat`-ing generated SQL —
+   cheaper in tokens, same information.
+2. **Customization seams (`00b`-`05b`) are preserved across builds.** They're
+   the right home for things the hub can't model (auth tenants, JWT helpers,
+   role GRANTs). For business entities, the hub is usually a better fit.
+3. **Read from `vw_*` views; write to base tables.** Views include the
+   calculated/lookup/aggregation fields; base tables only have raw columns,
+   and the views aren't updatable anyway.
+4. **Ask permission before editing the hub directly.** It's the SSoT — the
+   developer should be choosing when it changes.
+5. **`effortless build` is usually the final step.** Exception: when
+   reverse-syncing rulebook → Airtable, the bare build would overwrite the
+   hub JSON before the push completes.
+6. **Local-dev Postgres is regenerated, not migrated.** `init-db.sh` drops
+   and recreates the DB on every build, so a migration file / `ALTER TABLE` /
+   `migrations` tracking table would run once and then be wiped next build.
+   Schema changes that persist live in the hub. Bases-hosted DBs are the
+   exception (`postgres/apply-migration.sh`); even there, schema originates
+   in the hub. Full statement in `effortless-workflow`.
 
 ## Token Discipline (CANONICAL — leaf skills reference this)
 
