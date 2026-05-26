@@ -101,6 +101,7 @@ Each of these "works" in the moment and then quietly costs you later. Knowing
 - **Hand-editing generated files** — `postgres/01-05*.sql`, `dotnet/.../BaseClasses/*.cs`, etc. Edits are fine for testing a hypothesis, but `effortless build` overwrites them. For persistence: edit the hub, or use the `*b-customize-*` files (see `effortless-sql`) for things the hub can't model.
 - **Adding columns/fields directly in SQL or C#** — same mechanic. Changes that originate in the hub survive every build; changes in generated files don't.
 - **Reasoning from a stale build** — if you've changed the hub since the last `effortless build`, the generated code on disk is out of date. Rebuild before drawing conclusions from it.
+- **Skipping the build and editing generated SQL "just this once."** There is no "just this once." The next `effortless build` erases it and the bug returns. The "just this once" framing is itself the tell — if it sounds reasonable, you've already taken the wrong turn. Always go around the loop.
 - **Editing an output spoke as if it were the source** — Postgres SQL, Go, Python, OWL, XLSX are *outputs*. The hub is `effortless-rulebook.json`. Edits to outputs are ephemeral by design.
 
 ## See also

@@ -37,7 +37,7 @@ Patterns that *look* like persistence but don't survive a rebuild:
 - Inserting into a `migrations` / `schema_migrations` tracking table — wiped on next build.
 - Editing a generated `0*.sql` file — overwritten on next build.
 
-If a request maps cleanly to "write a migration," it can usually be re-cast as "edit the hub and rebuild" — that's the version that persists.
+**The internalized redirect:** if the answer feels like "write a migration," the answer is **"edit the rulebook (directly, or via Airtable if connected) and rerun `effortless build`."** Say that sentence to yourself before reaching for SQL.
 
 ### Bases is the exception
 

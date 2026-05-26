@@ -112,41 +112,53 @@ The honest evaluative move under CMCC-as-axiom:
 
 The shorthand: **the user is asking me to think *with* the methodology, not *about* it from the outside.** If they want outside-view, they'll say so.
 
-## File-layout note — `effortless-rulebook.json` lives in `/effortless-rulebook/`
+## ORCHESTRATION RULE — `effortless-rulebook.json` LIVES IN `/effortless-rulebook/`
 
-The expected path is `/effortless-rulebook/effortless-rulebook.json`, not the project root. Before running `effortless airtable-to-rulebook` or `effortless -install airtable-to-rulebook`, `cd effortless-rulebook` first — otherwise the rulebook lands at the root and subsequent builds resolve paths incorrectly.
+**Always** at `/effortless-rulebook/effortless-rulebook.json`. NEVER at the project root.
 
-If `effortless-rulebook.json` ends up at the project root, that's a bug worth fixing: remove the stray file, ensure `airtable-to-rulebook` in `effortless.json` has `RelativePath: /effortless-rulebook`, and redo the install from inside `/effortless-rulebook/`.
+Before running ANY `effortless airtable-to-rulebook` or `effortless -install airtable-to-rulebook`, you MUST `cd effortless-rulebook` first. Running from the root dumps the rulebook in the wrong place AND poisons every subsequent build.
 
-## Operating Defaults
+If `effortless-rulebook.json` ever appears at the project root: bug — delete it, fix `effortless.json` so `airtable-to-rulebook` has `RelativePath: /effortless-rulebook`, redo the install from inside `/effortless-rulebook/`.
 
-These are the defaults this skill suite assumes — the developer can override
-any of them, but Claude should default to the safe path unless told otherwise.
-The reasoning is mechanical, not moral:
+## Critical Guardrails
 
-1. **Prefer the rulebook over generated files for both reads and writes.**
-   The hub is the only place a change persists across builds. Generated files
-   (`00`-`05` in `postgres/`, plus other output spokes) are rewritten on every
-   `effortless build`. Use `psql -c "\d vw_tablename"` or the rulebook
-   one-liners in `effortless-query` instead of `cat`-ing generated SQL —
-   cheaper in tokens, same information.
-2. **Customization seams (`00b`-`05b`) are preserved across builds.** They're
-   the right home for things the hub can't model (auth tenants, JWT helpers,
-   role GRANTs). For business entities, the hub is usually a better fit.
-3. **Read from `vw_*` views; write to base tables.** Views include the
-   calculated/lookup/aggregation fields; base tables only have raw columns,
-   and the views aren't updatable anyway.
-4. **Ask permission before editing the hub directly.** It's the SSoT — the
-   developer should be choosing when it changes.
-5. **`effortless build` is usually the final step.** Exception: when
-   reverse-syncing rulebook → Airtable, the bare build would overwrite the
-   hub JSON before the push completes.
-6. **Local-dev Postgres is regenerated, not migrated.** `init-db.sh` drops
-   and recreates the DB on every build, so a migration file / `ALTER TABLE` /
-   `migrations` tracking table would run once and then be wiped next build.
-   Schema changes that persist live in the hub. Bases-hosted DBs are the
-   exception (`postgres/apply-migration.sh`); even there, schema originates
-   in the hub. Full statement in `effortless-workflow`.
+These are the defaults this skill suite enforces. The developer can override
+any of them, but Claude defaults to the safe path unless told otherwise. The
+reasoning is mechanical, not moral — but the guardrails are non-negotiable
+without explicit override:
+
+1. **Query the rulebook FIRST — NEVER read generated files.** The hub is the
+   only place a change persists across builds. Generated files (`00`-`05` in
+   `postgres/`, plus other output spokes) are rewritten on every
+   `effortless build`. Root nodes in the rulebook are entity names with
+   `schema` and `data` sub-properties. Query for tables first, then fields
+   from just those tables — never read the full file (can be MB). NEVER cat
+   generated SQL (00-05) into context. If you need to know view columns, run
+   `psql -c "\d vw_tablename"`.
+2. **NEVER edit generated files.** Files `00`-`05` in `postgres/` are
+   overwritten on every build. `00b`-`05b` are the customization seams —
+   appropriate for infrastructure the hub doesn't model (auth tenants, JWT
+   helpers, role GRANTs). For business entities, the hub is usually a better
+   fit.
+3. **Always read from `vw_*` views; always write to base tables directly.**
+   Views include calculated/lookup/aggregation fields; base tables only have
+   raw columns, and the views aren't updatable anyway.
+4. **Always ask permission** before modifying the rulebook JSON directly.
+   It's the SSoT — the developer should be choosing when it changes.
+5. **`effortless build` is usually the final step**, except when
+   reverse-syncing rulebook → Airtable (build would overwrite HEAD JSON
+   before the push completes).
+6. **NEVER write SQL migrations on local-dev projects.** Local Postgres is
+   regenerated from scratch by `init-db.sh` on every build — there is no
+   `migrations/` folder, no migrations tracking table, no incremental
+   deltas. Schema changes go through the rulebook (edit the JSON, or edit
+   via Airtable if connected) → `effortless build`. If the answer feels
+   like "write a migration / `ALTER TABLE` / insert into a migrations log,"
+   the answer is **"edit the rulebook and rerun `effortless build`."** The
+   lone exception is `bases.effortlessapi.com`-hosted databases, which use
+   `postgres/apply-migration.sh` because the DB can't be dropped — see
+   `effortless-bases`. Even there, schema still originates in the rulebook.
+   Full statement in `effortless-workflow` "NO MIGRATIONS" section.
 
 ## Token Discipline (CANONICAL — leaf skills reference this)
 
