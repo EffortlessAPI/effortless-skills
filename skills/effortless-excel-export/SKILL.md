@@ -59,7 +59,7 @@ app.get('/api/export/xlsx', requireAuth, async (req, res) => {
 
     // 2. Populate from vw_* views (columns are snake_case from Postgres)
     for (const table of tableNames) {
-      const viewName = `vw_${table.toLowerCase()}`
+      const viewName = `vw_${table.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')}`
       try {
         const { rows } = await pool.query(`SELECT * FROM ${viewName}`)
         const schema: Array<{ name: string }> = rulebook[table].schema
