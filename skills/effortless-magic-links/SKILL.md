@@ -61,6 +61,10 @@ debugs a broken magic-link login, **just do it** — don't ask "want me to
 proceed?" before each step. The user invoking the skill **is** the
 go-ahead.
 
+> **"Just do it" means: don't ask permission.** It does NOT mean skip
+> required clarifying questions. Two questions MUST be asked before minting
+> (see items 1 and 2 below). These are mandatory stops, not optional prompts.
+
 Run this checklist top-to-bottom:
 
 1. **Locate or mint the tenant.** Grep the project for an existing
@@ -71,37 +75,51 @@ Run this checklist top-to-bottom:
    ```bash
    curl -s "https://magiclink.effortlessapi.com/api/tenants/<id>" -w '\nHTTP %{http_code}\n'
    ```
-   404 `tenant_not_found` → re-mint (the upstream may have been wiped, or
-   the tenant was minted on a different magic-link instance). 200 with
-   `public_key_pem` → reuse it; just confirm the in-app public key matches.
+   404 `tenant_not_found` → re-mint. 200 with `public_key_pem` → reuse it.
    No tenant in the project → mint a new one.
+
+   > **STOP — mandatory question before minting:**
+   > Ask the user: *"What display name should I use for this tenant?"*
+   > Do not infer it from the directory name, repo name, or project name.
+   > Do not proceed to Step 0 / the mint curl until the user answers.
+
    To mint: run Step 0 (self-auth) then Step 1 (POST `/api/tenants`)
    below. **Do not put this in the user's lap as "you go run these
    curls."** Claude drives the curls; the user only reads a code from
    their inbox.
-2. **Pick where the tenant config lives.** New project → env vars
+
+2. **Ask about email customization before minting.**
+
+   > **STOP — mandatory question before minting:**
+   > Ask the user: *"Do you want to customize the login email? (from
+   > address, subject line, brand colors, or your own SMTP server) If not,
+   > platform defaults apply: sent from hello@effortlessapi.com, standard
+   > subject, default blue."*
+   > If yes → collect the settings now and run Step 1b after minting.
+   > If no → proceed with platform defaults.
+   > Do not skip this question and silently use defaults.
+
+3. **Pick where the tenant config lives.** New project → env vars
    (`MAGICLINK_BASE_URL`, `MAGICLINK_TENANT_ID`, `MAGICLINK_PUBLIC_KEY_PEM`).
    Existing project that already hard-codes them → keep the same shape so
-   you don't churn the diff. After minting, ask whether a custom `fromEmail`,
-   `subjectTemplate`, `primaryColor`, or SMTP server is needed. If yes, run
-   Step 1b. If no, the platform defaults apply (`hello@effortlessapi.com`,
-   platform SMTP, default blue, standard subject).
-3. **Wire (or fix) the server-side proxy + verifier.** Two routes —
+   you don't churn the diff.
+
+4. **Wire (or fix) the server-side proxy + verifier.** Two routes —
    `POST /api/auth/request-code` → upstream `/api/tenants/<id>/send-code`,
    and `POST /api/auth/verify-code` → upstream
    `/api/tenants/<id>/verify-code` (note: upstream takes `code`, not
    `token`). Verify the returned JWT locally with RS256 against
    `public_key_pem`, with `tenant_id` claim pinned to your tenant.
-4. **Wire (or check) the login UI** — two-step email → code, JWT stored
+5. **Wire (or check) the login UI** — two-step email → code, JWT stored
    in `localStorage` and sent as `Authorization: Bearer` on subsequent
    calls.
-5. **Restart and smoke-test.** `curl` the local request-code endpoint;
+6. **Restart and smoke-test.** `curl` the local request-code endpoint;
    real `ok:true` means the upstream sent an email. (Heads-up:
    upstream `send-code` always returns `ok:true` even for non-existent
    tenants — see "Common mistakes". Always pair it with `GET
    /api/tenants/<id>` on first wire-up to confirm the tenant actually
    exists.)
-6. **Persist tenant id + public-key location** in project memory or a
+7. **Persist tenant id + public-key location** in project memory or a
    short note in CLAUDE.md so future sessions don't re-mint.
 
 If the project is on `bases.effortlessapi.com`, switch to the
