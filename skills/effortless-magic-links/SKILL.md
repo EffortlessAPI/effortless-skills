@@ -69,57 +69,89 @@ Run this checklist top-to-bottom:
 
 1. **Locate or mint the tenant.** Grep the project for an existing
    `TENANT_ID` / `MAGICLINK_TENANT_ID`. If found, verify it still exists
-   on the magic-link service. If minting a new tenant, ask the user for a
-   `display_name` (e.g. the app name) before proceeding — it cannot be
-   inferred from the project alone.
+   on the magic-link service:
    ```bash
    curl -s "https://magiclink.effortlessapi.com/api/tenants/<id>" -w '\nHTTP %{http_code}\n'
    ```
    404 `tenant_not_found` → re-mint. 200 with `public_key_pem` → reuse it.
    No tenant in the project → mint a new one.
 
-   > **STOP — mandatory question before minting:**
-   > Ask the user: *"What display name should I use for this tenant?"*
-   > Do not infer it from the directory name, repo name, or project name.
-   > Do not proceed to Step 0 / the mint curl until the user answers.
+   > **STOP — mandatory pre-mint questions. Follow this exact sequence.**
+   >
+   > **Round 1 — what to customize (single multiSelect call, 1 question):**
+   > "Which parts of the login email do you want to customize?
+   > (Leave all unchecked for platform defaults.)"
+   > Options (multiSelect: true):
+   > - "Display name" — name in email subject line
+   > - "Brand colors" — primary color and optional gradient
+   > - "Custom SMTP" — send via your own mail server (from address is set here)
+   >
+   > Note: the tool always appends an "Other" option automatically — it
+   > is irrelevant for this question and users should ignore it.
+   > Note: "From address" is NOT a standalone option. A custom from
+   > address only works with custom SMTP, so it is collected in that flow.
+   > On platform SMTP, hello@effortlessapi.com is the sender.
+   >
+   > **Round 2+ — one `AskUserQuestion` call per selected item, in order:**
+   > Ask ONLY the questions for what the user selected. Each call has
+   > exactly ONE question (avoids the multi-tab submit problem).
+   >
+   > **If "Display name" selected:**
+   > - Call: "What name should appear in the email subject line?
+   >   (e.g. 'Sign-in code: 123456 for <name>')"
+   >   Options: inferred project name (state it explicitly),
+   >   "Magic Links (platform default)"
+   >   — user can type a custom name via Other
+   >
+   > **If "Brand colors" selected:**
+   > - Call 1: "Primary color for the login email? (hex, e.g. #3B82F6)"
+   >   Options: "Default blue", "Default teal"
+   >   — user types custom hex via Other
+   > - Call 2: "Gradient end color? (skip for solid)"
+   >   Options: "No gradient (solid color)", "Auto-darken primary"
+   >   — user types custom hex via Other
+   >
+   > **If "Custom SMTP" selected:**
+   > Do NOT use AskUserQuestion for SMTP fields — there are no useful
+   > predefined options and the tool requires 2 minimum. Instead, ask
+   > in a single plain-text message:
+   > "Please provide your SMTP details:
+   >  - From address (e.g. hello@yourdomain.com) — shown as the sender
+   >  - Host (e.g. mail.yourdomain.com or smtp.yourdomain.com)
+   >  - Port (587 for STARTTLS, 465 for TLS)
+   >  - Username (usually the same as your from address, e.g. hello@yourdomain.com)
+   >  - Password (your SMTP or mailbox password)"
+   > If they don't have their own SMTP server, tell them to skip this —
+   > the platform will send from hello@effortlessapi.com instead.
+   >
+   > Once all answers collected, proceed to Step 0 + mint + Step 1b.
 
    To mint: run Step 0 (self-auth) then Step 1 (POST `/api/tenants`)
    below. **Do not put this in the user's lap as "you go run these
    curls."** Claude drives the curls; the user only reads a code from
    their inbox.
 
-2. **Ask about email customization before minting.**
-
-   > **STOP — mandatory question before minting:**
-   > Ask the user: *"Do you want to customize the login email? (from
-   > address, subject line, brand colors, or your own SMTP server) If not,
-   > platform defaults apply: sent from hello@effortlessapi.com, standard
-   > subject, default blue."*
-   > If yes → collect the settings now and run Step 1b after minting.
-   > If no → proceed with platform defaults.
-   > Do not skip this question and silently use defaults.
-
-3. **Pick where the tenant config lives.** New project → env vars
+2. **Pick where the tenant config lives.** New project → env vars
    (`MAGICLINK_BASE_URL`, `MAGICLINK_TENANT_ID`, `MAGICLINK_PUBLIC_KEY_PEM`).
    Existing project that already hard-codes them → keep the same shape so
    you don't churn the diff.
 
-4. **Wire (or fix) the server-side proxy + verifier.** Two routes —
+3. **Wire (or fix) the server-side proxy + verifier.** Two routes —
    `POST /api/auth/request-code` → upstream `/api/tenants/<id>/send-code`,
    and `POST /api/auth/verify-code` → upstream
    `/api/tenants/<id>/verify-code` (note: upstream takes `code`, not
    `token`). Verify the returned JWT locally with RS256 against
    `public_key_pem`, with `tenant_id` claim pinned to your tenant.
-5. **Wire (or check) the login UI** — two-step email → code, JWT stored
+4. **Wire (or check) the login UI** — two-step email → code, JWT stored
    in `localStorage` and sent as `Authorization: Bearer` on subsequent
    calls.
-6. **Restart and smoke-test.** `curl` the local request-code endpoint;
+5. **Restart and smoke-test.** `curl` the local request-code endpoint;
    real `ok:true` means the upstream sent an email. (Heads-up:
    upstream `send-code` always returns `ok:true` even for non-existent
    tenants — see "Common mistakes". Always pair it with `GET
    /api/tenants/<id>` on first wire-up to confirm the tenant actually
    exists.)
-7. **Persist tenant id + public-key location** in project memory or a
+6. **Persist tenant id + public-key location** in project memory or a
    short note in CLAUDE.md so future sessions don't re-mint.
 
 If the project is on `bases.effortlessapi.com`, switch to the
@@ -157,10 +189,9 @@ MAGICLINK = https://magiclink.effortlessapi.com
 |---|---|---|---|
 | `POST` | `/auth/send-code` | open | Self-auth: send code to **developer's** email. |
 | `POST` | `/auth/verify-code` | open | Self-auth: verify → JWT used to create tenants. |
-| `POST` | `/api/tenants` | self-auth Bearer | Mint a tenant. Body: `{display_name, from_email?, jwt_expires_in_seconds?}`. Server generates keypair. Returns `{tenant_id, public_key_pem}`. |
-| `GET`  | `/api/tenants/{id}` | open | Public info: `{tenant_id, public_key_pem, from_email, jwt_expires_in_seconds}`. |
-| `PATCH`| `/api/tenants/{id}` | self-auth + ownership | Update `display_name` / `from_email` / `jwt_expires_in_seconds`. |
-| `PATCH`| `/v1/tenant/{id}` | self-auth + ownership | Update per-tenant **email config**: `fromEmail`, `tenantName`, `subjectTemplate`, `primaryColor`, `secondaryColor`, `smtpHost`, `smtpPort`, `smtpUser`, `smtpPass`, `smtpSecure`. Fields are optional — omit any you don't want to change. |
+| `POST` | `/api/tenants` | self-auth Bearer | Mint a tenant. Server generates keypair. Returns `{tenant_id, public_key_pem}`. |
+| `GET`  | `/api/tenants/{id}` | open | Public info: `{tenant_id, public_key_pem, from_email, jwt_expires_in_seconds, display_name?, brand_color?, gradient_to?, smtp_config?}`. Password stripped from smtp_config in response. |
+| `PATCH`| `/api/tenants/{id}` | self-auth + ownership | Update any of: `from_email`, `jwt_expires_in_seconds`, `display_name`, `brand_color`, `gradient_to`, `smtp_config`. Send only the fields you want to change; omitted fields are left as-is. Send `null` to clear a field. |
 | `DELETE`| `/api/tenants/{id}` | self-auth + ownership | Remove tenant. |
 | `POST` | `/api/tenants/{id}/send-code` | open | `{email, additional_claims?}` → `{ok:true}`. |
 | `POST` | `/api/tenants/{id}/verify-code` | open | `{email, code, additional_claims?}` → `{ok, jwt, expires_in}`. |
@@ -234,12 +265,10 @@ The user shouldn't be juggling tokens; that's the agent's responsibility.
 ### Step 1 — mint the tenant
 
 ```bash
-DISPLAY_NAME="<ask the user before running this>"
-
 TENANT=$(curl -sS "$MAGICLINK/api/tenants" \
   -H "Authorization: Bearer $SELF_JWT" \
   -H "Content-Type: application/json" \
-  -d "{\"display_name\":\"$DISPLAY_NAME\",\"from_email\":\"hello@effortlessapi.com\",\"jwt_expires_in_seconds\":3600}")
+  -d '{"from_email":"noreply@yourapp.com","jwt_expires_in_seconds":3600}')
 
 TENANT_ID=$(echo "$TENANT" | jq -r .tenant_id)
 PUBLIC_KEY=$(echo "$TENANT" | jq -r .public_key_pem)
@@ -249,45 +278,51 @@ Persist `TENANT_ID` and `PUBLIC_KEY` in the project (config/env vars). The
 `public_key_pem` is also fetchable any time from `GET /api/tenants/{id}`,
 so caching it is a perf optimization, not a requirement.
 
-### Step 1b — configure custom email settings (optional)
-
-**Ask the user** whether they need custom email settings. If not, skip this
-step — the platform defaults apply automatically:
-- `fromEmail`: `hello@effortlessapi.com` (platform SMTP)
-- `tenantName`: falls back to the tenant's `display_name`
-- `subjectTemplate`: `"Your {tenant} login code: {code}"`
-- No custom colors
-
-If custom settings are needed, PATCH the email config:
-
-```bash
-curl -sS -X PATCH "$MAGICLINK/v1/tenant/$TENANT_ID" \
-  -H "Authorization: Bearer $SELF_JWT" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromEmail": "noreply@yourapp.com",
-    "tenantName": "Your App Name",
-    "subjectTemplate": "Your {tenant} login code: {code}",
-    "primaryColor": "#007bff",
-    "secondaryColor": null,
-    "smtpHost": "smtp.yourprovider.com",
-    "smtpPort": 587,
-    "smtpUser": "user@yourapp.com",
-    "smtpPass": "secret",
-    "smtpSecure": false
-  }'
-```
-
-Only include the fields you want to set. Omit `smtpHost` (and friends) to
-keep using the platform SMTP. Omit `primaryColor` to use the default blue.
-`subjectTemplate` supports `{code}` and `{tenant}` placeholders.
-
 **Suggested env vars:**
 ```
 MAGICLINK_BASE_URL=https://magiclink.effortlessapi.com
 MAGICLINK_TENANT_ID=<tenant_id>
 MAGICLINK_PUBLIC_KEY_PEM=<public_key_pem multi-line>
 ```
+
+### Step 1b — apply branding (if user requested customization)
+
+Run a PATCH immediately after minting with whatever the user provided.
+Only include the fields the user asked for — omit the rest.
+
+```bash
+curl -sS -X PATCH "$MAGICLINK/api/tenants/$TENANT_ID" \
+  -H "Authorization: Bearer $SELF_JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "display_name": "My App",
+    "brand_color":  "#FF5733",
+    "gradient_to":  "#C70039",
+    "from_email":   "hello@myapp.com",
+    "smtp_config": {
+      "host":     "smtp.sendgrid.net",
+      "port":     587,
+      "secure":   false,
+      "username": "apikey",
+      "password": "SG.xxxx"
+    }
+  }'
+```
+
+**Field reference:**
+| Field | Type | Effect |
+|---|---|---|
+| `display_name` | string | Shown in email subject: "Sign-in code: 123456 for **My App**" |
+| `brand_color` | CSS hex (e.g. `#98FF98`) | Primary background/button color in the email |
+| `gradient_to` | CSS hex | Second color for a gradient. Omit for solid `brand_color`. |
+| `from_email` | email string | Sender address. Requires valid SMTP if using custom SMTP. |
+| `smtp_config.host` | string | SMTP server hostname (e.g. `smtp.sendgrid.net`) |
+| `smtp_config.port` | integer | Usually 587 (STARTTLS) or 465 (TLS). Default: 587. |
+| `smtp_config.secure` | boolean | `true` for port 465 (TLS), `false` for 587 (STARTTLS). |
+| `smtp_config.username` | string | SMTP auth user (for SendGrid: literal `"apikey"`) |
+| `smtp_config.password` | string | SMTP auth password / API key. Stored encrypted; never returned in GET/PATCH responses. |
+
+Set `null` for any field to clear it back to platform defaults.
 
 ### Step 2 — install the JWT verification middleware (Node / Express)
 
