@@ -22,6 +22,7 @@ This is the **SSoT repo for the effortless-claude skill suite itself** — the 2
 - Adding/modifying a skill → edit `skills/<name>/SKILL.md`, then add a corresponding row to the `Skills` table in the rulebook.
 - Adding a new category or scope-gate pattern → add a row to `SkillCategories` or `ScopeGateTypes` first, then reference it from the relevant `Skills` row.
 - Run `bash lint-skills.sh` before opening a PR.
+- After updating any `SKILL.md`, rebuild `raw_skills.zip` with `bash build-raw-skills.sh`. The script stages a temp `raw_skills/` folder (gitignored) with each `SKILL.md` copied as `effortless-<name>.md`, zips it, and deletes the staging folder. The zip is committed; the folder is not.
 
 ## Ground rules for Claude in this repo
 
