@@ -3,8 +3,8 @@ name: effortless-pipeline
 description: >
   Use when working with the ERB build pipeline — effortless.json configuration,
   transpiler catalog, effortless build commands, the -id flag, transpiler
-  installation, or understanding how the build flows from Airtable through
-  to generated code.
+  installation, or understanding how the build flows from the rulebook hub
+  through to generated code.
 
   **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
@@ -19,20 +19,24 @@ audience: customer
   "Name": "Project Name",
   "Description": "Optional description",
   "ProjectSettings": [
-    { "Name": "baseId", "Value": "appXXXXXXXXXXXX" },
-    { "Name": "project-name", "Value": "my-project" },
-    { "Name": "_apikey_", "Value": "patXXX...XXX" }
+    { "Name": "project-name", "Value": "my-project" }
   ],
   "ProjectTranspilers": [
     {
-      "Name": "airtabletorulebook",
-      "RelativePath": "/effortless-rulebook",
-      "CommandLine": "airtable-to-rulebook -o effortless-rulebook.json -account airtable",
+      "Name": "rulebooktopostgres",
+      "RelativePath": "/postgres",
+      "CommandLine": "rulebook-to-postgres -i ../effortless-rulebook/effortless-rulebook.json",
       "IsDisabled": false
     }
   ]
 }
 ```
+
+The example above is a Rulebook-First project: the rulebook is authored directly
+and projected to Postgres. A project that opted into an upstream surface adds an
+*input-spoke* transpiler too — e.g. `airtable-to-rulebook` (plus a `baseId` and
+`_apikey_` in `ProjectSettings`) for Airtable. See "Finding the Base ID and API Key"
+below for that case.
 
 ## Key Transpilers
 
@@ -47,13 +51,13 @@ audience: customer
 | `airtable-to-odxml` | Airtable -> ODXML | Generates XML metadata for .NET |
 | `odxml-to-csharp-pocos` | ODXML -> C# | Generates Entity Framework classes |
 
-## Finding the Base ID and API Key
+## Finding the Base ID and API Key (Airtable-connected projects only)
 
-1. **Base ID**: Check `effortless.json` -> `ProjectSettings` -> `baseId`. This is the canonical location — all airtable-facing tools read it from here.
-2. **API Key**: Priority order:
-   - `AIRTABLE_API_KEY` environment variable
-   - `~/.ssotme/ssotme.key` -> `APIKeys.airtable` (set via `effortless -setAccountAPIKey airtable=...`)
-   - `effortless.json` -> `ProjectSettings` -> `_apikey_`
+Only relevant if the project opted into Airtable as an input spoke. The full
+mechanics live in `effortless-airtable`; the short version:
+
+1. **Base ID**: `effortless.json` -> `ProjectSettings` -> `baseId`. The canonical location all airtable-facing tools read from.
+2. **API Key** (priority order): `AIRTABLE_API_KEY` env -> `~/.ssotme/ssotme.key` (`APIKeys.airtable`) -> `effortless.json` -> `ProjectSettings._apikey_`.
 3. **Setting the API Key**: `effortless -setAccountAPIKey airtable=patXXXXXXXX.XXXXXXXX`
 
 ## Running a Build
@@ -112,29 +116,31 @@ The installed transpiler configuration is stored in `effortless.json` under `Pro
 
 ### Standard Tool Installation Paths
 
-Each tool MUST be installed from its designated directory:
+Each tool MUST be installed from its designated directory. The output spokes
+below are the common core; the input-spoke transpilers are optional and only
+appear in a project that opted into an upstream surface:
 
 ```bash
-# From /bootstrap/
-effortless -install raw-text-to-rulebook -i requirements.txt -o bootstrap-rulebook.json
-
-# From /effortless-rulebook/
-effortless -install airtable-to-rulebook -o effortless-rulebook.json -account airtable
-
-# From /effortless-rulebook/push-to-airtable/
-# ** THIS TOOL MUST BE DISABLED — not run by default **
-effortless -install rulebook-to-airtable -i ../effortless-rulebook.json -account airtable
-
+# --- output spokes (regenerate from the hub) ---
 # From /postgres/
 effortless -install rulebook-to-postgres -i ../effortless-rulebook/effortless-rulebook.json
 
 # From /docs/
 effortless -install rulebook-to-docs
+
+# --- input spokes (optional — only if seeding the hub from an upstream surface) ---
+# From /bootstrap/
+effortless -install raw-text-to-rulebook -i requirements.txt -o bootstrap-rulebook.json
+
+# From /effortless-rulebook/   (Airtable-connected projects only)
+effortless -install airtable-to-rulebook -o effortless-rulebook.json -account airtable
+
+# From /effortless-rulebook/push-to-airtable/   (Airtable-connected projects only)
+# ** THIS TOOL MUST BE DISABLED — not run by default **
+effortless -install rulebook-to-airtable -i ../effortless-rulebook.json -account airtable
 ```
 
-**Critical:** The `rulebook-to-airtable` tool in `push-to-airtable/` must be disabled (`"IsDisabled": true`) so it is NOT run during a normal `effortless build`. It is only invoked explicitly with `effortless build -id` for reverse-sync (rulebook hub → Airtable mirror).
-
-Every airtable-facing tool MUST include `-account airtable` so the CLI sends the API key from `~/.ssotme/ssotme.key`.
+**Critical (Airtable-connected projects):** The `rulebook-to-airtable` tool in `push-to-airtable/` must be disabled (`"IsDisabled": true`) so it is NOT run during a normal `effortless build`. It is only invoked explicitly with `effortless build -id` for reverse-sync (rulebook hub → Airtable mirror). Every airtable-facing tool MUST include `-account airtable` so the CLI sends the API key from `~/.ssotme/ssotme.key`.
 
 ## Pipeline Flow
 
@@ -167,7 +173,7 @@ The pipeline above ends at the same generated SQL regardless of where it lands. 
 | **Local-dev Postgres** (default) | `init-db.sh` drops + recreates the DB on every build | NO | NO |
 | **Bases** (`bases.effortlessapi.com`) | `postgres/apply-migration.sh` applies one delta file at a time | YES (`postgres/migrations/`) | YES (`.applied.log`) |
 
-**Schema still originates in Airtable on both paths.** Bases doesn't author schema in migration files — it *delivers* rulebook deltas to a DB that can't be dropped. Never author business entities directly in a migration file; never write a migration on a local-dev project.
+**Schema still originates in the rulebook on both paths.** Bases doesn't author schema in migration files — it *delivers* rulebook deltas to a DB that can't be dropped. Never author business entities directly in a migration file; never write a migration on a local-dev project.
 
 If the project has no `BASES_DATABASE_URL` and no "Bases is migration-only" block in CLAUDE.md, you're on the local-dev shape: **no migrations, ever.** See `effortless-workflow` "NO MIGRATIONS" for the canonical rule.
 

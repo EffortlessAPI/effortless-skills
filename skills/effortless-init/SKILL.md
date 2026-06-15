@@ -5,8 +5,9 @@ description: >
   project", "init effortless", "init effortless project", "set up effortless
   here", "connect to Airtable", "hook up Airtable", or when an existing project
   is missing CLAUDE.md / start.sh / the standard ERB directory layout.
-  Covers `effortless -init`, the standard directory structure, the Airtable
-  connection sequence, the project-level CLAUDE.md template, and start.sh.
+  Covers `effortless -init`, the standard directory structure, the project-level
+  CLAUDE.md template, start.sh, and the optional step of connecting an upstream
+  editing surface (Airtable/Excel) as an input spoke.
   For Postgres-targeted first-run (preflight checks, init-db, full 7-step
   bootstrap), use effortless-setup-postgres instead — that skill is a superset
   for postgres projects.
@@ -35,8 +36,8 @@ project-root/
   CLAUDE.md                 # see template below
   start.sh                  # see template below
   bootstrap/                # raw-text-to-rulebook output (optional)
-  effortless-rulebook/      # airtable-to-rulebook output
-    push-to-airtable/       # reverse sync (DISABLED by default)
+  effortless-rulebook/      # the hub — authored directly, or pulled from an input spoke
+    push-to-airtable/       # reverse sync (only if Airtable-connected; DISABLED by default)
   postgres/                 # rulebook-to-postgres output (if using postgres)
   docs/                     # rulebook-to-docs output (optional)
 ```
@@ -55,7 +56,16 @@ build artifacts, key references). It is never source and must
 never be committed. Add this on every `effortless -init`, before
 the first commit.
 
-## Step 3 — Connect to Airtable
+## Step 3 — Get a rulebook in place
+
+**Rulebook-First (best practice, the default).** Author the rulebook directly at
+`effortless-rulebook/effortless-rulebook.json` — hand-written, LLM-authored, or
+generated from requirements via `raw-text-to-rulebook` (see `effortless-bootstrap`).
+Nothing else to wire; the rulebook is the hub. Most projects stay here.
+
+**Optional — connect an upstream editing surface as an input spoke.** If the team
+wants a human-friendly grid (Airtable is one option, a sibling of Excel/Notion),
+wire it as an *input* spoke. For Airtable:
 
 ```bash
 effortless -setAccountAPIKey airtable=patXXXX.XXXX     # if not already set
@@ -72,7 +82,9 @@ effortless -install rulebook-to-airtable -i ../effortless-rulebook.json -account
 # Mark as "IsDisabled": true in effortless.json — only run with `effortless build -id`
 ```
 
-Then `effortless build` to pull the first rulebook.
+Then `effortless build` to pull the first rulebook. (Tip: many teams keep the grid
+*downstream* — `rulebook-to-airtable` only — as a read-only mirror for review/QA,
+and edit the rulebook directly.)
 
 ## Step 4 — Write CLAUDE.md (CRITICAL)
 

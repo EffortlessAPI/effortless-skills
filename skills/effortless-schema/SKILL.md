@@ -21,7 +21,7 @@ This skill describes the **shape** of `effortless-rulebook.json`. It does NOT co
 {
   "$schema": "https://example.com/cmcc-schema/v1",
   "Name": "Project Display Name",
-  "Description": "Rulebook generated from Airtable base 'Base Name'.",
+  "Description": "Rulebook for 'Project Display Name'.",
   "TableName": { "Description": "...", "schema": [...], "data": [...] },
   "AnotherTable": { ... },
   "_meta": { /* conversion metadata */ }

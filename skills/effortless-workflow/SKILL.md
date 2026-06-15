@@ -70,16 +70,15 @@ effortless-rulebook.json  ← THE HUB
 All output spokes (regenerated)
 ```
 
-### Spoke 2: Airtable-connected
+### Spoke 2: An upstream grid (Airtable / Excel / …) — optional
 
-Use when the project has `airtable-to-rulebook` configured and the human prefers
-Airtable's UI for editing schema/data. Airtable is one good input spoke — not the
-SSoT.
+Use when the project has wired an upstream surface (e.g. `airtable-to-rulebook`)
+and the human prefers that grid's UI for editing schema/data. Airtable is one such
+surface, a sibling of Excel and Notion — one good input spoke, never the SSoT. The
+recipe below uses Airtable; other surfaces follow the same shape with their own
+`*-to-rulebook` transpiler.
 
-1. **Modify Airtable** — Add/change fields, data, or formulas in the Airtable base
-   - API key resolution: `AIRTABLE_API_KEY` env var > `~/.ssotme/ssotme.key` (`APIKeys.airtable`) > project settings
-   - Set the key via: `effortless -setAccountAPIKey airtable=patXXXXXXXX.XXXXXXXX`
-   - If no API key is available, tell the user — they may set it or make the change in Airtable UI
+1. **Modify Airtable** — Add/change fields, data, or formulas in the base. Key resolution, the `-account airtable` flag, and the API/OMNI split live in `effortless-airtable` / `effortless-airtable-omni`. If no API key is available, tell the user — they may set it or make the change in the Airtable UI.
 2. **`effortless build`** from the project root — `airtable-to-rulebook` pulls Airtable into the hub, then downstream transpilers regenerate every output spoke. Mandatory after every Airtable modification.
 
 ```

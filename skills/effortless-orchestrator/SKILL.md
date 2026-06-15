@@ -1,7 +1,7 @@
 ---
 name: effortless-orchestrator
 description: >
-  Top-level orchestrator for Effortless Rulebook (ERB) projects — Airtable-sourced
+  Top-level orchestrator for Effortless Rulebook (ERB) projects — rulebook-first
   schema-first business rules, `effortless.json` build pipelines,
   effortless-rulebook.json ontologies, rulebook-to-postgres code generation, or
   any project containing an effortless-rulebook/ directory or effortless.json file.
@@ -53,9 +53,9 @@ If you're in a project that lacks the marker and the user hasn't explicitly invo
 ```
    INPUT SPOKES (write to the hub)              OUTPUT SPOKES (regenerated from hub)
    ┌──────────────────────────────┐             ┌──────────────────────────────────┐
-   │ Airtable (optional)          │             │ Postgres (vw_* views + tables)   │
-   │ LLM-direct edits             │             │ Go / Python / TS / OWL / XLSX    │
-   │ Hand-edits (with permission) │             │ Docs / diagrams / explain-DAG    │
+   │ LLM-direct edits  (default)  │             │ Postgres (vw_* views + tables)   │
+   │ Hand-edits (with permission) │             │ Go / Python / TS / OWL / XLSX    │
+   │ Airtable / Excel (optional)  │             │ Docs / diagrams / explain-DAG    │
    │ Reverse-sync from Postgres   │             │ ... 11+ substrates today         │
    └──────────────┬───────────────┘             └──────────────▲───────────────────┘
                   │                                            │
@@ -181,33 +181,38 @@ You already knew the schema before the build because you queried it. Trust the p
 
 ## Schema Change Decision Tree
 
-First branch: **is this project Airtable-connected?** Check `effortless.json` for an
-`airtable-to-rulebook` transpiler. If yes, the Airtable path below is available; if
-no, edit `effortless-rulebook.json` directly (with permission) and rebuild.
+**Default (Rulebook-First):** edit `effortless-rulebook.json` directly (with
+permission), then `effortless build`. This is the best-practice path and the only
+one available unless the project explicitly opted into an upstream surface.
+
+**If the project is Airtable-connected** (check `effortless.json` for an
+`airtable-to-rulebook` transpiler), the Airtable path is *also* available as a
+sibling option — useful when a human prefers the grid. It's never required.
 
 ```
 NEW BUSINESS ENTITY (users, roles, products, orders, profiles)?
-  Airtable-connected project? → Airtable (new table via OMNI — needs Name formula).
-  Rulebook-direct project?    → edit effortless-rulebook.json, add the table object.
+  Rulebook-First (default) → edit effortless-rulebook.json, add the table object.
+  Airtable-connected, optional → new table via OMNI (needs Name formula).
   Then `effortless build`.
 
 Scalar field (text, number, select, checkbox, date, FK link)?
-  Airtable-connected? → Airtable REST API (effortless-airtable)
-  Rulebook-direct?    → edit the JSON directly
+  Rulebook-First (default) → edit the JSON directly
+  Airtable-connected, optional → Airtable REST API (effortless-airtable)
 
 Formula, lookup, or rollup?
-  Airtable-connected? → OMNI via Playwright (effortless-airtable-omni)
-                        node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> '<prompt>'
-  Rulebook-direct?    → edit the JSON directly (LLMs are excellent at this — the
-                        rulebook is JSON, formulas/lookups/rollups are just fields)
+  Rulebook-First (default) → edit the JSON directly (LLMs are excellent at this —
+                             the rulebook is JSON, formulas/lookups/rollups are
+                             just fields)
+  Airtable-connected, optional → OMNI via Playwright (effortless-airtable-omni)
+                             node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> '<prompt>'
 
 CRUD on records?
-  Airtable-connected? → Airtable REST API
-  Rulebook-direct?    → write to Postgres tables; reverse-sync if you need the
-                        rulebook to capture seed data
+  Rulebook-First (default) → write to Postgres tables; reverse-sync if you need
+                             the rulebook to capture seed data
+  Airtable-connected, optional → Airtable REST API
 ```
 
-**Never generate OMNI prompts for the user to paste.** Drive OMNI directly via `omni-send.mjs`.
+**If using OMNI: never generate OMNI prompts for the user to paste.** Drive OMNI directly via `omni-send.mjs`.
 
 ## When You Need More Detail
 
@@ -226,8 +231,8 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-workflow` | Editing the hub — directly, via Airtable, or via reverse-sync; permission checkpoints |
 | `effortless-pipeline` | `effortless.json`, transpilers, build mechanics |
 | `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `*b-customize-*` |
-| `effortless-airtable` | Airtable REST API — scalar fields, CRUD |
-| `effortless-airtable-omni` | OMNI via Playwright — formulas, lookups, rollups, new tables |
+| `effortless-airtable` | *(only if Airtable-connected)* Airtable REST API — scalar fields, CRUD |
+| `effortless-airtable-omni` | *(only if Airtable-connected)* OMNI via Playwright — formulas, lookups, rollups, new tables |
 | `effortless-diagnostics` | Diagnostic queries, DAG validation, legacy code migration |
 | `effortless-bases` | bases.effortlessapi.com + magic-links + RLS in 5 minutes |
 | `effortless-magic-links` | Magic-link auth on ANY Postgres-backed project |
@@ -247,7 +252,7 @@ Sub-skills load automatically based on what you're doing:
 - **It's a DAG**: 1-to-many only; no cycles, no many-to-many
 - **Every field** has a `Description`
 - **Schema is small, data is big** — query for entities, never read whole file
-- **Two change paths**: Airtable-first (preferred) or Rulebook-first with reverse sync
+- **Default change path**: Rulebook-First (edit the hub → build). Airtable/Excel are optional sibling input spokes if the project opted in.
 - **`effortless build`** runs enabled transpilers; `-id` includes disabled ones
 - **`effortless.json`** defines the build pipeline
 

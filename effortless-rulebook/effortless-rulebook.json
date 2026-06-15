@@ -348,7 +348,7 @@
       },
       {
         "Slug": "effortless-bootstrap",
-        "Description": "The Shadle steps: raw text to vocabulary to glossary to narrative to mock data to schema to Airtable.",
+        "Description": "The Shadle steps: raw text to vocabulary to glossary to narrative to mock data to schema to a populated effortless-rulebook.json (rulebook-first; Airtable/Excel mirror is optional and downstream).",
         "WhyItExists": "Going from 'here's what we want to build' to 'we have a formal rulebook' is the fuzziest part of ERB. This skill is the structured pipeline for that translation, so you don't end up with a half-formal mess that can't be projected to a substrate.",
         "Category": "project-lifecycle",
         "ScopeGate": "project-or-explicit-request",
@@ -356,8 +356,8 @@
       },
       {
         "Slug": "effortless-setup-postgres",
-        "Description": "First-run setup for Postgres-targeted projects: preflight tool checks, install transpilers, pull the rulebook, generate SQL, init the local DB. Sets up the regenerate-from-scratch shape (init-db.sh drops + recreates), not an incremental-migrations shape.",
-        "WhyItExists": "Gets you from 'I have an Airtable base' to 'I have a working local DB + generated views' without remembering the per-step cd discipline that makes the build work. This is the only step where commits without asking are appropriate (it's a known-good bootstrap sequence).",
+        "Description": "First-run setup for Postgres-targeted projects: preflight tool checks, install transpilers, get a rulebook in place (authored directly, or seeded from an optional Airtable/Excel surface), generate SQL, init the local DB. Sets up the regenerate-from-scratch shape (init-db.sh drops + recreates), not an incremental-migrations shape.",
+        "WhyItExists": "Gets you from 'I have a rulebook (or an upstream surface to seed it)' to 'I have a working local DB + generated views' without remembering the per-step cd discipline that makes the build work. This is the only step where commits without asking are appropriate (it's a known-good bootstrap sequence).",
         "Category": "project-lifecycle",
         "ScopeGate": "project-or-explicit-request",
         "Audience": "customer"
@@ -420,8 +420,8 @@
       },
       {
         "Slug": "effortless-workflow",
-        "Description": "The two valid paths for making changes: Path A (Airtable-first, preferred) and Path B (rulebook-first reverse sync via build -id). Permission checkpoints. Carries the canonical NO-MIGRATIONS rule for local-dev (regenerate from scratch via init-db.sh; never write SQL migrations).",
-        "WhyItExists": "Most 'this didn't work' stories in ERB are someone editing the rulebook JSON directly when Path A would have been right, then effortless build overwriting their edits. This skill is the discipline that prevents that.",
+        "Description": "The input-spoke options for making changes, all writing to the same rulebook hub: rulebook-direct (best practice), an optional upstream grid (Airtable/Excel), and reverse-sync via build -id. Permission checkpoints. Carries the canonical NO-MIGRATIONS rule for local-dev (regenerate from scratch via init-db.sh; never write SQL migrations).",
+        "WhyItExists": "Most 'this didn't work' stories in ERB are someone editing a generated output (SQL, app code) instead of the rulebook hub, then effortless build overwriting their edits. This skill is the discipline that keeps every change landing on the hub.",
         "Category": "workflow-and-build",
         "ScopeGate": "project-only",
         "Audience": "customer"
@@ -436,8 +436,8 @@
       },
       {
         "Slug": "effortless-airtable",
-        "Description": "The default for Airtable changes: scalar field add/modify/rename, table creation (without formulas), and all CRUD operations via the REST API.",
-        "WhyItExists": "About 80% of Airtable changes are scalar fields or CRUD \u2014 the API handles them in a few seconds. Falling back to OMNI (Playwright) for these is wasteful.",
+        "Description": "Canonical home for the Airtable-API mechanics, used only when the project opted into Airtable as an input spoke (one optional editing surface, sibling to Excel/Notion): scalar field add/modify/rename, table creation (without formulas), and all CRUD via the REST API. Other skills point here rather than repeating the key-resolution and -account airtable details.",
+        "WhyItExists": "When a project does use Airtable, about 80% of changes are scalar fields or CRUD \u2014 the API handles them in a few seconds, and falling back to OMNI (Playwright) for these is wasteful. Keeping the mechanics in one place lets the rest of the suite stay rulebook-first and just reference this skill.",
         "Category": "airtable-interaction",
         "ScopeGate": "project-only",
         "Audience": "customer"

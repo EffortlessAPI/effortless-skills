@@ -34,7 +34,7 @@ The Effortless rulebook, the schema generation, the migration discipline, and th
 
 This skill applies **only** to `bases.effortlessapi.com`-hosted databases. Bases is the **one and only ERB deployment shape that uses migrations** — because the DB is shared/persistent and cannot be dropped + recreated. Ongoing schema changes go through `postgres/apply-migration.sh`.
 
-**Local-dev ERB projects work the opposite way.** Local Postgres is regenerated from scratch on every `effortless build` via `init-db.sh`. They have **no `migrations/` folder, no migrations tracking table, no incremental deltas**. Schema changes there go through Airtable → `effortless build` — see `effortless-workflow` "NO MIGRATIONS" section.
+**Local-dev ERB projects work the opposite way.** Local Postgres is regenerated from scratch on every `effortless build` via `init-db.sh`. They have **no `migrations/` folder, no migrations tracking table, no incremental deltas**. Schema changes there go through the rulebook → `effortless build` — see `effortless-workflow` "NO MIGRATIONS" section.
 
 **Tell which path you're on before doing anything:**
 - `BASES_DATABASE_URL` in `.env.example` OR a `## Bases is migration-only` block in CLAUDE.md → bases path, this skill applies.
@@ -408,6 +408,6 @@ If down, run `bash magic-links-refactor/test-env/scripts/dev-stack-up.sh`.
 ## See also
 
 - `effortless-magic-links` — the generic magic-links flow for any Postgres app (when the DB is NOT on bases.effortlessapi.com).
-- `effortless-orchestrator` — for "AppUsers belongs in Airtable, not in `app.app_users` by hand".
+- `effortless-orchestrator` — for "AppUsers belongs in the rulebook, not in `app.app_users` by hand".
 - `effortless-sql` — for `*b-customize-*.sql` placement of `auth.trusted_tenants` and `app.jwt_*()` helpers.
 - `effortless-setup-postgres` — if you're standing up a brand-new local Postgres ERB project first.

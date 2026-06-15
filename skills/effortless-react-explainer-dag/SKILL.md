@@ -188,6 +188,23 @@ field's rulebook entry is probably typed as a raw field — check
 5. **Multiple `RoutingContext.Provider`s.** One at the App level is
    enough; nesting doesn't compose, it overrides.
 
+6. **Hover card clipped by a scroll/overflow ancestor.** The `DagCell`
+   hover micro-page (`DagHoverCard`) must escape every ancestor that
+   sets `overflow: hidden` / `overflow: auto` / `overflow-x: auto` —
+   horizontally-scrolling flow tracks, `<table>` cells, fixed-height
+   bars, any clipped panel. **Raising `z-index` does NOT help**: an
+   element cannot paint outside an `overflow`-clipping ancestor no
+   matter how high its `z-index` — only *leaving that clipping context*
+   does. The generated `DagHoverCard` already handles this: it measures
+   the trigger glyph's `getBoundingClientRect()` and renders the card
+   via `createPortal(..., document.body)` with `position: fixed`,
+   clamped into the viewport (and flipped above the glyph when there's
+   no room below). If you fork/hand-edit the card, keep the portal —
+   do not revert it to an in-flow `position: absolute` child of the
+   cell, or it will clip again the moment a `<DagCell>` lands inside a
+   scroll container. (Same doctrine the host app uses for its own gear/
+   reassign popovers: fixed-position, anchored to a measured rect.)
+
 ## Minimal integration checklist
 
 - [ ] Transpiler installed and added to `effortless.json`

@@ -1,5 +1,4 @@
 ---
-
 name: effortless-demo-app
 description: >
   Use when the user wants to spin up a complete Effortless POC demo app from
@@ -12,10 +11,10 @@ description: >
   for …", "spin up a demo app for …", "effortless demo app", "quick
   effortless demo of …".
 
-## **Scope (load gate):** Loads only on explicit user request for a demo app.
-
+  **Scope (load gate):** Loads only on explicit user request for a demo app.
   Does NOT require a marked Effortless project — this skill *creates* one.
 audience: customer
+---
 
 # Effortless Demo App — one-line description to running POC
 
