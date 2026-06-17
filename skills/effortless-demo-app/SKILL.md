@@ -106,7 +106,7 @@ fails, read the error before re-running with tweaks
 - `chmod +x init-db.sh` defensively — the transpiler emits it
 executable. Only chmod if the actual error says permission denied
 - Loading the `effortless-demo-app` skill twice
-- Running ToolSearch for transpiler names or React explainer features
+- Running ToolSearch for transpiler names or explainer-DAG features
 during bootstrap — irrelevant to first-build
 
 **Ask-before-building exception:** outside this demo skill, you should
@@ -399,11 +399,11 @@ is already explainer-aware from the first render. No retrofit.
 
 ### F. Explainer DAG (BEFORE real UI)
 
-1. Install the `effortless-react-explainer-dag` transpiler into this
-  project and integrate it into the hello-world `web/` app *now*,
-    while the UI is trivial. Load the `effortless-react-explainer-dag`
-    skill for exact installation and integration steps. Do it before
-    building the real UI — don't bolt it on later.
+1. Load **`effortless-explainer-dag`** and follow it end-to-end — install
+  `rulebook-to-explainer-dag`, wire static assets + `EffortlessExplainer.init()`,
+  add `/dag/*` routes, mount the toggle, mark derived cells with
+  `data-er-dag="Table.Field"`. Do this on the hello-world `web/` app *now*,
+  while the UI is trivial — before building the real UI. Don't bolt it on later.
 
 ### G. Server
 
@@ -429,8 +429,7 @@ is already explainer-aware from the first render. No retrofit.
 
 Replace the "coming soon" placeholder with the real app. Because the
 explainer was wired in step F, every calculated value rendered here
-should already use `<DagCell>` / `<FieldDag>` — not as a follow-up
-pass.
+should already use `data-er-dag="Table.Field"` — not as a follow-up pass.
 
 1. `web/src/`:
   - `main.tsx` → `<BrowserRouter><App /></BrowserRouter>`.
@@ -446,7 +445,7 @@ pass.
     callback so edits can refresh the view.
     - `pages/`:
       - **Primary role**: dashboard with calculated/aggregated stats
-      (each wrapped in `<DagCell>`), list pages, detail pages, and
+      (each wrapped in `data-er-dag`), list pages, detail pages, and
       **edit forms for the raw fields users actually change**.
       - **Other roles**: a single `Placeholder.tsx` page that
       describes the role's intended view and links back to the

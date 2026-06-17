@@ -15,3 +15,4 @@ upgrade infrequently.
 | magic-links | effortless-magic-links | 2026-04-30 | 2026-07-01 | Renamed to align with the `effortless-` prefix convention. Same content. |
 | effortless-claude | effortless-orchestrator | 2026-04-30 | 2026-07-01 | Orchestrator skill renamed to remove the name collision with the parent repo. The repo is still `effortless-claude`; the orchestrator is now `effortless-orchestrator`. |
 | effortless-install-cli | effortless-cli | 2026-05-01 | 2026-08-01 | CLI binary install/update merged into effortless-cli (Part 1 = install, Part 2 = use). One skill for the CLI artifact end-to-end. |
+| effortless-react-explainer-dag | effortless-explainer-dag | 2026-06-16 | 2026-09-01 | Superseded by portable `rulebook-to-explainer-dag` (vanilla JS + `data-er-dag`). React-specific transpiler and `<DagCell>` components removed. |
