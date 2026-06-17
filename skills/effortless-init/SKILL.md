@@ -183,24 +183,64 @@ register is structural engagement, not measured endorsement.
 
 ## Step 5 — Write start.sh
 
-Idempotent launcher; pick one stable 3-digit prefix per project so backend (`nnn4`) and frontend (`nnn2`) ports don't collide across your projects.
+**Contract (every Effortless app project):**
+
+1. Pick **one random odd port** when scaffolding the project (e.g. `8731`) and **hard-code it** in `start.sh`. Never reuse generic defaults like `3000`, `5173`, or `6164`.
+2. The **SPA/client port** is always **`API_PORT + 1`** (the next even number — `8732` in that example). Hard-code both in `start.sh`, `server/src/index.ts` (or `PORT` default), and `web/vite.config.ts` (proxy target + `server.port`).
+3. **`./start.sh` with no arguments** is the only way to run the app. It must:
+   - **Kill** anything bound to `API_PORT` and `UI_PORT` (`lsof -ti tcp:<port> | xargs kill -9`).
+   - **Restart** the current API and SPA dev servers.
+   - **Print** clickable `http://localhost:<port>` lines for **both** backend and frontend.
+4. Optional subcommands only for non-run tasks: `build` (`effortless build`), `db` (`init-db.sh`). Do **not** add `all`, `server`, or `web` subcommands — `./start.sh` alone runs everything.
 
 ```bash
-#!/bin/bash
-PORT_PREFIX=847   # randomly chosen ONCE per project, then never changed
+#!/usr/bin/env bash
+set -euo pipefail
 
-BACKEND_PORT="${PORT_PREFIX}4"
-FRONTEND_PORT="${PORT_PREFIX}2"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
 
-lsof -ti :$BACKEND_PORT | xargs kill -9 2>/dev/null
-lsof -ti :$FRONTEND_PORT | xargs kill -9 2>/dev/null
+# Hard-coded once per project — random ODD for API; SPA = odd + 1 (even).
+API_PORT=8731
+UI_PORT=$((API_PORT + 1))
 
-# cd backend && npm start -- --port $BACKEND_PORT &
-# cd frontend && npm start -- --port $FRONTEND_PORT &
+export PORT="$API_PORT"
+export WEB_PORT="$UI_PORT"
+export DATABASE_URL="${DATABASE_URL:-postgresql://postgres@localhost:5432/<db>}"
 
-echo "Backend:  http://localhost:$BACKEND_PORT"
-echo "Frontend: http://localhost:$FRONTEND_PORT"
+free_port() {
+  local p="$1"
+  local pids
+  pids=$(lsof -ti "tcp:${p}" 2>/dev/null || true)
+  [[ -n "$pids" ]] && kill -9 $pids 2>/dev/null || true
+}
+
+case "${1:-}" in
+  build) effortless build ;;
+  db)    ./dev-postgres/init-db.sh ;;
+  "")
+    free_port "$API_PORT"
+    free_port "$UI_PORT"
+
+    echo ""
+    echo "  API:  http://localhost:${API_PORT}"
+    echo "  App:  http://localhost:${UI_PORT}"
+    echo ""
+
+    (cd server && npm install && npm run dev) &
+    SERVER_PID=$!
+    trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+    sleep 1
+    cd web && npm install && npm run dev
+    ;;
+  *)
+    echo "Usage: ./start.sh [build|db]" >&2
+    exit 1
+    ;;
+esac
 ```
+
+Pick `API_PORT` from a random odd in `3001–9999` at scaffold time; **never change it** after the first commit. Re-running `./start.sh` must always free both ports first.
 
 If the project uses nvm, bake the version switch into start.sh — see effortless-cli's "Node version" section for the snippet.
 

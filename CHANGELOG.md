@@ -12,6 +12,11 @@ release section is an ISO date.
   `rulespeak/rulespeak.md` (plain-English declarative business rules).
 
 ### Changed
+- **`start.sh` contract** (`effortless-init`, `effortless-setup-postgres`,
+  `effortless-demo-app`) — per project: hard-code a random **odd** `API_PORT`
+  and **even** `UI_PORT = API_PORT + 1`. `./start.sh` (no args) always kills
+  both ports and restarts API + SPA, printing `http://localhost:` links for
+  both. Optional subcommands: `build`, `db` only — no `all`/`server`/`web`.
 - **`effortless-demo-app`** — POC bootstrap step F now installs RuleSpeak
   instead of the Explainer DAG; no `data-er-dag` wiring in default demos.
 - **`effortless-explainer-dag`** — explicitly on-demand only; not part of

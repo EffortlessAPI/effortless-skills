@@ -454,7 +454,7 @@ psql -d <dbname> -c "\dv vw_*"
 
 ## Step 7: Scaffold the prototype app + `./start.sh`
 
-Once the DB is initialized, scaffold a **minimal Node prototype app** and a `start.sh` that boots it on a deterministic port pair. The contract, defaults, and full skeleton live in [REFERENCE.md → Step 7 prototype app](REFERENCE.md#step-7--scaffold-the-prototype-app--startsh) — load that section when you're ready to do this step. Do NOT inline a UI framework / design system without the user asking.
+Once the DB is initialized, scaffold a **minimal Node prototype app** and a `start.sh` that boots it on a **hard-coded odd/even port pair** (API = odd, SPA = odd+1). `./start.sh` must always kill both ports and restart. The contract, defaults, and full skeleton live in [REFERENCE.md → Step 7 prototype app](REFERENCE.md#step-7--scaffold-the-prototype-app--startsh) — load that section when you're ready to do this step. Do NOT inline a UI framework / design system without the user asking.
 
 ## After Setup — Querying the Schema (Lightweight)
 

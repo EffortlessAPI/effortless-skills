@@ -66,18 +66,16 @@ swaps (React, Vue, etc.) come later, only when the user explicitly asks.
 
 Place a `start.sh` at the **project root** that:
 
-1. Picks an **odd port** (the API/server port) and an **even port = odd+1** (reserved for a future SPA UI).
-2. Kills anything currently bound to either port (`lsof -ti tcp:<port> | xargs kill -9`), so re-running `start.sh` is always idempotent.
-3. Starts the Node app in the background, redirecting logs to `./.run/app.log`.
-4. Waits until the server responds on the API port (poll `curl -sf http://localhost:<port>/` for up to ~10s).
-5. Prints a **clickable** `http://localhost:<port>/` line — most terminals (iTerm2, VS Code, Warp, Terminal.app) make these Ctrl/Cmd+clickable automatically. Print it on its own line, no surrounding punctuation that breaks link detection.
-6. Exits 0, leaving the server running.
+1. Hard-codes a **random odd `API_PORT`** (e.g. `8731`) chosen once at scaffold time, and **`UI_PORT = API_PORT + 1`** (even — `8732` in that example). Same pair in `start.sh`, server `PORT` default, and Vite `server.port` + proxy target.
+2. **`./start.sh` (no args)** always **kills** anything on both ports (`lsof -ti tcp:<port> | xargs kill -9`), then **restarts** the API and SPA dev servers.
+3. Prints **both** clickable URLs on their own lines:
+   - `http://localhost:<API_PORT>` (API)
+   - `http://localhost:<UI_PORT>` (SPA)
+4. Optional subcommands only: `build`, `db`. No `all` / `server` / `web` run modes.
 
-Pick ports deterministically per project (e.g., hash of project slug into
-the 3001–9999 odd range) so re-runs use the same pair. Persist the chosen
-ports in `./.run/ports.env` for `start.sh` to source on subsequent runs.
+Re-running `./start.sh` must be idempotent — stale processes on either port are killed before restart.
 
-### Skeleton
+### Skeleton (server-only prototype; reserve `UI_PORT` for a future SPA)
 
 ```bash
 #!/usr/bin/env bash
@@ -85,36 +83,40 @@ set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p .run
 
-# Resolve / persist port pair (odd = API, even = UI)
-if [[ -f .run/ports.env ]]; then
-  source .run/ports.env
-else
-  API_PORT=3011  # odd; pick deterministically per project
-  UI_PORT=$((API_PORT + 1))
-  printf 'API_PORT=%s\nUI_PORT=%s\n' "$API_PORT" "$UI_PORT" > .run/ports.env
-fi
+API_PORT=8731   # random odd — pick once per project, never change
+UI_PORT=$((API_PORT + 1))
 
-# Free the ports
-for p in "$API_PORT" "$UI_PORT"; do
-  pids=$(lsof -ti tcp:"$p" 2>/dev/null || true)
+free_port() {
+  local p="$1"
+  local pids
+  pids=$(lsof -ti "tcp:${p}" 2>/dev/null || true)
   [[ -n "$pids" ]] && kill -9 $pids 2>/dev/null || true
-done
+}
 
-# Start app
-( cd app && PORT="$API_PORT" nohup node server.js > ../.run/app.log 2>&1 & echo $! > ../.run/app.pid )
+case "${1:-}" in
+  build) effortless build ;;
+  db)    ./dev-postgres/init-db.sh ;;
+  "")
+    free_port "$API_PORT"
+    free_port "$UI_PORT"
 
-# Wait for ready
-for _ in $(seq 1 30); do
-  curl -sf "http://localhost:$API_PORT/" >/dev/null && break
-  sleep 0.3
-done
+    ( cd app && PORT="$API_PORT" nohup node server.js > ../.run/app.log 2>&1 & echo $! > ../.run/app.pid )
 
-echo ""
-echo "  App ready — Ctrl/Cmd+Click to open:"
-echo ""
-echo "    http://localhost:$API_PORT/"
-echo ""
-echo "  (UI port reserved: $UI_PORT)"
+    for _ in $(seq 1 30); do
+      curl -sf "http://localhost:$API_PORT/" >/dev/null && break
+      sleep 0.3
+    done
+
+    echo ""
+    echo "  API:  http://localhost:${API_PORT}/"
+    echo "  App:  http://localhost:${UI_PORT}/  (reserved for SPA)"
+    echo ""
+    ;;
+  *)
+    echo "Usage: ./start.sh [build|db]" >&2
+    exit 1
+    ;;
+esac
 ```
 
 Make it executable: `chmod +x start.sh`.

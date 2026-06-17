@@ -147,7 +147,7 @@ Every feature change follows exactly this order. No exceptions.
   `init-db.sh` (drops + recreates the DB with new schema + seed data)
 3. **Update the app** — change server routes and/or web UI if the new field
   needs an editor or display
-4. **Re-run the app and test** — `./start.sh all`, confirm the cascade works
+4. **Re-run the app and test** — `./start.sh`, confirm the cascade works
 
 If the DB doesn't update after `effortless build`, the init-db exec tool
 wasn't installed in step B — fix that, don't run `init-db.sh` manually.
@@ -321,9 +321,11 @@ before moving on.
   `> **Project type:** Effortless demo app (rulebook-first Postgres POC). Use the \`effortless-demo-app skill for any
   work in this repo — schema edits, Leopold loops, new pages,
   mock data, README updates.` Also include the standard ERB marker sentence ("This project follows the Effortless Rulebook (ERB) methodology…") so the project-only effortless-* skills load via their scope gate.
-  - `start.sh` (interactive launcher with subcommands
-  `all|server|web|db|build`).
-2. Pick ports unlikely to collide with other demos.
+  - `start.sh` — see **effortless-init** Step 5: hard-coded odd `API_PORT`,
+  even `UI_PORT = API_PORT + 1`; `./start.sh` kills both ports and restarts
+  API + SPA; optional `build` / `db` subcommands only.
+2. Pick a **random odd port** (e.g. `8731`) once per project — never use
+  shared defaults like `3000`, `5173`, or `6164`.
 
 ### C. Rulebook
 
@@ -378,20 +380,19 @@ user sees *something running in a browser* very early in the demo.
 1. Scaffold `web/`:
   - `web/package.json` (react, react-router-dom, vite,
   `@vitejs/plugin-react`).
-    - `web/vite.config.ts` (proxy `/api` to the planned server port
-    — the proxy can 502 for now, that's fine).
+    - `web/vite.config.ts` — `server.port = UI_PORT` (even), proxy `/api` to
+    `http://localhost:API_PORT` (odd). Hard-code the same pair as `start.sh`.
     - `web/index.html`, `web/src/main.tsx`, `web/src/App.tsx` that
     renders a literal **"**** — coming soon"** placeholder
     with a one-line description of the domain. No routing, no
     data fetching, no auth. Just text.
     - Add `node_modules/`, `dist/`, `.vite/` to `.gitignore` (append
     to the project-root `.gitignore` that already has `.ssotme/`).
-2. `start.sh` (if not already present) — interactive launcher with
-  subcommands `all | server | web | db | build`. The `web`
-    subcommand runs `cd web && npm install && npm run dev`.
-3. Run `./start.sh web`, then **open the URL in the browser** (the
-  assistant should print the URL and, where possible, open it).
-    Confirm the "coming soon" placeholder renders before moving on.
+2. `start.sh` per **effortless-init** Step 5 (if not already present).
+3. Run `./start.sh`, then **open the App URL** in the browser (the
+  assistant should print both `http://localhost:<API_PORT>` and
+  `http://localhost:<UI_PORT>` lines). Confirm the "coming soon"
+  placeholder renders before moving on.
     This is the first time the user sees *anything* — make it count.
 
 ### F. RuleSpeak (plain-English rules doc)
@@ -424,7 +425,7 @@ user explicitly asks for in-app field provenance. For that, load
     Writes hit base tables, only touching raw columns, keyed on
     `<table>_id`.
     - Role-filter in the route handlers from `req.me.role`.
-3. Boot it via `./start.sh server`; curl `/healthz` and one
+3. Boot it via `./start.sh`; curl `http://localhost:<API_PORT>/healthz` and one
   read+patch+read cycle showing the cascade.
 
 ### H. Flesh out the real UI
@@ -469,7 +470,7 @@ Replace the "coming soon" placeholder with the real app.
     flagged as over-budget. An over-budget report that hasn't been approved
     appears in the manager's escalation queue." Never use: DAG, calculated
     field, multi-hop, inference chain, rulebook.
-    - **Quick start** (`./start.sh all` or similar).
+    - **Quick start** (`./start.sh` — prints API and App URLs).
     - **Dev login table** (emails + roles + one-line description of each).
     - **"Try this" walkthrough** — 4–6 steps in domain language showing the
     cascade end-to-end. E.g. "Sign in as Alice → open a submitted report →
@@ -533,7 +534,7 @@ include this list inline and explicitly ask which enhancements to build next.
 
 ### J. Smoke test before declaring done
 
-1. `./start.sh all` boots cleanly.
+1. `./start.sh` boots cleanly (kills stale ports, restarts API + SPA, prints both URLs).
 2. Login picker shows all seeded identities; signing in as the
   primary role lands on a populated dashboard.
 3. Making a business-meaningful edit (change an amount, approve a
@@ -550,7 +551,7 @@ If any check fails, fix it before reporting back.
 
 | Thing                  | Default                                                            |
 | ---------------------- | ------------------------------------------------------------------ |
-| Ports                  | server :3032+, web :5175+ (pick unused)                            |
+| Ports                  | Hard-coded odd `API_PORT` (e.g. `8731`); `UI_PORT = API_PORT + 1` in `start.sh`, server, and Vite |
 | DB name                | snake_case of project name                                         |
 | Test runner            | none — manual smoke tests are enough for a demo                    |
 | Styling                | hand-rolled CSS in `web/src/styles.css`, no UI framework           |
