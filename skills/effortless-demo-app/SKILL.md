@@ -106,8 +106,7 @@ fails, read the error before re-running with tweaks
 - `chmod +x init-db.sh` defensively — the transpiler emits it
 executable. Only chmod if the actual error says permission denied
 - Loading the `effortless-demo-app` skill twice
-- Running ToolSearch for transpiler names or explainer-DAG features
-during bootstrap — irrelevant to first-build
+- Running ToolSearch for transpiler names during bootstrap — irrelevant to first-build
 
 **Ask-before-building exception:** outside this demo skill, you should
 generally confirm before running `effortless build` (it drops the DB).
@@ -136,7 +135,8 @@ can't answer from this skill
 
 Skip entirely for demos: `effortless-airtable`*, `effortless-bootstrap`
 (Shadle steps), `effortless-magic-links`, `effortless-bases`,
-`effortless-orchestrator` (its content is summarized inline here).
+`effortless-orchestrator` (its content is summarized inline here),
+`effortless-explainer-dag` (on-demand only — user must explicitly ask).
 
 ## The Leopold loop — canonical 4 steps
 
@@ -373,10 +373,7 @@ before moving on.
 ### E. Hello-world web app (BEFORE the server)
 
 The point of doing the web app first — even as a stub — is so the
-user sees *something running in a browser* very early in the demo,
-and so the explainer DAG can be wired in before any real UI exists.
-This means as soon as the real UI is built, every calculated cell
-is already explainer-aware from the first render. No retrofit.
+user sees *something running in a browser* very early in the demo.
 
 1. Scaffold `web/`:
   - `web/package.json` (react, react-router-dom, vite,
@@ -397,17 +394,18 @@ is already explainer-aware from the first render. No retrofit.
     Confirm the "coming soon" placeholder renders before moving on.
     This is the first time the user sees *anything* — make it count.
 
-### F. Explainer DAG (BEFORE real UI)
+### F. RuleSpeak (plain-English rules doc)
 
-1. Load **`effortless-explainer-dag`** only (never `effortless-react-explainer-dag`)
-   and follow it end-to-end — install `rulebook-to-explainer-dag`, `./start.sh build`,
-   serve static assets, paste `integrate/snippet.html`, add `/dag/*` routes or
-   `mode: "modal"`, mount the toggle, mark derived cells with
-   `data-er-dag="Table.Field"`. Do this on the hello-world app *now*, while the
-   UI is trivial — before building the real UI. Don't bolt it on later.
+1. From project root: `mkdir -p rulespeak && cd rulespeak && effortless -install rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json && cd ..`
+2. Run `effortless build` (or include in the next `./start.sh build`) and confirm
+   `rulespeak/rulespeak.md` was generated.
+3. List `rulespeak/` in the repo layout in `CLAUDE.md`. Optionally mention the
+   file in README under the developer-reference section — business-readable rules
+   in plain English, no UI wiring required.
 
-   **Do not invent:** local transpiler servers, `run-local-tool.sh`, custom
-   `explainer-host.js`, `dag_shell.html`, or CSS overrides for `.dag-cell`.
+**Do not** install `rulebook-to-explainer-dag` during POC bootstrap unless the
+user explicitly asks for in-app field provenance. For that, load
+**`effortless-explainer-dag`** on demand.
 
 ### G. Server
 
@@ -429,11 +427,9 @@ is already explainer-aware from the first render. No retrofit.
 3. Boot it via `./start.sh server`; curl `/healthz` and one
   read+patch+read cycle showing the cascade.
 
-### H. Flesh out the real UI (with explainer tokens from the start)
+### H. Flesh out the real UI
 
-Replace the "coming soon" placeholder with the real app. Because the
-explainer was wired in step F, every calculated value rendered here
-should already use `data-er-dag="Table.Field"` — not as a follow-up pass.
+Replace the "coming soon" placeholder with the real app.
 
 1. `web/src/`:
   - `main.tsx` → `<BrowserRouter><App /></BrowserRouter>`.
@@ -448,9 +444,9 @@ should already use `data-er-dag="Table.Field"` — not as a follow-up pass.
     - `lib/useApi.ts`: `useEffect`-based hook with a `reload()`
     callback so edits can refresh the view.
     - `pages/`:
-      - **Primary role**: dashboard with calculated/aggregated stats
-      (each wrapped in `data-er-dag`), list pages, detail pages, and
-      **edit forms for the raw fields users actually change**.
+      - **Primary role**: dashboard with calculated/aggregated stats,
+      list pages, detail pages, and **edit forms for the raw fields users
+      actually change**.
       - **Other roles**: a single `Placeholder.tsx` page that
       describes the role's intended view and links back to the
       primary role's home for the demo.
@@ -458,8 +454,7 @@ should already use `data-er-dag="Table.Field"` — not as a follow-up pass.
 2. `npx tsc --noEmit` to confirm typecheck.
 3. Confirm the SPA: log in as primary role, make a business-meaningful
   edit (change an amount, flip a status, update a quantity), watch the
-    dependent values update — and click a calculated value to see the
-    source values and rule that produced it.
+    dependent values update on the next read.
 
 ### I. README
 

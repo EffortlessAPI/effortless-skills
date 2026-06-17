@@ -237,7 +237,8 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-bases` | bases.effortlessapi.com + magic-links + RLS in 5 minutes |
 | `effortless-magic-links` | Magic-link auth on ANY Postgres-backed project |
 | `effortless-excel-export` | Adding Excel export from live Postgres data |
-| `effortless-explainer-dag` | **Explainer DAG** — `rulebook-to-explainer-dag`, `data-er-dag`, hover + full field pages. **Only skill for this task** (not `effortless-react-explainer-dag`) |
+| `effortless-rulespeak` | **RuleSpeak doc** — `rulebook-to-rulespeak` → `rulespeak/rulespeak.md`. Default for demo/POC bootstrap |
+| `effortless-explainer-dag` | **Explainer DAG (on demand)** — in-app `rulebook-to-explainer-dag`, `data-er-dag`, hover + full field pages. Load only when user asks; not default for POCs |
 | `effortless-demo-app` | Spin up a complete demo POC from a one-line domain description |
 | `effortless-claude-updates` | Anything about the **skill set** — check, update, author skills |
 | `effortless-cmcc` | The conceptual floor — SDLAF, bitemporal ACID DAG, the 5 primitives |

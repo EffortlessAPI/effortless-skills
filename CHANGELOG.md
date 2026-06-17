@@ -8,6 +8,18 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **`effortless-rulespeak`** — install `rulebook-to-rulespeak`, emit
+  `rulespeak/rulespeak.md` (plain-English declarative business rules).
+
+### Changed
+- **`effortless-demo-app`** — POC bootstrap step F now installs RuleSpeak
+  instead of the Explainer DAG; no `data-er-dag` wiring in default demos.
+- **`effortless-explainer-dag`** — explicitly on-demand only; not part of
+  standard POC path.
+- **`effortless-orchestrator`** / **`effortless-pipeline`** — document
+  RuleSpeak as default doc output; Explainer DAG as optional add-on.
+
+### Added
 - **Load-bearing axioms.** Every non-trivial skill now opens with a 1–2
   line axiom that captures the model:
   - `effortless-orchestrator`: "The rulebook is the invariant; generated code is disposable."

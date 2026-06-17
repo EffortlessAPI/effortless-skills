@@ -48,6 +48,7 @@ below for that case.
 | `init-db` | SQL -> Postgres | Runs `init-db.sh` to bootstrap the database |
 | `json-hbars-transform` | JSON + Handlebars -> Docs | Generates documentation (README.SCHEMA.md etc.) |
 | `rulebook-to-xlsx` | JSON -> Excel | Generates spreadsheet export |
+| `rulebook-to-rulespeak` | JSON -> Markdown | Plain-English RuleSpeak rules document (`rulespeak.md`) |
 | `airtable-to-odxml` | Airtable -> ODXML | Generates XML metadata for .NET |
 | `odxml-to-csharp-pocos` | ODXML -> C# | Generates Entity Framework classes |
 

@@ -14,14 +14,21 @@ description: >
   "explain a calculated field visually", "make calculated fields clickable",
   "data-er-dag", "explainer DAG".
 
-  **Scope (load gate):** Effortless projects with a web UI (any stack).
-  Does not require Airtable. **This is the ONLY skill for explainer DAG work.**
-  Do not load `effortless-react-explainer-dag` (deprecated — wrong transpiler,
-  wrong integration model).
+  **Scope (load gate):** Loads **on demand only** — when the user explicitly
+  wants in-app field provenance / DAG visualization. **Not** part of the default
+  demo/POC bootstrap (that uses `rulebook-to-rulespeak` via effortless-rulespeak).
+  Effortless projects with a web UI (any stack). Does not require Airtable.
+  **This is the ONLY skill for explainer DAG work.** Do not load
+  `effortless-react-explainer-dag` (deprecated — wrong transpiler, wrong
+  integration model).
 audience: customer
 ---
 
 # Effortless Explainer DAG — one-prompt integration playbook
+
+> **On-demand, not default.** Demo/POC apps install `rulebook-to-rulespeak`
+> instead (see **effortless-rulespeak**). Load this skill only when the user
+> asks for clickable in-app field provenance or DAG pages.
 
 Portable inference visualizer generated from `effortless-rulebook.json`.
 Users hover a derived cell for RuleSpeak + upstream chips, double-click
