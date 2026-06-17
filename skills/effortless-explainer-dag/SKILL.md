@@ -9,14 +9,15 @@ description: >
   Flask/Jinja, HTMX, etc. via the portable `rulebook-to-explainer-dag`
   transpiler (vanilla JS + CSS, no React dependency).
 
-  Triggers: "add the explainer dag", "wire up the explainer", "show the
-  DAG in the UI", "rulebook-to-explainer-dag", "explain a calculated
-  field visually", "make calculated fields clickable", "data-er-dag".
+  Triggers: "add the explainer dag", "wire up the explainer", "install the
+  effortless explainer dag", "show the DAG in the UI", "rulebook-to-explainer-dag",
+  "explain a calculated field visually", "make calculated fields clickable",
+  "data-er-dag", "explainer DAG".
 
   **Scope (load gate):** Effortless projects with a web UI (any stack).
-  Does not require Airtable. Load as the sole skill for this task — the
-  steps below are complete; do not also load the deprecated
-  effortless-react-explainer-dag skill.
+  Does not require Airtable. **This is the ONLY skill for explainer DAG work.**
+  Do not load `effortless-react-explainer-dag` (deprecated — wrong transpiler,
+  wrong integration model).
 audience: customer
 ---
 
@@ -30,6 +31,41 @@ cells with `data-er-dag`, mount scripts + routes, done.
 > **Deprecated:** `rulebook-to-react-explainer-dag` and `<DagCell>` are
 > superseded. Remove that transpiler from `effortless.json` if present.
 > Use `rulebook-to-explainer-dag` + `data-er-dag` instead.
+
+## Agent hard rules — do NOT roll your own
+
+Read this section before writing any app code. The transpiler output is the
+UI; the host only serves files and pastes one snippet.
+
+**Do:**
+
+1. `effortless -install rulebook-to-explainer-dag` (registers transpiler in `effortless.json`)
+2. `effortless build` or `./start.sh build` — **hosted transpiler only**
+3. Serve `/rulebook-explainer-dag/*` as static files from generated output
+4. Copy `integrate/snippet.html` into the host layout (link + scripts + init)
+5. Route `/dag/*` to the tool's own `pages/*.html` **or** use `mode: "modal"`
+6. Mark derived display cells: `data-er-dag="Table.Field"` (PascalCase)
+7. After dynamic DOM updates (HTMX, React lists): one call to `enhanceCells()`
+
+**Do NOT create or document any of the following:**
+
+| Forbidden | Why |
+|-----------|-----|
+| Local transpiler dev server (port 30071, `run-local-tool.sh`) | Not part of integration; use `effortless build` |
+| Environment variables for the explainer | Not required |
+| `explainer-host.js`, `explainer-bridge.js` (except React §4) | Use `integrate/snippet.html` + inline init |
+| Custom Jinja/HTML shell wrapping DAG pages (`dag_shell.html`) | Tool ships self-contained `pages/*.html` + `dag.css` |
+| CSS overrides for `.dag-cell`, `.dag-hovercard`, etc. | Use generated `dag.css` only |
+| Patch scripts for generated `explainer-dag.js` | Fix the transpiler version; don't patch in app repos |
+| Reimplementing hover cards, toggles, or DAG page renderers | All live in `explainer-dag.js` |
+
+**Before writing host code:** open the generated
+`rulebook-explainer-dag/integrate/snippet.html` and
+`integrate/README.md`. If your plan deviates from those files, stop.
+
+**Host code budget:** static mount + snippet paste + routes (if `path` mode) +
+`data-er-dag` markers + (optional) one inline `enhanceCells` hook. ~30 lines
+max outside the generated folder.
 
 ## One-prompt execution order
 
@@ -335,10 +371,23 @@ Serve `pages/index.html`, `pages/table.html`, `pages/field.html` at
 ### Modal (URL unchanged)
 
 ```javascript
-EffortlessExplainer.init({ mode: "modal", mountToggle: "#effortless-dag-toggle" });
+EffortlessExplainer.init({ mode: "modal", mountToggle: "#explainer-toggle-mount" });
 ```
 
 Double-click / navigate opens `#effortless-explainer-modal` overlay.
+
+### FastAPI + Jinja + HTMX (server-rendered)
+
+Minimal host wiring — no custom JS modules:
+
+1. Static mount: `/rulebook-explainer-dag` → generated `rulebook-explainer-dag/`
+2. Paste `integrate/snippet.html` into `base.html` (when user is logged in)
+3. **Path mode** (full DAG pages at `/dag/Table/Field`):
+   - Serve the tool's `pages/field.html` at `/dag`, `/dag/{table}`, `/dag/{table}/{field}`
+   - Add `<base href="/rulebook-explainer-dag/pages/">` so relative `../dag.css` resolves
+   - Do **not** wrap in app header/styles — the page is tool HTML + `dag.css` only
+4. **Modal mode** (simpler — no `/dag` routes): use `mode: "modal"` in init
+5. HTMX row swaps: one inline listener — `EffortlessExplainer.enhanceCells(e.detail.target)`
 
 ---
 

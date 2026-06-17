@@ -399,11 +399,15 @@ is already explainer-aware from the first render. No retrofit.
 
 ### F. Explainer DAG (BEFORE real UI)
 
-1. Load **`effortless-explainer-dag`** and follow it end-to-end — install
-  `rulebook-to-explainer-dag`, wire static assets + `EffortlessExplainer.init()`,
-  add `/dag/*` routes, mount the toggle, mark derived cells with
-  `data-er-dag="Table.Field"`. Do this on the hello-world `web/` app *now*,
-  while the UI is trivial — before building the real UI. Don't bolt it on later.
+1. Load **`effortless-explainer-dag`** only (never `effortless-react-explainer-dag`)
+   and follow it end-to-end — install `rulebook-to-explainer-dag`, `./start.sh build`,
+   serve static assets, paste `integrate/snippet.html`, add `/dag/*` routes or
+   `mode: "modal"`, mount the toggle, mark derived cells with
+   `data-er-dag="Table.Field"`. Do this on the hello-world app *now*, while the
+   UI is trivial — before building the real UI. Don't bolt it on later.
+
+   **Do not invent:** local transpiler servers, `run-local-tool.sh`, custom
+   `explainer-host.js`, `dag_shell.html`, or CSS overrides for `.dag-cell`.
 
 ### G. Server
 

@@ -325,7 +325,11 @@ if [ "${#DEPRECATED_SKILLS[@]}" -gt 0 ]; then
 
       echo ""
       echo "  DEPRECATED: $dep_skill is still installed but has been replaced."
-      if ask_yes_no "  Remove deprecated skill '$dep_skill'?"; then
+      if $AUTO_YES; then
+        rm -rf "$dep_dest"
+        echo "  Removed: $dep_skill (--yes)"
+        ((++deprecated_removed))
+      elif ask_yes_no "  Remove deprecated skill '$dep_skill'?"; then
         rm -rf "$dep_dest"
         echo "  Removed: $dep_skill"
         ((++deprecated_removed))
