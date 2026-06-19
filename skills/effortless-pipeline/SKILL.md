@@ -44,11 +44,12 @@ below for that case.
 |------------|-----------|-------------|
 | `airtable-to-rulebook` | Airtable -> JSON | Pulls schema + data from Airtable base into `effortless-rulebook.json` |
 | `rulebook-to-postgres` | JSON -> SQL | Generates all `00`-`05` SQL files from the rulebook |
+| `rulebook-to-sql-server` | JSON -> T-SQL | Same `00`-`05` layout for SQL Server (`sql-server/`) |
 | `rulebook-to-airtable` | JSON -> Airtable | Pushes rulebook back to an Airtable base (reverse sync) |
 | `init-db` | SQL -> Postgres | Runs `init-db.sh` to bootstrap the database |
 | `json-hbars-transform` | JSON + Handlebars -> Docs | Generates documentation (README.SCHEMA.md etc.) |
 | `rulebook-to-xlsx` | JSON -> Excel | Generates spreadsheet export |
-| `rulebook-to-rulespeak` | JSON -> Markdown | Plain-English RuleSpeak rules document (`rulespeak.md`) |
+| `rulebook-to-rulespeak` | JSON -> Markdown + HTML | Plain-English RuleSpeak (`rulespeak/rulespeak.html`, `rulespeak.md`) — **default whenever a rulebook is created** |
 | `airtable-to-odxml` | Airtable -> ODXML | Generates XML metadata for .NET |
 | `odxml-to-csharp-pocos` | ODXML -> C# | Generates Entity Framework classes |
 
@@ -125,6 +126,9 @@ appear in a project that opted into an upstream surface:
 # --- output spokes (regenerate from the hub) ---
 # From /postgres/
 effortless -install rulebook-to-postgres -i ../effortless-rulebook/effortless-rulebook.json
+
+# From /sql-server/
+effortless -install rulebook-to-sql-server -i ../effortless-rulebook/effortless-rulebook.json
 
 # From /docs/
 effortless -install rulebook-to-docs

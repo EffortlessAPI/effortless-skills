@@ -8,10 +8,36 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
-- **`effortless-rulespeak`** — install `rulebook-to-rulespeak`, emit
-  `rulespeak/rulespeak.md` (plain-English declarative business rules).
+- **`effortless-setup-sql-server`** (new skill) — first-run setup for SQL Server
+  substrate projects: install `rulebook-to-sql-server` from `/sql-server/`,
+  patch `init-db.sh` connection defaults, register `-exec ./init-db.sh` in
+  `effortless.json`, preflight `sqlcmd` + Docker MSSQL, disable Postgres
+  spokes when switching substrates, and wire Express to the `mssql` driver
+  (`@param` placeholders, boolean normalization, CAST for aggregates).
+  Documents the generated `00`–`05` T-SQL layout, check-add idempotency, and
+  the `03c-drop-security-policies.sql` workaround for RLS Msg 3729 on re-runs.
+- **`effortless-publish-tool`** (new skill) — the supported path to **publish /
+  push / deploy / release a new version of a transpiler tool** in
+  `Versioned-Stable-SSoTme-Tools`. Documents `scripts/publish-tool.sh
+  <transpilerId> <category>/<tool-name>`, how to fetch the `recXXXX` transpilerId
+  from `/api/transpilers`, and — the thing that previously caused confusion —
+  that the transpiler-server often runs on a **non-3000 port** (find it via
+  `ps`/`lsof`, pass `API_BASE=http://localhost:<port>/api`) and that the Bash
+  sandbox can make a live localhost server *look* down. Disambiguates
+  `publish-tool.sh` (flips `[latest]` live) from `build-and-push-cpln-workload.sh`
+  (build only) and from `effortless build` (consumes a published tool). Triggers
+  on "publish/push/deploy/ship/release the tool".
+- **Default RuleSpeak on rulebook creation** — `effortless-rulespeak`,
+  `effortless-init` (Step 3.5), `effortless-bootstrap` (Step 10.5),
+  `effortless-demo-app` (bootstrap step 7), and `effortless-setup-postgres`
+  (Step 2.5) now require installing `rulebook-to-rulespeak` and generating
+  `rulespeak/rulespeak.html` (+ `.md`) whenever a rulebook hub is first authored.
+  Agents should not wait for the user to ask for plain-English rules.
 
 ### Changed
+- **`effortless-rulespeak`** — scope expanded from demo/POC-only to default on
+  any "create/write a rulebook" task; documents `rulespeak.html` as the primary
+  human deliverable.
 - **`start.sh` contract** (`effortless-init`, `effortless-setup-postgres`,
   `effortless-demo-app`) — per project: hard-code a random **odd** `API_PORT`
   and **even** `UI_PORT = API_PORT + 1`. `./start.sh` (no args) always kills

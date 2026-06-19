@@ -82,6 +82,8 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 **`effortless-setup-postgres`** — First-run setup for Postgres-targeted projects: preflight tool checks, install the airtable-to-rulebook + rulebook-to-postgres transpilers, pull the rulebook, generate SQL, init the local DB. **Why?** This is the only step where commits are appropriate without asking (it's a known-good bootstrap sequence), and it gets you from "I have an Airtable base" to "I have a working local DB + generated views" without you having to remember the per-step `cd` discipline that makes the build work.
 
+**`effortless-setup-sql-server`** — First-run setup for SQL Server–targeted projects: install `rulebook-to-sql-server` into `sql-server/`, patch `init-db.sh` defaults, register the `-exec ./init-db.sh` build step, preflight `sqlcmd` + Docker MSSQL, and wire the Express app to `mssql`. **Why?** The SQL Server transpiler mirrors the Postgres pipeline (same `00`–`05` + `vw_*` pattern) but uses T-SQL, security policies instead of Postgres RLS, and `sqlcmd` instead of `psql` — this skill encodes those differences so agents don't improvise.
+
 **`effortless-leopold-loop`** — The iterative ERB development cycle: CHANGE-RULE (in Airtable) → `effortless build` → CONSUME generated views in app code → repeat. **Why?** Without it you'll regress to "naked Claude" — hand-maintaining schema in three places (DB migration, ORM model, API serializer) and breaking sync every time something changes. The loop is the thing that makes ERB feel effortless instead of redundant.
 
 **`effortless-claude-updates`** — Everything about the **skill set itself**: check whether your local clone is behind upstream, apply updates (`git pull` + `install.sh`), add/edit/deprecate skills. **Why?** The skill set is its own moving target — new skills get added, old ones get merged, conventions drift. This skill is the maintenance interface for the suite (separate from the CLI binary, which is `effortless-cli`).
@@ -91,6 +93,8 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 **`effortless-cli`** — Both **installing/updating the `effortless` binary** and **using it**. Covers prerequisites (.NET 8, Node 18+), the npm-package install (clones `effortlessapi/cli`, registers `effortless` / `ssotme` / `aicapture` / `aic` shims), nvm coexistence pitfalls, login flow, `-init`, `-setAccountAPIKey`, transpiler installation paths, build flags, project file structure. **Why?** Because nothing in the rest of the suite works without the CLI being on `PATH` and pointing at the right Node version. This skill is also where the `effortless: command not found` recovery flow lives.
 
 **`effortless-mcp`** — Install and use the always-on **Effortless MCP server** — the streamable-HTTP endpoint that exposes ~54 transpiler tools (auto-generated from the Airtable catalog) plus the effortless-claude skill set as MCP **Resources** to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.). Covers the deployed cpln URL, per-client wiring snippets, smoke tests, local dev (`./start.sh`, stdio mode), and the bake/publish flow for new versions. **Why?** The CLI binary is not the only way to drive the catalog — MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally.
+
+**`effortless-publish-tool`** — **Publish / push / deploy / release a new version of a transpiler tool** in `Versioned-Stable-SSoTme-Tools`. The one supported scripted path is `scripts/publish-tool.sh <transpilerId> <category>/<tool-name>` (the same sequence as the green 🚀 Deploy button: Airtable version → build+push cpln image → wait online → flip `[latest]` live). **Why?** "Push the tool online" reads as trivial but has a precise contract, and the two most common stumbles are (1) concluding the transpiler-server is "down" when it's just on a non-3000 `PORT` (find it; pass `API_BASE`), and (2) confusing the real publish with `build-and-push-cpln-workload.sh` (build only) or `effortless build` (consume). This skill encodes that contract so push/publish/deploy requests don't get re-derived from scratch.
 
 ### Schema & Conventions
 
@@ -227,10 +231,12 @@ effortless-claude/
 │   ├── effortless-init/                ← initialize a project as Effortless
 │   ├── effortless-bootstrap/           ← Shadle steps (raw text → rulebook)
 │   ├── effortless-setup-postgres/      ← first-run Postgres setup
+│   ├── effortless-setup-sql-server/    ← first-run SQL Server setup
 │   ├── effortless-leopold-loop/        ← the iteration cycle
 │   ├── effortless-claude-updates/      ← skill-set maintenance
 │   ├── effortless-cli/                 ← CLI binary install + command reference
 │   ├── effortless-mcp/                 ← MCP server install + per-client wiring
+│   ├── effortless-publish-tool/        ← publish/deploy a new transpiler-tool version
 │   ├── effortless-conventions/         ← naming, DAG, PK/FK rules
 │   ├── effortless-schema/              ← rulebook JSON structure
 │   ├── effortless-query/               ← token-efficient rulebook queries
