@@ -173,11 +173,32 @@ Determine something changed → `effortless build` → commit → DONE
 Do NOT:
 - Read generated files after a build to "verify" them
 - Cat SQL files into context
-- Read the rulebook.json in full
+- **Read `effortless-rulebook.json` directly** — the file is the hub and can be megabytes. A direct `Read` or `cat` floods context and defeats the entire point of having a structured rulebook. This is one of the biggest benefits of ERB: you never have to read the whole thing.
+- **Use the `query_rulebook` MCP tool** — it adds a network round-trip and is no better than a local one-liner. It is never the right first move for querying schema.
 
 You already knew the schema before the build because you queried it. Trust the pipeline.
 
-**Context-window rule:** Use `effortless-query` one-liners that extract only the table/field metadata you need. A 5-line python one-liner is worth 1000x reading the whole file.
+**Context-window rule:** Use `effortless-query` python one-liners that extract only the table/field metadata you need. A 5-line one-liner is worth 1000× reading the whole file.
+
+### Quick query patterns (full library in `effortless-query`)
+
+```bash
+# List all tables + field/row counts
+cat effortless-rulebook/effortless-rulebook.json | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+skip={'\$schema','Name','Description','_meta'}
+for k in d:
+  if k not in skip and isinstance(d[k],dict) and 'schema' in d[k]:
+    print(f'  {k}: {len(d[k][\"schema\"])} fields, {len(d[k].get(\"data\",[]))} rows')
+"
+
+# Show schema for one table (replace TableName)
+cat effortless-rulebook/effortless-rulebook.json | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+for f in d['TableName']['schema']:
+  print(f'  {f[\"name\"]:30s} {f[\"type\"]:15s} {f[\"datatype\"]:10s} {f.get(\"Description\",\"\")[:60]}')
+"
+```
 
 ## Schema Change Decision Tree
 
@@ -237,7 +258,7 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-bases` | bases.effortlessapi.com + magic-links + RLS in 5 minutes |
 | `effortless-magic-links` | Magic-link auth on ANY Postgres-backed project |
 | `effortless-excel-export` | Adding Excel export from live Postgres data |
-| `effortless-rulespeak` | **RuleSpeak doc** — `rulebook-to-rulespeak` → `rulespeak/rulespeak.md`. Default for demo/POC bootstrap |
+| `effortless-rulespeak` | **RuleSpeak doc (default on rulebook creation)** — `rulebook-to-rulespeak` → `rulespeak/rulespeak.html` + `.md`. Install and build whenever the hub is first authored |
 | `effortless-explainer-dag` | **Explainer DAG (on demand)** — in-app `rulebook-to-explainer-dag`, `data-er-dag`, hover + full field pages. Load only when user asks; not default for POCs |
 | `effortless-demo-app` | Spin up a complete demo POC from a one-line domain description |
 | `effortless-claude-updates` | Anything about the **skill set** — check, update, author skills |
@@ -257,6 +278,7 @@ Sub-skills load automatically based on what you're doing:
 - **Every field** has a `Description`
 - **Schema is small, data is big** — query for entities, never read whole file
 - **Default change path**: Rulebook-First (edit the hub → build). Airtable/Excel are optional sibling input spokes if the project opted in.
+- **Default on new rulebooks**: install `rulebook-to-rulespeak` → `rulespeak/rulespeak.html` (plain-English sibling; see `effortless-rulespeak`)
 - **`effortless build`** runs enabled transpilers; `-id` includes disabled ones
 - **`effortless.json`** defines the build pipeline
 
