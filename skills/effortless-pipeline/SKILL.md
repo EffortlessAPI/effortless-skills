@@ -42,6 +42,7 @@ below for that case.
 
 | Transpiler | Direction | What It Does |
 |------------|-----------|-------------|
+| `minimize-rulebook` | JSON -> JSON (derived) | Generates an escalation ladder next to the rulebook: `read-me-1st.txt` → `schema.min.json` → `schema.json` → `data.json` (data rows, on-demand only). Register it FIRST in `ProjectTranspilers` (before the output spokes). See `effortless-query` for the read order. |
 | `airtable-to-rulebook` | Airtable -> JSON | Pulls schema + data from Airtable base into `effortless-rulebook.json` |
 | `rulebook-to-postgres` | JSON -> SQL | Generates all `00`-`05` SQL files from the rulebook |
 | `rulebook-to-sql-server` | JSON -> T-SQL | Same `00`-`05` layout for SQL Server (`sql-server/`) |

@@ -1,0 +1,4 @@
+Audiences: Name, AudienceLabel, Description, Skills, CountOfSkills
+SkillCategories: Name, CategoryLabel, Description, SortOrder, Skills, CountOfSkills
+ScopeGateTypes: Name, GateLabel, Description, RequiresMarker, LoadsOnExplicitRequest, Skills, CountOfSkills
+Skills: Name, Slug, Description, WhyItExists, Category, ScopeGate, Audience, DirectoryPath, CategoryLabel, ScopeGateLabel, AudienceLabel

@@ -17,6 +17,11 @@ This skill describes the **shape** of `effortless-rulebook.json`. It does NOT co
 
 **Format:** Standard JSON + Single Line Leaves.
 
+If `minimize-rulebook` is registered as a transpiler, climb the derived files
+in order — `read-me-1st.txt` → `schema.min.json` → `schema.json` — before
+reading this structure from the full file. See `effortless-query` for the
+full escalation ladder.
+
 ## Top-level
 
 ```json

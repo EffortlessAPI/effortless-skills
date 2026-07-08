@@ -180,6 +180,16 @@ You already knew the schema before the build because you queried it. Trust the p
 
 **Context-window rule:** Use `effortless-query` python one-liners that extract only the table/field metadata you need. A 5-line one-liner is worth 1000× reading the whole file.
 
+**Derived rulebooks (`minimize-rulebook`):** if this transpiler is registered in
+`ProjectTranspilers`, climb the derived files in order — `*.derived-read-me-1st.txt`
+(table/field names, read first, always) → `*.derived-schema.min.json` →
+`*.derived-schema.json` → full rulebook → `*.derived-data.json` (data rows, on
+demand only — never the default first read). These exist specifically so you
+never have to read the full rulebook to query it. If the project doesn't have this
+transpiler yet, ask the user whether to install it — see `effortless-query` for
+the full discipline and `effortless-workflow` for writing via code instead of
+tokens.
+
 ### Quick query patterns (full library in `effortless-query`)
 
 ```bash

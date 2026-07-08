@@ -13,6 +13,11 @@ audience: customer
 
 **Format:** Standard JSON + Single Line Leaves.
 
+If a `minimize-rulebook` transpiler is registered, check the derived
+`*.derived-read-me-1st.txt` for a quick table/field map first — climb to
+`schema.min.json` / `schema.json` before the full rulebook. See
+`effortless-query` for the full escalation ladder.
+
 ## Table Names
 - **PascalCase**, no spaces, no symbols, no underscores
 - Plural for collections: `Customers`, `WorkflowSteps`, `TypesOfAgents`

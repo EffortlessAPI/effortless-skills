@@ -8,9 +8,19 @@
   "Description": "The effortless-claude skill suite — hand-authored rulebook, no Airtable source, no transpiler pipeline. The rulebook describes the 23 live skills and their high-level attributes (Category, ScopeGate, Audience).",
   "ProjectSettings": [
     {
-      "ProjectSettingId": "3876e03d-2a12-42e5-9c13-139b5835fdf6",
       "Name": "project-name",
       "Value": "effortless-claude"
+    }
+  ],
+  "ProjectTranspilers": [
+    {
+      "IsSSoTTranspiler": false,
+      "Name": "minimizerulebook",
+      "RelativePath": "/effortless-rulebook",
+      "CommandLine": "minimize-rulebook -i effortless-rulebook.json",
+      "IsDisabled": false,
+      "LastVersionUsed": "v2026.07.08.1133",
+      "LastUrl": "https://effortless-minimize-rulebook-v2026-07-08-1133-cmvbd4phczmeg.7pktzg2z971j0.cpln.app"
     }
   ]
 }

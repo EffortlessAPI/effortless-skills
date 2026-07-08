@@ -58,6 +58,14 @@ ergonomics, not by historical preference.
 The cleanest path, and the default for new LLM-driven projects. The rulebook is
 JSON — LLMs edit it natively.
 
+If `minimize-rulebook` is registered, orient with the derived files in order —
+`read-me-1st.txt` → `schema.min.json` → `schema.json` — instead of jumping to
+the full rulebook or `derived-data.json` (see `effortless-query` for the full
+escalation ladder). For the edit itself, prefer a small script (python/jq) that
+loads the full JSON, mutates the target table/field, and writes it back, over
+reading the whole file into context and hand-editing tokens — the mutation is
+the same either way, but code avoids paying for the read.
+
 1. **Edit `effortless-rulebook.json` directly** (with permission). Add/modify table objects, fields, formulas, lookups.
 2. **`effortless build`** — regenerates every enabled output spoke (Postgres SQL, RuleSpeak at `rulespeak/rulespeak.html`, etc.).
 3. If the project is also Airtable-connected and you want the human-friendly view in step: reverse-sync (Spoke 3) before the build.

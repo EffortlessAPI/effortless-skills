@@ -1,0 +1,242 @@
+{
+  "Audiences": {
+    "Description": "Intended consumer of a skill\u0027s behavior. customer = end users of the suite; general = applicable beyond marked Effortless projects.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased audience label.",
+        "formula": "=SUBSTITUTE(LOWER({{AudienceLabel}}), \u0022 \u0022, \u0022-\u0022)"
+      },
+      {
+        "name": "AudienceLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Human label as written in SKILL.md frontmatter (audience: \u003Clabel\u003E)."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "What this audience designation means."
+      },
+      {
+        "name": "Skills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Skills tagged with this audience.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "CountOfSkills",
+        "datatype": "integer",
+        "type": "aggregation",
+        "nullable": false,
+        "Description": "How many skills declare this audience.",
+        "formula": "=COUNTIFS(Skills!{{Audience}}, Audiences!{{Name}})"
+      }
+    ]
+  },
+  "SkillCategories": {
+    "Description": "Functional grouping of skills as presented in the README. Categories are presentation/discovery groupings, not load-gate semantics (that\u0027s ScopeGateTypes).",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased category label.",
+        "formula": "=SUBSTITUTE(LOWER({{CategoryLabel}}), \u0022 \u0022, \u0022-\u0022)"
+      },
+      {
+        "name": "CategoryLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Display label as used in the README section header."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "What unifies the skills in this category."
+      },
+      {
+        "name": "SortOrder",
+        "datatype": "integer",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Presentation order in the README."
+      },
+      {
+        "name": "Skills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Skills in this category.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "CountOfSkills",
+        "datatype": "integer",
+        "type": "aggregation",
+        "nullable": false,
+        "Description": "How many skills are in this category.",
+        "formula": "=COUNTIFS(Skills!{{Category}}, SkillCategories!{{Name}})"
+      }
+    ]
+  },
+  "ScopeGateTypes": {
+    "Description": "When the harness loads a skill into context. The four patterns referenced in the skill-writing conventions (project-only / entry-point / tooling / theory).",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased gate label.",
+        "formula": "=SUBSTITUTE(LOWER({{GateLabel}}), \u0022 \u0022, \u0022-\u0022)"
+      },
+      {
+        "name": "GateLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Short label for this load-gate pattern."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "When this gate fires \u2014 paraphrased from the skill description\u0027s Scope (load gate) clause."
+      },
+      {
+        "name": "RequiresMarker",
+        "datatype": "boolean",
+        "type": "raw",
+        "nullable": false,
+        "Description": "True iff the gate requires the project to be a marked Effortless project (effortless.json \u002B ERB CLAUDE.md)."
+      },
+      {
+        "name": "LoadsOnExplicitRequest",
+        "datatype": "boolean",
+        "type": "raw",
+        "nullable": false,
+        "Description": "True iff the gate also fires when the user explicitly invokes the skill by phrase, regardless of project marker."
+      },
+      {
+        "name": "Skills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Skills using this gate pattern.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "CountOfSkills",
+        "datatype": "integer",
+        "type": "aggregation",
+        "nullable": false,
+        "Description": "How many skills use this gate pattern.",
+        "formula": "=COUNTIFS(Skills!{{ScopeGate}}, ScopeGateTypes!{{Name}})"
+      }
+    ]
+  },
+  "Skills": {
+    "Description": "One row per SKILL.md under skills/. The 23 currently live skills in the suite. Deprecation history is in DEPRECATED_SKILLS.md, not here.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 equals the kebab-cased Slug, which equals the directory name.",
+        "formula": "=SUBSTITUTE(LOWER({{Slug}}), \u0022 \u0022, \u0022-\u0022)"
+      },
+      {
+        "name": "Slug",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Skill folder name under skills/ \u2014 also the value of the name: field in SKILL.md frontmatter."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Short pitch \u2014 one sentence on what the skill is for."
+      },
+      {
+        "name": "WhyItExists",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "The \u0027why\u0027 answer \u2014 what failure mode this skill prevents, paraphrased from the README."
+      },
+      {
+        "name": "Category",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "Functional grouping (Orchestration, Project Lifecycle, etc.).",
+        "RelatedTo": "SkillCategories"
+      },
+      {
+        "name": "ScopeGate",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "Load-gate pattern (when the harness pulls this skill into context).",
+        "RelatedTo": "ScopeGateTypes"
+      },
+      {
+        "name": "Audience",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "audience: value from SKILL.md frontmatter.",
+        "RelatedTo": "Audiences"
+      },
+      {
+        "name": "DirectoryPath",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Filesystem path to the skill directory, relative to repo root.",
+        "formula": "=\u0022skills/\u0022 \u0026 {{Slug}} \u0026 \u0022/\u0022"
+      },
+      {
+        "name": "CategoryLabel",
+        "datatype": "string",
+        "type": "lookup",
+        "nullable": false,
+        "Description": "Display label of the parent category.",
+        "formula": "=INDEX(SkillCategories!{{CategoryLabel}}, MATCH({{Category}}, SkillCategories!{{Name}}, 0))"
+      },
+      {
+        "name": "ScopeGateLabel",
+        "datatype": "string",
+        "type": "lookup",
+        "nullable": false,
+        "Description": "Display label of the parent scope-gate type.",
+        "formula": "=INDEX(ScopeGateTypes!{{GateLabel}}, MATCH({{ScopeGate}}, ScopeGateTypes!{{Name}}, 0))"
+      },
+      {
+        "name": "AudienceLabel",
+        "datatype": "string",
+        "type": "lookup",
+        "nullable": false,
+        "Description": "Display label of the parent audience.",
+        "formula": "=INDEX(Audiences!{{AudienceLabel}}, MATCH({{Audience}}, Audiences!{{AudienceLabel}}, 0))"
+      }
+    ]
+  }
+}
