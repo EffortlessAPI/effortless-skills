@@ -11,6 +11,8 @@ audience: customer
 
 # ERB Naming & Design Conventions
 
+**Format:** Standard JSON + Single Line Leaves.
+
 ## Table Names
 - **PascalCase**, no spaces, no symbols, no underscores
 - Plural for collections: `Customers`, `WorkflowSteps`, `TypesOfAgents`

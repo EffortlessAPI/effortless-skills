@@ -13,6 +13,8 @@ audience: customer
 
 # ERB Change Workflow
 
+**Format:** Standard JSON + Single Line Leaves.
+
 ## Ask before modifying the hub or rebuilding
 
 Before modifying `effortless-rulebook.json` (directly, via Airtable, reverse-sync, or any other input spoke), or running `effortless build`, ask the user. These operations change the hub and cascade through every output spoke — the developer should be choosing when that cascade fires, not discovering it after the fact.

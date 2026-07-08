@@ -15,6 +15,8 @@ audience: customer
 
 This skill describes the **shape** of `effortless-rulebook.json`. It does NOT cover naming/DAG/FK rules — those are in **effortless-conventions**.
 
+**Format:** Standard JSON + Single Line Leaves.
+
 ## Top-level
 
 ```json
