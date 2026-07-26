@@ -199,7 +199,7 @@ When working in this project, load the relevant `effortless-*` skills:
 - `effortless-orchestrator` — overview / entry point
 - `effortless-setup-postgres` — initial setup (already run for this project)
 - `effortless-workflow` — making changes (edit the hub → build)
-- `effortless-leopold-loop` — CHANGE-RULE → REBUILD → CONSUME-VIEWS cycle
+- `effortless-loop` — CHANGE-RULE → REBUILD → CONSUME-VIEWS cycle
 - `effortless-sql` — `vw_*` view / function patterns; never read base tables
 - `effortless-query` — querying the rulebook JSON
 - `effortless-conventions` — naming, FK, DAG rules
@@ -486,7 +486,7 @@ something goes sideways.
 - `effortless-orchestrator` — for the canonical Token Discipline + the bigger mental model.
 - `effortless-cli` — for installing / updating / using the `effortless` CLI binary if it's missing in preflight.
 - `effortless-cli` / `effortless-pipeline` — for the install / build commands this skill drives.
-- `effortless-leopold-loop` — for the iterative cycle once setup is done.
+- `effortless-loop` — for the iterative cycle once setup is done.
 - `effortless-bases` — switch to this skill instead if the Postgres database is hosted on `bases.effortlessapi.com`.
 - [REFERENCE.md](REFERENCE.md) — long-tail content (preflight install options per OS, Step 7 prototype-app skeleton, Common Issues troubleshooting).
 

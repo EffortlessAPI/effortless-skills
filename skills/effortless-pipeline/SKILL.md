@@ -278,7 +278,7 @@ For the catalog of public transpilers and their source repos, see `effortless-ec
 - `effortless-cli` — for the CLI flags and command surface that drive the pipeline.
 - `effortless-setup-postgres` — for the canonical first-run install order (which transpiler from which directory).
 - `effortless-workflow` — for choosing input spokes (rulebook-direct, Airtable, reverse-sync) and when `-id` is appropriate.
-- `effortless-leopold-loop` — for the iterative dev cycle the pipeline supports.
+- `effortless-loop` — for the iterative dev cycle the pipeline supports.
 - `effortless-cmcc` — the conjecture that justifies the substrate-equivalence stance.
 - `effortless-rulebooks` — the empirical demonstration of multi-substrate equivalence.
 - `effortless-ecosystem` — the catalog of public transpiler repos and the orgs that maintain them.

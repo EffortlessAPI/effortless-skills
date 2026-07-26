@@ -1,9 +1,9 @@
 ---
-name: effortless-leopold-loop
+name: effortless-loop
 description: >
-  Use whenever the user mentions the "Leopold loop", "the loop", "a turn of the loop",
-  "do a turn", "rebuild the rulebook", "update the app to match the rules", or any
-  reference to the iterative ERB development cycle. This is the user's name for the
+  Use whenever the user mentions "the loop", "a turn of the loop", "do a turn",
+  "rebuild the rulebook", "update the app to match the rules", or any
+  reference to the iterative ERB development cycle. This is the
   CHANGE-RULE → REBUILD → CONSUME-VIEWS workflow that makes ERB feel effortless.
   Load this skill on first mention so you understand what the user expects to happen.
 
@@ -11,21 +11,23 @@ description: >
 audience: customer
 ---
 
-# The Leopold Loop
+# The Effortless Loop
 
-The "Leopold loop" is the user's name for the iterative ERB development cycle. It is the **core workflow** that makes ERB feel effortless compared to hand-coding without the rulebook (a mode the user calls **"naked Claude"** — every layer of schema, migration, DTO, ORM model, API serializer, and client type written and maintained by hand). When the user mentions the loop in any form, they are invoking this entire mental model — load this skill so you respond in the right paradigm.
+Also called the Leopold loop, after Ben Leopold, our first beta tester.
+
+The loop is the iterative ERB development cycle — the **core workflow** that makes ERB feel effortless compared to hand-coding without the rulebook (a mode called **"naked Claude"** — every layer of schema, migration, DTO, ORM model, API serializer, and client type written and maintained by hand). When the user mentions the loop in any form, they are invoking this entire mental model — load this skill so you respond in the right paradigm.
 
 > **"Naked Claude"** (used in passing throughout this skill): coding without
 > the rulebook — i.e. hand-writing every schema/migration/DTO/serializer
 > layer instead of generating them from a single rulebook source. The
-> Leopold loop's whole purpose is to eliminate that mode.
+> loop's whole purpose is to eliminate that mode.
 
 ## The Loop
 
 ```
    1. CHANGE THE RULE (once, in the hub — effortless-rulebook.json, the SSoT)
-      via whichever input spoke fits: rulebook-direct (LLM/hand-edit),
-      Airtable (if connected), or reverse-sync.
+      directly (LLM/hand-edit, the default), or via Airtable/reverse-sync
+      if the project opted into one of those as a sibling input spoke.
             |
             v
    2. effortless build  (one command)
@@ -49,9 +51,9 @@ The "Leopold loop" is the user's name for the iterative ERB development cycle. I
 
 ## Why it's "effortless"
 
-A single rule change propagates through every layer with **zero hand-written migrations, DTOs, ORM updates, API serializers, or client types**. The business logic ("a customer is stopped when CurrentColor is Red") lives in **exactly one place** — the rulebook hub (authored directly or via Airtable) → generated SQL function → exposed in the view as `is_stopped`. The app just reads `is_stopped`. If the rule flips ("now Green means stopped"), the loop runs once and *no app code changes*.
+A single rule change propagates through every layer with **zero hand-written migrations, DTOs, ORM updates, API serializers, or client types**. The business logic ("a customer is stopped when CurrentColor is Red") lives in **exactly one place** — the rulebook hub → generated SQL function → exposed in the view as `is_stopped`. The app just reads `is_stopped`. If the rule flips ("now Green means stopped"), the loop runs once and *no app code changes*.
 
-Compare to **naked Claude** (defined above — hand-coding every layer): the same change requires editing a migration, seed data, DTO, ORM model, API serializer, client type, and client logic — and probably missing one and shipping a bug. The Leopold loop exists specifically to eliminate that class of failure.
+Compare to **naked Claude** (defined above — hand-coding every layer): the same change requires editing a migration, seed data, DTO, ORM model, API serializer, client type, and client logic — and probably missing one and shipping a bug. The loop exists specifically to eliminate that class of failure.
 
 ## Phrases that mean "do a turn of the loop"
 
@@ -66,7 +68,7 @@ When the user says any of these, they expect the same sequence of actions:
 
 All of these mean: **propagate the current rulebook state through every downstream layer, then update only the app's schema-surface code.** (If the project is Airtable-connected, the build pulls Airtable into the rulebook first.)
 
-## What "do a turn of the Leopold loop" actually entails
+## What "do a turn of the loop" actually entails
 
 0. **Pre-build: check the tree first.** Run `git status --porcelain` (read-only).
    If non-empty, **pause and ask the user for permission to build** — they may want to commit or stash first
@@ -89,7 +91,7 @@ All of these mean: **propagate the current rulebook state through every downstre
 
 ## Always Build After Hub Changes
 
-Whenever the rulebook hub is modified — directly, via Airtable (API/OMNI/UI), or via reverse-sync — run `effortless build` to propagate the change. Without the build, the generated code is stale and the app drifts out of sync with the hub. The developer is in charge of *when* to build; this skill's role is to make sure the build doesn't get forgotten.
+Whenever the rulebook hub is modified — directly, or via a connected input spoke (Airtable, reverse-sync) — run `effortless build` to propagate the change. Without the build, the generated code is stale and the app drifts out of sync with the hub. The developer is in charge of *when* to build; this skill's role is to make sure the build doesn't get forgotten.
 
 ## Things that look like progress but bypass the loop
 
@@ -107,11 +109,11 @@ Each of these "works" in the moment and then quietly costs you later. Knowing
 ## See also
 
 - `effortless-orchestrator` — the big-picture mental model; references this skill for the loop itself.
-- `effortless-workflow` — choosing among input spokes (rulebook-direct, Airtable, reverse-sync).
+- `effortless-workflow` — editing the hub directly (default) vs. an optional connected input spoke.
 - `effortless-pipeline` — the mechanics of `effortless build` itself.
-- `effortless-airtable` / `effortless-airtable-omni` — *how* to make the rule change via the Airtable spoke (when connected). For rulebook-direct, just edit the JSON.
+- `effortless-airtable` / `effortless-airtable-omni` — *how* to make the rule change via the Airtable spoke, only if the project opted in. For rulebook-direct (the default), just edit the JSON.
 - `effortless-sql` — verifying step 3's generated output and using `*b-customize-*` overrides correctly.
 
 ## TL;DR for future-you
 
-If the user says "the loop" or "Leopold loop" and you're not sure what to do: **load this skill, then run a turn of it.** Don't grep the project for "leopold". Don't ask the user to explain. The loop is a workflow, not a string.
+If the user says "the loop" and you're not sure what to do: **load this skill, then run a turn of it.** Don't ask the user to explain. The loop is a workflow, not a string.

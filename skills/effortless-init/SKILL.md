@@ -154,9 +154,9 @@ This is an Effortless Rulebook (ERB) project. All development follows the effort
 - Use OMNI (Playwright) for formula / lookup / rollup fields and new tables:
   `node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs {baseId} '<prompt>'`
 
-## The Leopold Loop
+## The Effortless Loop
 CHANGE RULE (in rulebook JSON, or Airtable if connected) → `effortless build` → CONSUME generated views in app code → repeat.
-On "do a turn" / "rebuild", load **effortless-leopold-loop**.
+On "do a turn" / "rebuild", load **effortless-loop**.
 
 ## Build & Start
 - Build: `effortless build` from project root

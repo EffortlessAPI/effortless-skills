@@ -168,7 +168,7 @@ can't create formula fields, no API key, project isn't Airtable-connected at all
 ## See also
 
 - `effortless-orchestrator` — for the bigger mental model and the schema-change decision tree this skill operationalizes.
-- `effortless-leopold-loop` — for the iterative cycle every spoke produces.
+- `effortless-loop` — for the iterative cycle every spoke produces.
 - `effortless-rulespeak` — default plain-English sibling (`rulespeak/rulespeak.html`) on every new rulebook and every build.
 - `effortless-airtable` / `effortless-airtable-omni` — for *how* to make the change via the Airtable spoke (API vs OMNI).
 - `effortless-pipeline` — for the `-id` flag mechanics referenced in the reverse-sync spoke.

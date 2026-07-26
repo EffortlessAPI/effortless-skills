@@ -1,0 +1,27 @@
+{
+  "_comment": "Stable DR-number ledger for rulebook-to-rulespeak. Auto-maintained; feed this file back in on the next build to keep rule numbers stable. Numbers in 'Retired' are tombstones and are never reissued. Hand-edit an Assignments number only to deliberately re-pin a rule.",
+  "NextId": 21,
+  "Assignments": {
+    "Audiences.Name": 1,
+    "Audiences.CountOfSkills": 2,
+    "SkillCategories.Name": 3,
+    "SkillCategories.CountOfSkills": 4,
+    "ScopeGateTypes.Name": 5,
+    "ScopeGateTypes.CountOfSkills": 6,
+    "Skills.Name": 7,
+    "Skills.DirectoryPath": 8,
+    "Skills.CategoryLabel": 9,
+    "Skills.ScopeGateLabel": 10,
+    "Skills.AudienceLabel": 11,
+    "ConceptCategories.Name": 12,
+    "ConceptCategories.CountOfConcepts": 13,
+    "Concepts.Name": 14,
+    "ConceptSkills.Name": 15,
+    "Gotchas.Name": 16,
+    "GotchaSkills.Name": 17,
+    "SkillBodies.Name": 18,
+    "SkillArtifacts.Name": 19,
+    "SkillArtifacts.Path": 20
+  },
+  "Retired": []
+}

@@ -54,7 +54,7 @@ Everything below is a consequence of that sentence.
    │  effortless-rulebook.json  +  admin portal (MOCK data)   │
    └───────────┬──────────────────────────────────────────────┘
                │  effortless build → init-db.sh
-               │  LOCALHOST ONLY · DROP + RESEED · the "Leopold loop"
+               │  LOCALHOST ONLY · DROP + RESEED · "the effortless loop"
                │  (dev's rulebook-owned config = the rulebook, row-for-row)
                ▼
         ┌───────────┐   derive     ┌───────────┐   apply     ┌──────────┐   apply    ┌────────────┐
@@ -64,7 +64,7 @@ Everything below is a consequence of that sentence.
         │  = HEAD     │             │ migs only │             │ migs only│            │ migs only  │
         └───────────┘               └───────────┘             └──────────┘            └────────────┘
         rebuilt by init-db          never dropped             never dropped           never dropped
-        (Leopold loop)              own DB, dev's code         own DB + own code       own DB + own code
+        (the loop)                  own DB, dev's code         own DB + own code       own DB + own code
 
         ◄──────────── restore (refresh a soak env from prod) ─────────────
         prod → beta/UAT is EXPECTED; prod → staging is allowed. Never the reverse.
@@ -142,18 +142,29 @@ pointing at local stand-ins until you flip them.
    DB or a remote production box. There is **no other write path** into these
    environments — no admin "Save to staging", no ad-hoc SQL, no auto-sync. (§4.)
 
-3. **dev = HEAD, always, by construction.** HEAD is the newest migration in the
-   rulebook catalog; dev is built from the rulebook, so dev holds every migration by
-   definition. A migration folder that dev's schema does **not** reflect is a
-   **broken build**, not "drift."
+3. **dev = HEAD, always, by construction.** HEAD is the **newest migration FOLDER on
+   disk** (`postgres/migrations/<NNNN>-*/`). The folders in git ARE the ledger and dev
+   physically holds every one, so dev = HEAD by definition. **HEAD is NOT derived from
+   the rulebook `promotion_migrations` catalog** — that catalog is a *mirror* of the
+   folders (it carries per-migration metadata: idempotency, refresh-file, kind) and it
+   can LAG the folders. Deriving HEAD from the mirror is the "dev behind staging" bug:
+   a migration folder gets created on disk and applied to staging, but its catalog row
+   is never added to the rulebook, so a catalog-derived HEAD freezes one release behind
+   while staging reads the newer id from its own `schema_migrations`. **Register every
+   migration in the rulebook so the catalog mirrors the folders** — a folder with **no
+   catalog row is a broken build, surfaced LOUDLY, never hidden** (and it still counts
+   toward HEAD, because HEAD reads the folders, not the mirror).
 
 4. **The version is DERIVED from the ledger on every read — never stored as
-   authority.** An env's version = the newest migration in *its own*
-   `schema_migrations`. Because the version and the matrix read the *same* ledger,
-   they can never disagree. A stored copy of "the version" (`project_meta` /
-   `erb_versions` treated as truth) is exactly what drifts — **do not reintroduce
-   one.** `erb_versions` is a **human changelog only** (release label + message); a
-   missing row degrades to the migration id, never a stale number.
+   authority.** HEAD = the newest migration **folder on disk**; an env's version = the
+   newest migration in *its own* `schema_migrations`. The `promotion_migrations`
+   catalog and each env's `schema_migrations` are read/asserted **against the folders**,
+   never treated as the authority for what migrations *exist*. Any *stored copy* of "the
+   version" — `project_meta`, an `erb_versions` number, **or the catalog table used as
+   the HEAD authority** — is exactly what drifts (the frozen-HEAD bug reappears wherever
+   a hand-maintained copy shadows the folders). `erb_versions` is a **human changelog
+   only** (release label + message); a missing row degrades to the migration id, never a
+   stale number.
 
 5. **Monotonic order: dev ≥ staging ≥ beta ≥ production, always.** You cannot promote
    what is not already upstream. "Staging behind while production is ahead" is
@@ -220,9 +231,31 @@ The canonical create-a-migration flow:
    schema DDL, config/reference `INSERT … ON CONFLICT DO UPDATE` + targeted
    `DELETE`, RLS + grants, `security_invoker` options, comments — **idempotent**, and
    **operational data excluded**.
-4. **Self-register.** The `up.sql` (or `cut-version.sh`) MUST record the migration in
-   the catalog (`promotion_migrations`) **and** stamp an `erb_versions` changelog
-   row. Skipping the `erb_versions` row is what freezes HEAD at a stale label.
+4. **Register in the rulebook ledger — SAME step as creating the folder, never a
+   later cleanup (this is what advances dev/HEAD).**
+   The instant a migration folder exists on disk it **MUST** have a matching
+   `PromotionMigrations` row in `effortless-rulebook.json`. A folder without its
+   rulebook row is a bug, full stop — **the rulebook is the SSoT and it can never be
+   missing a migration that lives in its own tree.** So `cut-version.sh` writes the
+   row for you (via `register-promotion-migration.mjs`); if you hand-author a folder,
+   add the row in the *same* edit. Then `effortless build` + `init-db` so dev's
+   `promotion_migrations` catalog mirrors the folder. **Registering in the rulebook is
+   the ONLY thing that puts the migration in dev's catalog.** Do not confuse it with
+   the `up.sql`'s own `promotion_migrations` INSERT: that self-register runs **only on
+   `apply`** (staging/beta/production) — dev is *never* applied-to, so the up.sql
+   INSERT never reaches dev. Also stamp an `erb_versions` changelog row (label +
+   message).
+
+   > **The Deployment page NEVER authors the rulebook.** It *reads* the ledger to
+   > grade envs; it does not enumerate folders and back-fill missing
+   > `PromotionMigrations` rows, and it must never offer to. A folder-without-a-row is
+   > surfaced as a **broken build** so a human/agent fixes it *at the source* (add the
+   > rulebook row + rebuild) — because the fix is "put it in the SSoT," and only the
+   > migration author knows the metadata (kind, idempotency, description). Building
+   > reconcile-into-the-rulebook logic into the page re-introduces exactly the
+   > second-source-of-truth the ledger model exists to kill. **If a migration is on
+   > disk but not in the rulebook, add it to the rulebook — do not teach the page to
+   > paper over it.**
 5. **Promote.** `apply.sh staging` → run tests → (only when explicitly asked, and
    only after staging is green) `apply.sh beta` / `apply.sh production`.
 
@@ -269,6 +302,18 @@ lifecycle. (Formerly you might have called it a "database manager" — **Deploym
 Management** is the right name: it manages *deployments*, of which DB migrations are
 one axis and code builds the other.)
 
+> **The layout is a ROW OF ENVIRONMENT CARDS — not a bare table.** The primary
+> view is one **card per tier** (dev · staging · [beta] · production), each with
+> both version axes, a drift-colored progress bar, a reachability-first status
+> block, and its own action buttons (Bring to HEAD · Drift report · Run tests ·
+> Push code). The migration×env *table* is **secondary** — put it in a
+> collapsible "Details" section **below** the cards. A page that renders only the
+> flat matrix table is the failure mode this skill exists to prevent (it looks
+> like a 1990s admin screen). **Copy `reference/devops.css` verbatim and import
+> it** — a card layout with no stylesheet still looks unfinished. The real
+> `EnvCard` component + page shell + CSS are in `reference/templates.md` →
+> "Client — the layout is THREE ENV CARDS." Build to that, out of the gate.
+
 ### 6.1 Purpose & motivation (why it exists)
 
 - **Make promotion legible.** At a glance: what version is dev, staging, beta, prod
@@ -285,11 +330,17 @@ one axis and code builds the other.)
 ### 6.2 The one-ledger principle (non-negotiable)
 
 The page has exactly **one** source of truth: the **migration ledger** — the
-`postgres/migrations/<NNNN>-<slug>/` folders plus each environment's own
-`public.schema_migrations`. **Everything displayed is derived from it.** Do **not**
-introduce a stored version/`project_meta`/`erb_versions`-as-authority; that is the
-frozen-HEAD bug. `erb_versions` is a human changelog (label + message) shown
-alongside, never the authority.
+`postgres/migrations/<NNNN>-<slug>/` **folders** (which define HEAD) plus each
+environment's own `public.schema_migrations` (which define that env's version).
+**Everything displayed is derived from the folders + each env's `schema_migrations`.**
+The `promotion_migrations` **catalog table is a metadata MIRROR of the folders**
+(idempotency / refresh-file / kind), **not a second ledger** — the page must enumerate
+the folders and LEFT-JOIN the catalog for metadata, never *list the catalog and stat
+the folders*, or a folder with no catalog row goes invisible and HEAD freezes behind an
+env that applied it. Do **not** introduce a stored version/`project_meta`/`erb_versions`
+/`promotion_migrations`-catalog-**as-authority**; that is the frozen-HEAD bug. A folder
+lacking a catalog row is flagged as a **broken build**; `erb_versions` is a human
+changelog (label + message) shown alongside, never the authority.
 
 ### 6.3 Two axes, shown side by side, for every tier
 
@@ -325,8 +376,14 @@ button must state the exact shas it will move (`prodSha → headSha`).
 
 The page asserts **dev ≥ staging ≥ beta ≥ production**. If the snapshot ever computes
 a downstream tier ahead of an upstream one, it emits `orderViolation` and the page
-renders a **loud, blocking alert** — never two contradictory cards. Promotion actions
-that would violate monotonicity are disabled with an explanation.
+renders a **loud, blocking alert** — never two contradictory cards. **This includes any
+env ahead of HEAD** (e.g. staging applied a migration whose folder dev's catalog lacks)
+— check the whole chain `dev(HEAD) ≥ staging ≥ …`, not just `staging ≥ production`.
+Because HEAD is disk-authoritative (§3, §6.2), "ahead of HEAD" should be impossible in
+practice — every applied migration is a folder dev holds — so if it *does* fire, the
+real fault is usually a folder missing its catalog row (broken build): surface **that**,
+loudly, alongside the order alert. Promotion actions that would violate monotonicity are
+disabled with an explanation.
 
 ### 6.6 Grading: fast signal always, deep check on demand — symmetric across tiers
 
@@ -370,7 +427,13 @@ so the day you promote to a live box, it is routine.
 
 ### 6.9 Requirements checklist (build to this)
 
+- [ ] **Layout is a row of env CARDS** (not a bare table), styled with
+      `reference/devops.css`; the matrix table is collapsed into "Details" below.
 - [ ] One ledger; **version derived on every read**, never stored as authority.
+- [ ] **HEAD = newest migration FOLDER on disk.** Enumerate the folders and LEFT-JOIN
+      the `promotion_migrations` catalog for metadata (never list the catalog and stat
+      the folders). A folder with **no catalog row** is flagged as a **broken build**,
+      never dropped — and it still counts toward HEAD.
 - [ ] **Both axes** (DB version + code build) shown per tier.
 - [ ] Migration × env **matrix** with applied/pending/not-built/drift cells.
 - [ ] **Monotonic** dev ≥ staging ≥ beta ≥ production, with a loud `orderViolation`.
@@ -452,6 +515,44 @@ beta = blue, production = red).
   never `init-db` a remote.
 - **Read a remote's running build** from its own health stamp; unreachable →
   `unknown`.
+
+### 8.4 Worked example — dev/staging/prod on `bases.effortlessapi.com` (no SSH box)
+
+A proven concrete substrate for the remote tiers when you **don't want to stand up
+your own Postgres box**: give each environment its **own bases base**. This keeps the
+whole model (one ledger, `apply.sh`, derived versions) but replaces "SSH into a live
+box" with "connect to a bases DB." (See the `effortless-bases` skill for the API.)
+
+1. **One empty base per environment** — `source:"empty"` is DEPLOYED now, so no
+   Airtable / PAT is needed:
+   ```bash
+   for ENV in dev staging prod; do
+     curl -sS -X POST "$BASES/bases/register" -H "Authorization: Bearer $JWT" \
+       -H 'Content-Type: application/json' \
+       -d "{\"source\":\"empty\",\"displayName\":\"myapp-$ENV\",\"createERBTables\":false}"
+   done
+   ```
+2. **Provision + get admin creds per base** — `POST .../auth/apply-privileges-template`
+   (`returnCredentials:true`) creates the DB roles and hands back the connection string.
+3. **Apply schema** — the same `rulebook-to-postgres` generated SQL (dev) / ledger
+   `apply.sh` migrations (staging/prod) target each base's admin connection string.
+   `init-db.sh` still only ever touches **dev** (§3); staging/prod bases move by
+   migration only.
+4. **Runtime env switch is server-side.** Keep a **server-side env registry** — a
+   gitignored secrets file **or** an injected env var — keyed by env name (`dev` /
+   `staging` / `prod` → that base's connection string). The app sends the *active env
+   name* as a **request header**; the server resolves it to a connection string. **The
+   browser never sees a connection string** (same rule as §8.2).
+5. **PROD gets magic-links auth (RLS); dev/staging stay open.** Wire production's base
+   with `setup-trusted-tenants` + RLS policies per **Learning 1 / `effortless-bases`**;
+   leave dev and staging unauthenticated for fast iteration.
+6. **Production ships as a Control Plane scale-to-zero workload** (`minScale:0`,
+   `scaleToZeroDelay:3600`) — the prod app spins down when idle and cold-starts on
+   demand, since its state lives in the bases DB, not in the workload.
+
+> This is Posture B (§2) with bases as the "live box." Nothing about the ledger, the
+> derived-version rule, or the Deployment Management page changes — only *where the
+> remote tiers physically live*.
 
 ---
 
@@ -548,7 +649,13 @@ of every script, endpoint, and UI piece.
 scripts/devops/
   _lib.sh                  # host guards (assert_localhost for dev/staging), PG_BIN, env URLs
   00-create-local-envs.sh  # create <db>_staging locally (NEVER init-db's it)
-  cut-version.sh           # Take Snapshot: erb_versions row (git msg) + scaffold empty NNNN/up.sql
+  cut-version.sh           # Take Snapshot: erb_versions row (git msg) + scaffold NNNN/up.sql
+                           #   AND auto-registers the PromotionMigrations rulebook row via
+                           #   register-promotion-migration.mjs — a folder is NEVER cut without
+                           #   its rulebook ledger row. Then build + init-db seeds it into dev.
+  register-promotion-migration.mjs  # upsert ONE PromotionMigrations row into the rulebook
+                           #   (SSoT). The ONLY sanctioned way a folder→rulebook row is added;
+                           #   the Deployment page never does this.
   analyze-diff.sh          # READ-ONLY dev↔target schema/config diff — discovery aid
   canonicalize-schema.py   # order-independent schema fingerprint
   apply.sh (wrapper)       # thin wrapper over migrations/apply.sh per target (local or remote)
@@ -579,7 +686,7 @@ server
 
 ## 14. Relationship to other skills
 
-- **effortless-leopold-loop** — the rulebook→build→consume cycle this page visualizes.
+- **effortless-loop** — the rulebook→build→consume cycle this page visualizes.
 - **effortless-setup-postgres** — run first if the project has no dev DB yet.
 - **effortless-sql / effortless-diagnostics** — view-reads, drift, and DAG health that
   back the matrix's canonical-fingerprint / `⚠ drift` signal.

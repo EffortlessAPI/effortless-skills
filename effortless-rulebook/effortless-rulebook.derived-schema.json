@@ -238,5 +238,311 @@
         "formula": "=INDEX(Audiences!{{AudienceLabel}}, MATCH({{Audience}}, Audiences!{{AudienceLabel}}, 0))"
       }
     ]
+  },
+  "ConceptCategories": {
+    "Description": "Thematic grouping of cross-skill concepts (analogous to SkillCategories, but for Concepts).",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased category label.",
+        "formula": "=SUBSTITUTE(LOWER({{CategoryLabel}}), \u0022 \u0022, \u0022-\u0022)"
+      },
+      {
+        "name": "CategoryLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Display label for this concept grouping."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "What unifies the concepts in this category."
+      },
+      {
+        "name": "SortOrder",
+        "datatype": "integer",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Presentation order."
+      },
+      {
+        "name": "Concepts",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Concepts in this category.",
+        "RelatedTo": "Concepts"
+      },
+      {
+        "name": "CountOfConcepts",
+        "datatype": "integer",
+        "type": "aggregation",
+        "nullable": false,
+        "Description": "How many concepts are in this category.",
+        "formula": "=COUNTIFS(Concepts!{{Category}}, ConceptCategories!{{Name}})"
+      }
+    ]
+  },
+  "Concepts": {
+    "Description": "Cross-skill vocabulary extracted from surveying all skills/*/SKILL.md \u2014 named ideas/terms that recur across multiple skills and that a newcomer needs defined to understand ERB. Hand-authored, not derived from Airtable.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased ConceptLabel.",
+        "formula": "=SUBSTITUTE(LOWER({{ConceptLabel}}), \u0022 \u0022, \u0022-\u0022)"
+      },
+      {
+        "name": "ConceptLabel",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Display name of the concept as used across the skills."
+      },
+      {
+        "name": "Description",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Concise, concrete, instructional definition \u2014 1 to 4 sentences. Must include the specific fact (exact command/flag/path/rule), not a vague restatement of the label. May end with a \u0027See \u003Ctopic\u003E\u0027 pointer to a SkillArtifacts row or the skill\u0027s full SKILL.md when real depth was deliberately left out."
+      },
+      {
+        "name": "Category",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "Thematic grouping.",
+        "RelatedTo": "ConceptCategories"
+      },
+      {
+        "name": "ConceptSkills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Join rows linking this concept to the skill(s) it is most central to.",
+        "RelatedTo": "ConceptSkills"
+      }
+    ]
+  },
+  "ConceptSkills": {
+    "Description": "Junction table: which skill(s) each Concept is most central to. A many-to-many between Concepts and Skills modeled as two 1-to-many FKs, per ERB DAG conventions.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 Concept \u002B Skill composite.",
+        "formula": "=CONCAT({{Concept}}, \u0022::\u0022, {{Skill}})"
+      },
+      {
+        "name": "Concept",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "The concept.",
+        "RelatedTo": "Concepts"
+      },
+      {
+        "name": "Skill",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "The skill this concept is most central to.",
+        "RelatedTo": "Skills"
+      }
+    ]
+  },
+  "Gotchas": {
+    "Description": "Specific anti-patterns per skill \u2014 what the plausible-but-wrong approach looks like and what the actual fix is. Extracted from each SKILL.md\u0027s explicit warnings; distinct from Concepts (definitions) \u2014 these are traps.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 kebab-cased GotchaKey.",
+        "formula": "=SUBSTITUTE(LOWER({{GotchaKey}}), \u0022 \u0022, \u0022-\u0022)"
+      },
+      {
+        "name": "GotchaKey",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Skill-scoped unique key (Skill::title-slug) supplied at extraction time."
+      },
+      {
+        "name": "Title",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Short name for the trap."
+      },
+      {
+        "name": "LooksRight",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "The plausible-but-wrong approach \u2014 what someone would naively try."
+      },
+      {
+        "name": "ActualFix",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "What is actually correct, and why the naive approach fails."
+      },
+      {
+        "name": "Severity",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "critical = silent data corruption, security hole, or breaks the core methodology guarantee; moderate = a bug or wasted work but locally contained."
+      },
+      {
+        "name": "GotchaSkills",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": true,
+        "Description": "Join rows linking this gotcha to the skill(s) it applies to.",
+        "RelatedTo": "GotchaSkills"
+      }
+    ]
+  },
+  "GotchaSkills": {
+    "Description": "Junction table: which skill(s) each Gotcha applies to. A many-to-many between Gotchas and Skills modeled as two 1-to-many FKs, per ERB DAG conventions.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 Gotcha \u002B Skill composite.",
+        "formula": "=CONCAT({{Gotcha}}, \u0022::\u0022, {{Skill}})"
+      },
+      {
+        "name": "Gotcha",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "The gotcha.",
+        "RelatedTo": "Gotchas"
+      },
+      {
+        "name": "Skill",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "The skill this gotcha applies to.",
+        "RelatedTo": "Skills"
+      }
+    ]
+  },
+  "SkillBodies": {
+    "Description": "Point-in-time SNAPSHOT of each SKILL.md file, captured for the read-only rulebook portal\u0027s drift display. SKILL.md remains the hand-authored SSoT (see project CLAUDE.md) \u2014 FullText here is NOT a generation source, it is what the file looked like as of the last snapshot. The portal compares this byte-for-byte against the live file to show when a skill has drifted from its last-known-good rulebook snapshot.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 equals Skill.",
+        "formula": "={{Skill}}"
+      },
+      {
+        "name": "Skill",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "The skill this snapshot belongs to.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "Path",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Repo-relative path to the SKILL.md file at snapshot time."
+      },
+      {
+        "name": "FullText",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Verbatim file contents as of the snapshot. NOT regenerated from; compared against the live file to detect drift."
+      },
+      {
+        "name": "Bytes",
+        "datatype": "integer",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Byte length of FullText at snapshot time."
+      },
+      {
+        "name": "Lines",
+        "datatype": "integer",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Line count of FullText at snapshot time."
+      }
+    ]
+  },
+  "SkillArtifacts": {
+    "Description": "Hand-maintained reference/subtask docs that go deeper than a compressed skill body can hold \u2014 optional, freeform naming, referenced by a Concepts.Description \u0027See \u003Ctopic\u003E\u0027 pointer or directly by a skill. Tracked here so the rulebook stays the single source of truth end-to-end, even for material that isn\u0027t generated.",
+    "schema": [
+      {
+        "name": "Name",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Logical PK \u2014 Skill \u002B Filename composite.",
+        "formula": "=CONCAT({{Skill}}, \u0022::\u0022, {{Filename}})"
+      },
+      {
+        "name": "Skill",
+        "datatype": "string",
+        "type": "relationship",
+        "nullable": false,
+        "Description": "The skill this artifact belongs to / was written for.",
+        "RelatedTo": "Skills"
+      },
+      {
+        "name": "Filename",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "Freeform filename, e.g. \u0027magic-links-jwt-verification.md\u0027. No enforced naming convention."
+      },
+      {
+        "name": "Path",
+        "datatype": "string",
+        "type": "calculated",
+        "nullable": false,
+        "Description": "Repo-relative path, conventionally under the skill\u0027s directory.",
+        "formula": "=\u0022skills/\u0022 \u0026 {{Skill}} \u0026 \u0022/\u0022 \u0026 {{Filename}}"
+      },
+      {
+        "name": "Summary",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": false,
+        "Description": "One sentence: what this artifact covers and why it\u0027s split out from the skill body."
+      },
+      {
+        "name": "FullText",
+        "datatype": "string",
+        "type": "raw",
+        "nullable": true,
+        "Description": "Verbatim file contents, hand-maintained. Not generated, not overwritten by any transpiler."
+      }
+    ]
   }
 }

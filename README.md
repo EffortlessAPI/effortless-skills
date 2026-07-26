@@ -1,6 +1,6 @@
 # Effortless Claude
 
-A [Claude Code](https://claude.ai/claude-code) skill suite for working with **Effortless Rulebook (ERB)** projects — schema-first, Airtable-sourced, multi-substrate code generation.
+A [Claude Code](https://claude.ai/claude-code) skill suite for working with **Effortless Rulebook (ERB)** projects — schema-first, rulebook-driven, multi-substrate code generation.
 
 ## What This Does
 
@@ -14,8 +14,8 @@ This means you can install the suite globally without it crashing the party in y
 The suite covers the full ERB lifecycle:
 
 - **Bootstrap** new projects from raw requirements (the "Shadle steps")
-- **Initialize** the project structure, CLAUDE.md marker, and Airtable connection
-- **Iterate** via the Leopold loop (CHANGE-RULE → REBUILD → CONSUME-VIEWS)
+- **Initialize** the project structure, CLAUDE.md marker, and (optionally) an Airtable connection
+- **Iterate** via the loop (CHANGE-RULE → REBUILD → CONSUME-VIEWS)
 - **Generate** SQL, views, functions, and policies from the rulebook
 - **Secure** apps with magic-link auth and Row-Level Security
 - **Diagnose** schema and DAG issues
@@ -23,24 +23,23 @@ The suite covers the full ERB lifecycle:
 
 ## What's an ERB Project?
 
-An Effortless Rulebook project uses **Airtable as the single source of truth** for business schema and rules:
+An Effortless Rulebook project uses **`effortless-rulebook.json` as the single source of truth** for business schema and rules:
 
 ```
-Airtable Base (humans + AI agents edit here)
-    |
-    | airtable-to-rulebook
-    v
 effortless-rulebook.json   (substrate-agnostic IR — the invariant)
-    |          |          |          |
-    v          v          v          v
-PostgreSQL   Python      Go       Excel ...
-(tables,     (classes,   (structs, (native
- functions,   calc        methods)  formulas)
- views,       methods)
- policies)
+    ^          |          |          |          |
+    |          v          v          v          v
+ (optional: PostgreSQL   Python      Go       Excel ...
+  Airtable,  (tables,     (classes,   (structs, (native
+  Excel,      functions,   calc        methods)  formulas)
+  reverse-    views,       methods)
+  sync, or    policies)
+  hand-edit
+  input
+  spokes)
 ```
 
-The rulebook JSON is the invariant. Generated code is disposable and regenerated from this single file. Schema changes go through Airtable, not through hand-edited generated artifacts.
+The rulebook JSON is the invariant. Generated code is disposable and regenerated from this single file. Schema changes go directly to the rulebook (by hand or by LLM), not through hand-edited generated artifacts. Airtable, Excel, and reverse-sync are optional input spokes for projects that opt in.
 
 ### The Effortless project marker
 
@@ -49,7 +48,7 @@ A project is "Effortless" if and only if **both** are true:
 1. `effortless.json` (or legacy `ssotme.json`) exists at the project root.
 2. A `CLAUDE.md` at the project root explicitly identifies the project as following the Effortless Rulebook (ERB) methodology.
 
-This dual marker is what tells Claude to load the project-only skills (the ones that read your rulebook, write to your Airtable, regenerate your SQL). Entry-point skills like `effortless-init` and `effortless-cli` can also load on explicit user request, since their job is to *create* the marker or manage tooling.
+This dual marker is what tells Claude to load the project-only skills (the ones that read and edit your rulebook and regenerate your SQL). Entry-point skills like `effortless-init` and `effortless-cli` can also load on explicit user request, since their job is to *create* the marker or manage tooling.
 
 ### Key files in an ERB project
 
@@ -68,7 +67,7 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 ## Skills
 
-23 skills, grouped by purpose. Each one explains *why you'd want it* — what problem it actually solves for you when you reach for it.
+31 skills, grouped by purpose. Each one explains *why you'd want it* — what problem it actually solves for you when you reach for it.
 
 ### Orchestration
 
@@ -78,13 +77,17 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 **`effortless-init`** — Turns any folder into an Effortless project: runs `effortless -init`, creates the standard directory layout (`effortless-rulebook/`, `postgres/`, etc.), writes the project-level CLAUDE.md, and generates a `start.sh`. **Why?** Without the CLAUDE.md marker, future Claude sessions can't recognize the project as Effortless and the rest of the suite won't load. This skill installs the gate that opens everything else.
 
-**`effortless-bootstrap`** — The "Shadle steps": raw text → vocabulary → glossary → narrative → mock data → schema → Airtable. **Why?** Going from "here's what we want to build" to "we have a formal rulebook" is the fuzziest part of ERB. This skill is the structured pipeline for that translation, so you don't end up with a half-formal mess that can't be projected to a substrate.
+**`effortless-bootstrap`** — The "Shadle steps": raw text → vocabulary → glossary → narrative → mock data → schema → a populated rulebook (optionally mirrored to Airtable for teams that want a grid). **Why?** Going from "here's what we want to build" to "we have a formal rulebook" is the fuzziest part of ERB. This skill is the structured pipeline for that translation, so you don't end up with a half-formal mess that can't be projected to a substrate.
 
-**`effortless-setup-postgres`** — First-run setup for Postgres-targeted projects: preflight tool checks, install the airtable-to-rulebook + rulebook-to-postgres transpilers, pull the rulebook, generate SQL, init the local DB. **Why?** This is the only step where commits are appropriate without asking (it's a known-good bootstrap sequence), and it gets you from "I have an Airtable base" to "I have a working local DB + generated views" without you having to remember the per-step `cd` discipline that makes the build work.
+**`effortless-demo-app`** — Spin up a complete Effortless POC demo app from a one- or two-sentence domain description — no Shadle steps needed. Fastest path from "make this an effortless demo for X" to a running Express + Vite SPA backed by a Postgres-generated rulebook with a multi-hop calculated-field DAG the UI exercises end-to-end. **Why?** Without this skill, "make me a quick demo" either drags in the full bootstrap pipeline or gets hand-coded outside the rulebook entirely. This skill is the direct, no-detour path from a one-liner to a running, rulebook-first proof.
+
+**`effortless-rulespeak`** — Generate plain-English RuleSpeak documentation from an `effortless-rulebook.json` — declarative business rules, vocabulary, fact types, definitional rules (DR-n), traceability back to formulas. Installs `rulebook-to-rulespeak` and emits `rulespeak/rulespeak.md` + `.html` on every build. **Why?** A rulebook is only as useful as a non-technical stakeholder's ability to read it. Without this skill, a newly-authored rulebook has no plain-English artifact and reviewers are stuck reading JSON. Default install whenever a rulebook is created.
+
+**`effortless-setup-postgres`** — First-run setup for Postgres-targeted projects: preflight tool checks, get a rulebook in place (hand-authored, or seeded from Airtable/Excel if the project has one), install `rulebook-to-postgres`, generate SQL, init the local DB. **Why?** This is the only step where commits are appropriate without asking (it's a known-good bootstrap sequence), and it gets you from "I have a rulebook" to "I have a working local DB + generated views" without you having to remember the per-step `cd` discipline that makes the build work.
 
 **`effortless-setup-sql-server`** — First-run setup for SQL Server–targeted projects: install `rulebook-to-sql-server` into `sql-server/`, patch `init-db.sh` defaults, register the `-exec ./init-db.sh` build step, preflight `sqlcmd` + Docker MSSQL, and wire the Express app to `mssql`. **Why?** The SQL Server transpiler mirrors the Postgres pipeline (same `00`–`05` + `vw_*` pattern) but uses T-SQL, security policies instead of Postgres RLS, and `sqlcmd` instead of `psql` — this skill encodes those differences so agents don't improvise.
 
-**`effortless-leopold-loop`** — The iterative ERB development cycle: CHANGE-RULE (in Airtable) → `effortless build` → CONSUME generated views in app code → repeat. **Why?** Without it you'll regress to "naked Claude" — hand-maintaining schema in three places (DB migration, ORM model, API serializer) and breaking sync every time something changes. The loop is the thing that makes ERB feel effortless instead of redundant.
+**`effortless-loop`** — The iterative ERB development cycle: CHANGE-RULE (in the rulebook) → `effortless build` → CONSUME generated views in app code → repeat. **Why?** Without it you'll regress to "naked Claude" — hand-maintaining schema in three places (DB migration, ORM model, API serializer) and breaking sync every time something changes. The loop is the thing that makes ERB feel effortless instead of redundant.
 
 **`effortless-claude-updates`** — Everything about the **skill set itself**: check whether your local clone is behind upstream, apply updates (`git pull` + `install.sh`), add/edit/deprecate skills. **Why?** The skill set is its own moving target — new skills get added, old ones get merged, conventions drift. This skill is the maintenance interface for the suite (separate from the CLI binary, which is `effortless-cli`).
 
@@ -92,7 +95,9 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 **`effortless-cli`** — Both **installing/updating the `effortless` binary** and **using it**. Covers prerequisites (.NET 8, Node 18+), the npm-package install (clones `effortlessapi/cli`, registers `effortless` / `ssotme` / `aicapture` / `aic` shims), nvm coexistence pitfalls, login flow, `-init`, `-setAccountAPIKey`, transpiler installation paths, build flags, project file structure. **Why?** Because nothing in the rest of the suite works without the CLI being on `PATH` and pointing at the right Node version. This skill is also where the `effortless: command not found` recovery flow lives.
 
-**`effortless-mcp`** — Install and use the always-on **Effortless MCP server** — the streamable-HTTP endpoint that exposes ~54 transpiler tools (auto-generated from the Airtable catalog) plus the effortless-claude skill set as MCP **Resources** to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.). Covers the deployed cpln URL, per-client wiring snippets, smoke tests, local dev (`./start.sh`, stdio mode), and the bake/publish flow for new versions. **Why?** The CLI binary is not the only way to drive the catalog — MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally.
+**`effortless-ssotme-protocol`** — The canonical reference for the exact `effortless.json` schema — `ProjectTranspilers` entries, the `ssotme://` protocol, correct CLI flag shapes. **Why?** `effortless.json` is hand-authored exactly once per project and then owned by the CLI. Without this skill, Claude hallucinates key names (`Transpilers` vs `ProjectTranspilers`) or invents fields — errors that silently break every later build. Load before emitting any `effortless.json` content, even a partial snippet.
+
+**`effortless-mcp`** — Install and use the always-on **Effortless MCP server** — the streamable-HTTP endpoint that exposes ~54 transpiler tools (auto-generated from the tool catalog) plus the effortless-claude skill set as MCP **Resources** to any MCP-compatible agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.). Covers the deployed cpln URL, per-client wiring snippets, smoke tests, local dev (`./start.sh`, stdio mode), and the bake/publish flow for new versions. **Why?** The CLI binary is not the only way to drive the catalog — MCP is the protocol-level surface that lets non-Claude agents (and Claude in non-CLI contexts) call transpilers, run builds, query rulebooks, and read skills without anything installed locally.
 
 **`effortless-publish-tool`** — **Publish / push / deploy / release a new version of a transpiler tool** in `Versioned-Stable-SSoTme-Tools`. The one supported scripted path is `scripts/publish-tool.sh <transpilerId> <category>/<tool-name>` (the same sequence as the green 🚀 Deploy button: Airtable version → build+push cpln image → wait online → flip `[latest]` live). **Why?** "Push the tool online" reads as trivial but has a precise contract, and the two most common stumbles are (1) concluding the transpiler-server is "down" when it's just on a non-3000 `PORT` (find it; pass `API_BASE`), and (2) confusing the real publish with `build-and-push-cpln-workload.sh` (build only) or `effortless build` (consume). This skill encodes that contract so push/publish/deploy requests don't get re-derived from scratch.
 
@@ -106,19 +111,27 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 ### Workflow & Build
 
-**`effortless-workflow`** — The two valid paths for making changes: **Path A** (Airtable-first, preferred) and **Path B** (rulebook-first reverse sync via `build -id`). Permission checkpoints — when to ask before modifying the rulebook, Airtable, or running a build. **Why?** Most "this didn't work" stories in ERB are someone editing the rulebook JSON directly when Path A would have been right, then `effortless build` overwriting their edits. This skill is the discipline that prevents that.
+**`effortless-workflow`** — The input-spoke options for making changes: rulebook-direct (the default), Airtable when connected, LLM-direct edits, and reverse-sync. Permission checkpoints — when to ask before modifying the rulebook or running a build. **Why?** Most "this didn't work" stories in ERB are someone editing the rulebook JSON directly without realizing a build would overwrite their edits, or vice versa. This skill is the discipline that prevents that.
 
 **`effortless-pipeline`** — How `effortless.json`, `ProjectTranspilers`, and `effortless build` actually work: the catalog of transpilers, the `-id` flag, the multi-substrate architecture (Postgres, Python, Go, Excel, OWL, YAML, UML, …), and the standard install paths for each tool. **Why?** When the build does something surprising — a transpiler doesn't run, a generated file lands in the wrong directory, `-id` does something different than `build` — this skill is the "how does the pipeline actually work" reference.
 
-### Airtable Interaction
+**`effortless-rulebook-devops`** — Best-practice dev-ops for an ERB project: a rulebook-first pipeline promoted across up to four tiers (dev/staging on localhost, beta/production on a live remote server), governed by one migration ledger, a derived (never stored) version, and two independent axes (DB migration version + code build). Ships a Deployment Management console, environment/DB switcher, and guardrails keeping staging/production reachable only through ledger-tracked migrations. **Why?** Without a formal promotion model, "push this rulebook change to production" has no safe, repeatable answer — dev/staging/prod drift silently. This is the one-time-per-project scaffold for a real release discipline.
 
-**`effortless-airtable`** — The **default** for Airtable changes: scalar field add/modify/rename, table creation (without formulas), and all CRUD operations via the REST API. Includes the `-account airtable` flag pattern and the `~/.ssotme/ssotme.key` resolution order. **Why?** ~80% of Airtable changes are scalar fields or CRUD — the API handles them in a few seconds. Falling back to OMNI (Playwright) for these is wasteful.
+### Airtable Interaction (optional, opt-in)
+
+**`effortless-airtable`** — For projects that opt in to Airtable as an input spoke, the **default** for Airtable changes: scalar field add/modify/rename, table creation (without formulas), and all CRUD operations via the REST API. Includes the `-account airtable` flag pattern and the `~/.ssotme/ssotme.key` resolution order. **Why?** ~80% of Airtable changes are scalar fields or CRUD — the API handles them in a few seconds. Falling back to OMNI (Playwright) for these is wasteful.
 
 **`effortless-airtable-omni`** — The **escape hatch** for what the API can't do: formula fields, lookup fields, rollup fields, and new-table creation (which requires the `Name` formula). Includes the bundled Playwright script (`omni-send.mjs`) that drives a headed Chrome to OMNI directly — Claude doesn't generate prompts for you to paste, it sends them. **Why?** Without this skill Claude either can't add a formula field at all, or wastes everyone's time generating OMNI prompts for you to copy-paste manually. With it, formula/lookup/rollup work happens automatically.
 
 ### Generated Code
 
 **`effortless-sql`** — Patterns for the generated SQL: read from `vw_*` views (never base tables), never edit `00`–`05` files (regenerated every build), customize via `*b-customize-*.sql` and the `ERBCustomizations` table only when the rulebook genuinely can't express the rule. **Why?** This is where most "fixes" go wrong: someone edits `02-create-functions.sql` to "patch" a behavior, the next build erases it, the bug comes back, and now there's a phantom commit history with no surviving code. This skill is the rule that prevents that whole class of incident.
+
+**`effortless-explainer-dag`** — Add the Explainer DAG to any Effortless project — a generated, embedded visualization of the rulebook's calculated-field DAG that lets a user click any cell/field and see exactly how it was derived (raw inputs → lookups → calcs → aggregations), with RuleSpeak prose baked in at transpile time. Portable (vanilla JS + CSS) across React, Vue, plain HTML, Flask/Jinja, HTMX. **Why?** A calculated field's provenance is otherwise invisible to the end user — they see the number, not the formula chain that produced it. This skill makes that chain inspectable in-app, on demand, without hand-building a DAG viewer per project.
+
+### Data & Export
+
+**`effortless-excel-export`** — Add Excel export to any Effortless Postgres project: populate a `rulebook-export.json` from live `vw_*` views, run `rulebook-to-xlsx`, and wire a download endpoint + link into the app. **Why?** Any ERB project can export its full current state — schema + live data + all calculated fields — as a multi-sheet Excel workbook. This skill makes it a single turn of the loop to add that capability.
 
 ### Auth & Deployment
 
@@ -232,7 +245,7 @@ effortless-claude/
 │   ├── effortless-bootstrap/           ← Shadle steps (raw text → rulebook)
 │   ├── effortless-setup-postgres/      ← first-run Postgres setup
 │   ├── effortless-setup-sql-server/    ← first-run SQL Server setup
-│   ├── effortless-leopold-loop/        ← the iteration cycle
+│   ├── effortless-loop/                ← the iteration cycle
 │   ├── effortless-claude-updates/      ← skill-set maintenance
 │   ├── effortless-cli/                 ← CLI binary install + command reference
 │   ├── effortless-mcp/                 ← MCP server install + per-client wiring

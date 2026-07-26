@@ -15,7 +15,11 @@ audience: customer
 
 This skill describes the **shape** of `effortless-rulebook.json`. It does NOT cover naming/DAG/FK rules — those are in **effortless-conventions**.
 
-**Format:** Standard JSON + Single Line Leaves.
+**Format:** Standard JSON + Single Line Leaves — every leaf value (a string,
+number, or boolean) stays on one line even though the file is pretty-printed
+and nested. This is what makes the file greppable/diffable line-by-line
+despite being structured JSON, and it's what `minimize-rulebook` depends on
+to strip data down to schema-only without reformatting the file.
 
 If `minimize-rulebook` is registered as a transpiler, climb the derived files
 in order — `read-me-1st.txt` → `schema.min.json` → `schema.json` — before

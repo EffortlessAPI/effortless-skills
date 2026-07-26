@@ -42,6 +42,21 @@ Every table also has a `Name` **calculated** field — a human-readable display 
 - Because `Name` is calculated, it works correctly even if the substrate swaps slug identifiers for UUIDs.
 - In Airtable contexts, `Name` maps to the primary field (first column).
 
+> ⚠️ **Compound-`Name` PK collapse (FIXED in published `rulebook-to-postgres`).**
+> A table whose logical key is a **calculated `Name` compounding a relationship +
+> a raw field** (e.g. `Publications.Name = ={{Video}} & " @ " & {{Channel}}`) used
+> to have its synthesized `<Table>Id` PK **collapsed onto just the first component**
+> — so distinct rows deduped and vanished (14 videos became 2). Two related
+> mis-selections went with it: an incidental `Id`-ending **attribute** field
+> (`CategoryId`, `PlaylistId`, `ExternalId`) could get picked as the PK over the
+> real calculated `Name`. **Both are fixed:** the PK now synthesizes from the full
+> compound value, and an author-intended `<Entity>Id` (`student_id` for `Students`,
+> etc.) still correctly wins. **Symptom → cause:** if a table's rows collapse /
+> dedupe in Postgres (fewer rows than the rulebook), OR you hit FK violations where
+> a compound-`Name` FK won't resolve, it was this bug — **just rebuild with the
+> published transpiler.** Do NOT work around it by materializing `Name` as a raw
+> field; no rulebook workaround is needed anymore.
+
 ## Every Table and Field Must Have a Description
 - Descriptions form the semantic backbone of the DAG
 - They explain purpose, usage context, and ontology mappings

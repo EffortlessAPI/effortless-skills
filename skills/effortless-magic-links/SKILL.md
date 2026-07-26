@@ -38,9 +38,10 @@ the bases-specific flow (auto-RLS templates, `auth.trusted_tenants`,
 ## "AppUsers" / "Roles" / "Profiles" tables belong in the consuming app, NOT in `app.*`
 
 Magic-links stores no users. Your app does. If the app is an ERB project,
-that means `AppUsers` (or whatever you call it) is an **Airtable entity**,
-regenerated as `public.app_users` + `vw_app_users`. The `app.jwt_role()`
-helper reads from `vw_app_users`.
+that means `AppUsers` (or whatever you call it) is a **rulebook entity**
+(hand-authored, or via Airtable if the project opted in), regenerated as
+`public.app_users` + `vw_app_users`. The `app.jwt_role()` helper reads
+from `vw_app_users`.
 
 Do NOT create `app.app_users` (or `app.users`, `app.profiles`, etc.) by
 hand in `01b-customize-schema.sql`. That mirror will drift from the
@@ -324,6 +325,35 @@ curl -sS -X PATCH "$MAGICLINK/api/tenants/$TENANT_ID" \
 
 Set `null` for any field to clear it back to platform defaults.
 
+### Token lifetime — arbitrary but BOUNDED to `[60s, 10 years]`; how to set 365 days
+
+The deployed service supports an **arbitrary per-tenant JWT lifetime** via
+`jwt_expires_in_seconds`, set on tenant create (`POST /api/tenants`) or later
+via `PATCH /api/tenants/{id}`. It is clamped to **`[60s, 10 years]`
+(60 … 315360000)**.
+
+```bash
+# Make sessions effectively never re-auth: 365-day tokens.
+curl -sS -X PATCH "$MAGICLINK/api/tenants/$TENANT_ID" \
+  -H "Authorization: Bearer $SELF_JWT" -H "Content-Type: application/json" \
+  -d '{"jwt_expires_in_seconds":31536000}'   # 365 days
+```
+
+> ⚠️ **There is deliberately NO "infinite" / claim-less token.** Every base's
+> Postgres verifier installs with `verify_exp:True` and hard-requires an `exp`
+> claim — an unbounded / exp-less token would fail *every* RLS query. So the
+> longest practical "don't make me sign in again" session is a large finite
+> lifetime (365 days = `31536000`), never an eternal token.
+
+The unified `/api` refresh grace was also raised to **3600s (1 h)** (matching
+v2), so a short-lived token silently refreshes if it's used within an hour of
+expiry.
+
+> ⚠️ **For a base's OWN auth** (your app talking to `bases.effortlessapi.com`),
+> the JWT is minted by the **bases magic-links tenant** — so to lengthen *that*
+> session, set `jwt_expires_in_seconds` on **that** tenant, not the one your
+> app's end-users use.
+
 ### Step 2 — install the JWT verification middleware (Node / Express)
 
 ```js
@@ -516,7 +546,7 @@ references a column that no longer exists.
 
 - [REFERENCE.md](REFERENCE.md) — long-tail material kept out of the core: Python/FastAPI middleware, the role-resolver recursion gotcha, refresh flow, multi-database tenant sharing, full cheat sheet.
 - `effortless-bases` — switch to this skill if the project's database lives on `bases.effortlessapi.com`. Bases-specific endpoints (`/auth/generate-policy`, `/auth/apply-privileges-template`) and pre-installed `app.jwt_*()` helpers replace much of Steps 4–5 here.
-- `effortless-orchestrator` — if this is an ERB project, `AppUsers` belongs in Airtable, not in `app.app_users` by hand.
+- `effortless-orchestrator` — if this is an ERB project, `AppUsers` belongs in the rulebook, not in `app.app_users` by hand.
 - `effortless-sql` — for `*b-customize-*.sql` placement of `auth.trusted_tenants` and `app.jwt_*()` helpers in ERB projects.
 
 ---

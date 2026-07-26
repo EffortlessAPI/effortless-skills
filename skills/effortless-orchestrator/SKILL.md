@@ -175,6 +175,7 @@ Do NOT:
 - Cat SQL files into context
 - **Read `effortless-rulebook.json` directly** — the file is the hub and can be megabytes. A direct `Read` or `cat` floods context and defeats the entire point of having a structured rulebook. This is one of the biggest benefits of ERB: you never have to read the whole thing.
 - **Use the `query_rulebook` MCP tool** — it adds a network round-trip and is no better than a local one-liner. It is never the right first move for querying schema.
+- For planning purposes specifically, the minimized schema alone is almost always sufficient — see `effortless-query`.
 
 You already knew the schema before the build because you queried it. Trust the pipeline.
 
@@ -189,6 +190,52 @@ never have to read the full rulebook to query it. If the project doesn't have th
 transpiler yet, ask the user whether to install it — see `effortless-query` for
 the full discipline and `effortless-workflow` for writing via code instead of
 tokens.
+
+### Why `minimize-rulebook` matters beyond token savings
+
+`minimize-rulebook` isn't just a compact-read convenience — it's the mechanism
+that lets the whole skill suite (and the agents working inside it) stay small
+and stay isolated.
+
+**The SSoT isn't in the code, so the agent doesn't have to keep reversing it.**
+In a hand-written codebase, an LLM re-derives "how does this system work" by
+reading source across many files, over and over, every session, because the
+model of the system only exists implicitly in the code. In ERB, the model
+*is* the rulebook — explicit, declarative, and small relative to the code it
+generates. Once `minimize-rulebook` has run, that model is also sitting
+right next to the hub in an already-digested form. An agent (or a fresh
+sub-agent with zero prior context) can answer "what tables exist," "what
+does this field depend on," or "what's the FK shape here" by reading a
+~30-line `read-me-1st.txt`, without opening a single generated file and
+without having been present for any prior conversation about the project.
+
+**This is what makes sub-agent fan-out safe for ERB work.** Most steps in an
+ERB pipeline are deterministic and isolated from each other — editing one
+table's formula doesn't require understanding the whole app's runtime
+behavior, because the DAG is explicit in the schema, not implicit in
+call-graphs. That means many tasks (schema questions, formula audits,
+per-table documentation, diagnostics) can be delegated to a sub-agent that
+starts cold, reads only the derived ladder for the slice it needs, and
+answers — instead of requiring the full conversational context or a
+from-scratch codebase crawl. This does not extend to the application/UI
+layer, which still has to be understood by actually reading the frontend
+code — but even there, the *data model* half of that understanding comes
+free by reading `schema.min.json` instead of reverse-engineering it from
+queries scattered across the app.
+
+**Net effect on the skill suite's shape:** the more a project leans on
+`minimize-rulebook`, the less any individual skill needs to embed deep
+structural knowledge inline, because that knowledge is discoverable at
+query-time from the derived files rather than needing to be pre-loaded from
+a skill doc. `effortless-schema` in particular exists mainly for the *first*
+time an agent (or project) needs the full structural explanation; after
+`minimize-rulebook` is installed, most day-to-day schema questions are
+answered by the ladder itself, not by re-reading that skill.
+
+**Install it early.** Because so much of the rest of the suite's token
+discipline depends on the derived ladder existing, `minimize-rulebook`
+should be among the first transpilers registered on any new ERB project —
+see `effortless-pipeline` for where it sits in `ProjectTranspilers` order.
 
 ### Quick query patterns (full library in `effortless-query`)
 
@@ -255,7 +302,7 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-init` | Initializing a new effortless project (project structure, CLAUDE.md, start.sh, Airtable connection) |
 | `effortless-setup-postgres` | First-run setup for Postgres-targeted projects (preflight + init-db + everything in -init) |
 | `effortless-bootstrap` | Bootstrapping from raw text — Shadle steps from vocabulary to rulebook |
-| `effortless-leopold-loop` | The iterative dev cycle — "the loop", "do a turn", "rebuild the rulebook" |
+| `effortless-loop` | The iterative dev cycle — "the loop", "do a turn", "rebuild the rulebook" |
 | `effortless-query` | Querying the rulebook JSON — listing tables, extracting schema, finding relationships |
 | `effortless-schema` | Understanding the JSON structure — field types, datatypes, formula syntax, `_meta` |
 | `effortless-conventions` | Naming, DAG, PK/FK rules, no many-to-many |
@@ -296,7 +343,7 @@ Sub-skills load automatically based on what you're doing:
 
 - `effortless-init` — for the actual init walkthrough referenced above.
 - `effortless-claude-updates` — for "update effortless skills" / authoring new skills.
-- `effortless-leopold-loop` — for the iterative dev cycle.
+- `effortless-loop` — for the iterative dev cycle.
 - `effortless-query` — for the targeted JSON queries the Token Discipline section requires.
 - `effortless-conventions` — full naming/DAG rules.
 

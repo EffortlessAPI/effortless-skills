@@ -14,7 +14,7 @@ audience: customer
 
 # Effortless Bootstrap — The Shadle Steps
 
-This skill describes the full bootstrap process for turning raw requirements or platform descriptions into a formal `effortless-rulebook.json`. This is how a new project goes from "here's what we're building" to "we're in the Leopold loop."
+This skill describes the full bootstrap process for turning raw requirements or platform descriptions into a formal `effortless-rulebook.json`. This is how a new project goes from "here's what we're building" to "we're in the effortless loop."
 
 The whole pipeline targets the **rulebook hub** — that's the destination (Rulebook-First, the best-practice default). If the team wants a human-friendly grid, Airtable is one optional surface you can populate from the rulebook afterward (a sibling of Excel/Notion); it's never a required step.
 
@@ -56,7 +56,7 @@ effortless-rulebook.json  ← THE HUB / SSoT
      higher-order inferences into a comprehensive DAG)
     |
     v
-Now in the Leopold Loop
+Now in the loop
 ```
 
 Everything from the normalized schema onward is authored **directly in the
@@ -133,7 +133,7 @@ This builds out the full analytical power of the rulebook. LLMs are strong at th
 
 ### Step 10.5 — RuleSpeak sibling (DEFAULT)
 
-Before entering the Leopold loop, install the plain-English documentation spoke.
+Before entering the loop, install the plain-English documentation spoke.
 Load **effortless-rulespeak** and follow its "Default on rulebook creation" block:
 
 ```bash
@@ -145,7 +145,7 @@ cd .. && effortless build
 Confirm `rulespeak/rulespeak.html` exists — this is the human-readable sanity
 check for the rulebook you just authored.
 
-### Step 11: You're in the Leopold loop
+### Step 11: You're in the loop
 
 With the rulebook seeded and the DAG built out, `effortless build` projects it to
 Postgres (and every other output spoke). Future changes flow in via direct edits
@@ -198,7 +198,7 @@ This output is a **starting point** — it needs to be reviewed, normalized, and
 - `effortless-cli` — the `-install` and build commands used throughout.
 - `effortless-conventions` — naming and DAG rules the rulebook must follow.
 - `effortless-schema` — JSON structure the rulebook must conform to.
-- `effortless-leopold-loop` — what you enter at Step 11 once the rulebook hub is seeded.
+- `effortless-loop` — what you enter at Step 11 once the rulebook hub is seeded.
 - `effortless-rulespeak` — Step 10.5; default plain-English sibling on every new rulebook.
 - `effortless-setup-postgres` — for projects that target Postgres, run once the rulebook is in place.
 - `effortless-airtable` / `effortless-airtable-omni` — *only* for the optional Airtable-first appendix path.

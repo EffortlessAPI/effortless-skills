@@ -160,7 +160,7 @@ source "$(dirname "$0")/_lib.sh"
 SLUG="${1:?migration slug required}"
 MSG="${2:-$(git log -1 --pretty=%s)}"          # default: most recent git commit message
 
-effortless build                                # ensure dev = HEAD (Leopold loop)
+effortless build                                # ensure dev = HEAD (the loop)
 NNNN="$(printf '%04d' "$(ls -d migrations/[0-9]* 2>/dev/null | wc -l)")"
 MIG="migrations/${NNNN}-${SLUG}"; mkdir -p "$MIG"
 [[ -f "$MIG/up.sql" ]] || printf -- '-- %s-%s: %s\n-- Author this by hand (diff to discover, author to derive).\nBEGIN;\nCOMMIT;\n' \

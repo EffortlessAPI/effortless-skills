@@ -194,5 +194,5 @@ Do **not** `cat sql-server/02-create-functions.sql` into context.
 - `effortless-setup-postgres` — Postgres counterpart
 - `effortless-pipeline` — `ProjectTranspilers` / `-install` / `build`
 - `effortless-sql` — read `vw_*`, never base tables; `*b-customize-*` files
-- `effortless-leopold-loop` — edit rulebook → build → consume views
+- `effortless-loop` — edit rulebook → build → consume views
 - [REFERENCE.md](REFERENCE.md) — RLS idempotency, app wiring, troubleshooting

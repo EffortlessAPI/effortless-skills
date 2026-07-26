@@ -198,6 +198,21 @@ echo "--- Plan ---"
 echo ""
 actions_needed=0
 
+# Count pending deprecated-skill removals too, so the "nothing to do" early
+# exit below doesn't skip past the cleanup block further down — otherwise a
+# deprecated skill sits installed forever once every current skill is
+# already up to date (the common case on a repeat install.sh run).
+for dep_skill in "${DEPRECATED_SKILLS[@]}"; do
+  dep_dest="$SKILLS_DEST/$dep_skill"
+  if [ -e "$dep_dest" ] || [ -L "$dep_dest" ]; then
+    is_current=false
+    for skill in "${SKILLS[@]}"; do
+      [ "$skill" = "$dep_skill" ] && is_current=true && break
+    done
+    $is_current || ((++actions_needed))
+  fi
+done
+
 for skill in "${SKILLS[@]}"; do
   src="$SKILLS_SRC/$skill"
   dest="$SKILLS_DEST/$skill"

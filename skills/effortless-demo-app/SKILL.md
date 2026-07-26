@@ -28,7 +28,7 @@ Shadle steps, no migration tooling.
 
 ## User-facing documentation discipline
 
-**README and user-facing docs must read as if you have never heard of Effortless, DAGs, or the Leopold loop.**
+**README and user-facing docs must read as if you have never heard of Effortless, DAGs, or the effortless loop.**
 
 Imagine handing the README to a business analyst who just wants to use the app. They don't know what a rulebook is, they don't know what a DAG is, and the word "multi-hop" means nothing to them. Write for that person.
 
@@ -41,7 +41,7 @@ Imagine handing the README to a business analyst who just wants to use the app. 
 | calculated field            | *derived value*, *is calculated automatically*, *updates automatically* |
 | rulebook                    | *(invisible — it's the implementation)*                                 |
 | multi-hop                   | *(just describe what changes what, in plain English)*                   |
-| Leopold loop                | *"to add or change a field"*, *"modifying the app"*                     |
+| the loop                    | *"to add or change a field"*, *"modifying the app"*                     |
 | ERB / Effortless Rulebook   | *(invisible in user sections)*                                          |
 | inference chain / inference | *(just say what updates when)*                                          |
 | transpiler                  | *(invisible)*                                                           |
@@ -51,7 +51,7 @@ Imagine handing the README to a business analyst who just wants to use the app. 
 
 Instead of drawing the DAG, describe the **cascade in domain language**: *"Changing a line item's amount instantly updates the report total, which determines whether the High Value badge appears on the manager's queue."* That sentence conveys the same information without any jargon.
 
-The "Next 10 Leopold loops" section in the README MUST be called **"What to add next"** (or a domain-appropriate variant like "Next 10 enhancements"). The word "Leopold loop" should never appear in the README. Each suggestion should describe the business change ("add a Category field to line items so managers can filter by type"), not the technical mechanism.
+The "Next 10 turns of the loop" section in the README MUST be called **"What to add next"** (or a domain-appropriate variant like "Next 10 enhancements"). The word "loop" should never appear in the README. Each suggestion should describe the business change ("add a Category field to line items so managers can filter by type"), not the technical mechanism.
 
 ERB methodology, DAG diagrams, and transpiler details belong only in CLAUDE.md and in an optional **"How This Was Built"** section clearly labeled as a developer reference, placed at the very end of the README after all user-facing content.
 
@@ -130,7 +130,7 @@ path in "Speed discipline" above doesn't need them. Load on demand:
 (step C); it defines the JSON shape, field types, and formula syntax
 - `effortless-setup-postgres` / `effortless-pipeline` — only if the  
 build fails in a way that needs pipeline-level debugging
-- `effortless-leopold-loop` — only when documenting the edit→build  
+- `effortless-loop` — only when documenting the edit→build  
 loop in the README
 - `effortless-conventions` — only if you hit a naming/DAG question you
 can't answer from this skill
@@ -141,7 +141,7 @@ Skip entirely for demos: `effortless-airtable`*, `effortless-bootstrap`
 `effortless-orchestrator` (its content is summarized inline here),
 `effortless-explainer-dag` (on-demand only — user must explicitly ask).
 
-## The Leopold loop — canonical 4 steps
+## The loop — canonical 4 steps
 
 Every feature change follows exactly this order. No exceptions.
 
@@ -322,7 +322,7 @@ before moving on.
   the `effortless-demo-app` skill (and the standard ERB skills)
   when working in this directory. Use exactly this marker line:
   `> **Project type:** Effortless demo app (rulebook-first Postgres POC). Use the \`effortless-demo-app skill for any
-  work in this repo — schema edits, Leopold loops, new pages,
+  work in this repo — schema edits, turns of the loop, new pages,
   mock data, README updates.` Also include the standard ERB marker sentence ("This project follows the Effortless Rulebook (ERB) methodology…") so the project-only effortless-* skills load via their scope gate.
   - `start.sh` — see **effortless-init** Step 5: hard-coded odd `API_PORT`,
   even `UI_PORT = API_PORT + 1`; `./start.sh` kills both ports and restarts
@@ -486,7 +486,7 @@ Replace the "coming soon" placeholder with the real app.
     - **Repo layout** — file tree with one-line descriptions.
     - **Modifying this app** — plain-English instructions for adding a field or
     changing a rule: "edit the rulebook, run `./start.sh build`, run
-    `./start.sh db`". Do NOT call this "Leopold loop". Do NOT mention
+    `./start.sh db`". Do NOT call this "the loop". Do NOT mention
     "calculated fields" or "rulebook-to-postgres transpiler".
     - **What to add next** — the 10 enhancement suggestions (see G.1 below).
     - **Known limitations** — stub auth, no RLS, placeholder roles, no tests.
@@ -505,7 +505,7 @@ build.
 
 **The section is called "What to add next"** (or a domain-appropriate variant
 like "Next 10 enhancements", "Ideas for the next feature", etc.). The phrase
-"Leopold loop" MUST NOT appear anywhere in the README. Internally, each
+"the loop" MUST NOT appear anywhere in the README. Internally, each
 suggestion is one loop turn — but the README reader doesn't need to know that.
 
 Rules for the list:

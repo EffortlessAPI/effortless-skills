@@ -21,6 +21,25 @@
       "IsDisabled": false,
       "LastVersionUsed": "v2026.07.08.1133",
       "LastUrl": "https://effortless-minimize-rulebook-v2026-07-08-1133-cmvbd4phczmeg.7pktzg2z971j0.cpln.app"
+    },
+    {
+      "IsSSoTTranspiler": false,
+      "Name": "rulebook-to-rulespeak",
+      "RelativePath": "/rulespeak",
+      "CommandLine": "rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json",
+      "IsDisabled": false,
+      "PinnedVersion": "v2026.07.08.1458",
+      "LastVersionUsed": "v2026.07.08.1458",
+      "LastUrl": "https://effortless-rulebook-to-rulespeak-v2026-07-08-1458-cmvbd4phczmeg.7pktzg2z971j0.cpln.app"
+    },
+    {
+      "IsSSoTTranspiler": false,
+      "Name": "effortless-rulebook-editor",
+      "RelativePath": "/effortless-rulebook/docker",
+      "CommandLine": "effortless-rulebook-editor -i ../effortless-rulebook.json",
+      "IsDisabled": false,
+      "LastVersionUsed": "v2026.07.27.0122",
+      "LastUrl": "https://effortless-effortless-rulebook-e-v2026-07-27-0122-cmvbd4phczmeg.7pktzg2z971j0.cpln.app"
     }
   ]
 }

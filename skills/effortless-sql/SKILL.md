@@ -72,7 +72,7 @@ SELECT * FROM vw_customers WHERE is_red_headed = true;
 
 ### Why This Matters:
 
-- Business logic belongs in the rulebook (Airtable formulas or rulebook-direct edits), not in ad-hoc queries
+- Business logic belongs in the rulebook (rulebook-direct edits, or Airtable formulas if connected), not in ad-hoc queries
 - Views contain pre-calculated fields that encapsulate business rules
 - Computing things yourself (e.g., `LOWER(field) = 'value'`) duplicates logic and risks inconsistency
 - The whole point of ERB is that the view already did the work for you

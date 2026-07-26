@@ -1,0 +1,2038 @@
+<!doctype html>
+<html lang="en" data-lang="en" class="show-rulespeak show-desc show-inputs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effortless Claude — RuleSpeak</title>
+<style>
+
+:root{
+  --raw:#003a70; --calc:#5a3aa0; --agg:#0a7b78; --rel:#666; --lookup:#9a6708;
+  --raw-bg:#eaf0f8; --calc-bg:#f1ebfb; --agg-bg:#e5f4f3; --rel-bg:#f0f0f0; --lookup-bg:#fbf2dd;
+  --ink:#1a1a22; --muted:#6b6b78; --line:#e3e3ea; --bg:#fafafc; --card:#fff;
+  --bar-h:48px;                 /* sticky topbar height — anchors clear it */
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:15px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);background:var(--bg);}
+a{color:var(--calc);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font:0.85em ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f3f7;padding:1px 5px;border-radius:4px}
+
+/* ── One language visible at a time; <html data-lang> picks it (rules per
+      language are appended at render time). ─────────────────────────────── */
+.lang-doc{display:none}
+
+/* ── Element visibility: each doc element shows only when <html> carries its flag. */
+.elem{display:none}
+html.show-rulespeak .elem-rulespeak{display:block}
+html.show-english   .elem-english{display:block}
+html.show-formula   .elem-formula{display:block}
+html.show-desc      .elem-desc{display:block}
+html.show-inputs    .elem-inputs{display:block}
+html.show-consumers .elem-consumers{display:block}
+
+/* ── Sticky top bar — brand · breadcrumb · language · gear ───────────────── */
+.topbar{position:sticky;top:0;z-index:40;height:var(--bar-h);
+  background:rgba(255,255,255,.92);border-bottom:1px solid var(--line);
+  backdrop-filter:saturate(1.1) blur(8px)}
+.topbar-inner{max-width:960px;margin:0 auto;padding:0 24px;height:var(--bar-h);
+  display:flex;align-items:center;gap:12px}
+.topbar-brand{font-weight:800;font-size:15px;color:var(--ink);white-space:nowrap;flex:none}
+.topbar-brand:hover{text-decoration:none}
+.topbar-tag{font-size:11px;font-weight:700;color:var(--calc);background:var(--calc-bg);
+  padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:middle}
+.crumb{flex:1;min-width:0;display:flex;align-items:center;gap:7px;
+  font-size:13px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.crumb-entity{font-weight:700;color:var(--ink)}
+.crumb-sep{color:var(--line)}
+.crumb-field{color:var(--calc);font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.lang-select{flex:none;height:32px;border:1px solid var(--line);border-radius:9px;background:#fff;
+  color:var(--ink);font:600 13px/1 inherit;padding:0 8px;cursor:pointer;max-width:150px}
+.lang-select:hover{border-color:var(--calc)}
+.gear{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+  background:#fff;cursor:pointer;font-size:17px;line-height:1;color:var(--muted);
+  display:inline-flex;align-items:center;justify-content:center;transition:all .12s}
+.gear:hover{color:var(--ink);border-color:var(--calc);box-shadow:0 1px 4px rgba(90,58,160,.15)}
+.gear[aria-expanded='true']{background:var(--calc);color:#fff;border-color:var(--calc)}
+
+/* ── Gear popup ──────────────────────────────────────────────────────────── */
+.gear-pop{position:absolute;top:calc(var(--bar-h) + 6px);right:24px;z-index:50;width:290px;
+  background:#fff;border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 10px 32px rgba(20,20,40,.18);padding:12px}
+.gear-pop[hidden]{display:none}
+.gear-pop-title{margin:2px 4px 8px;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted)}
+.gear-opt{display:grid;grid-template-columns:auto 1fr;column-gap:9px;align-items:baseline;
+  padding:7px 6px;border-radius:8px;cursor:pointer}
+.gear-opt:hover{background:var(--calc-bg)}
+.gear-opt input{grid-row:1 / span 2;align-self:center;width:16px;height:16px;accent-color:var(--calc);cursor:pointer}
+.gear-opt-label{font-weight:600;font-size:14px;color:var(--ink)}
+.gear-opt-hint{grid-column:2;font-size:12px;color:var(--muted);line-height:1.35}
+.gear-reset{margin:8px 4px 2px;border:0;background:transparent;color:var(--calc);
+  font:600 12px/1 inherit;cursor:pointer;padding:4px}
+.gear-reset:hover{text-decoration:underline}
+.gear-inline{border:1px solid var(--line);background:#fff;border-radius:7px;padding:1px 7px;
+  font:600 12px/1 inherit;color:var(--calc);cursor:pointer}
+.gear-inline:hover{border-color:var(--calc)}
+
+.doc-header{background:linear-gradient(180deg,#fff,#f5f4fb);border-bottom:1px solid var(--line)}
+.doc-header-inner{max-width:960px;margin:0 auto;padding:18px 24px}
+.doc-title{margin:0;font-size:24px;font-weight:800}
+.doc-title-sub{font-size:13px;font-weight:600;color:var(--calc);background:var(--calc-bg);
+  padding:2px 8px;border-radius:999px;vertical-align:middle;margin-left:6px}
+.doc-lede{margin:6px 0 0;font-style:italic;color:var(--muted)}
+.doc-note{margin:8px 0 12px;color:var(--muted);font-size:13px;max-width:70ch}
+.narr-hint{margin:8px 0 0;font-size:12px;color:var(--muted);max-width:78ch}
+
+.toc{max-width:960px;margin:22px auto 0;padding:0 24px;scroll-margin-top:calc(var(--bar-h) + 12px)}
+.toc-title{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 8px}
+.toc-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+.toc-list a{font-weight:600}
+.toc-meta{font-size:12px;color:var(--muted);margin-left:6px}
+
+.entity{max-width:960px;margin:34px auto 0;padding:0 24px;scroll-margin-top:calc(var(--bar-h) + 14px)}
+.entity-head{border-bottom:2px solid var(--line);padding-bottom:8px;margin-bottom:14px}
+.entity-title{margin:0;font-size:21px;font-weight:800}
+.entity-synopsis{margin:4px 0 0;color:var(--muted);max-width:74ch}
+
+.field{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--rel);
+  border-radius:10px;padding:14px 16px;margin:0 0 12px;scroll-margin-top:calc(var(--bar-h) + 14px)}
+.field.tone-raw{border-left-color:var(--raw)} .field.tone-calc{border-left-color:var(--calc)}
+.field.tone-agg{border-left-color:var(--agg)} .field.tone-lookup{border-left-color:var(--lookup)}
+.field.tone-rel{border-left-color:var(--rel)}
+.field-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.field-glyph{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:6px;font-weight:700;color:#fff;font-size:13px}
+.tone-raw .field-glyph{background:var(--raw)} .tone-calc .field-glyph{background:var(--calc)}
+.tone-agg .field-glyph{background:var(--agg)} .tone-lookup .field-glyph{background:var(--lookup)}
+.tone-rel .field-glyph{background:var(--rel)}
+.field-name{font-weight:700;font-size:16px}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#f0f0f5;color:var(--muted)}
+.pill-type{background:var(--calc-bg);color:var(--calc)}
+.tone-raw .pill-type{background:var(--raw-bg);color:var(--raw)}
+.tone-agg .pill-type{background:var(--agg-bg);color:var(--agg)}
+.tone-lookup .pill-type{background:var(--lookup-bg);color:var(--lookup)}
+.tone-rel .pill-type{background:var(--rel-bg);color:var(--rel)}
+.pill-dr{background:#eee;color:#555;font-variant-numeric:tabular-nums}
+
+.narr-views{margin-top:10px;display:flex;flex-direction:column;gap:10px}
+.narr-views:empty{margin-top:0}
+.view-label{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--muted);margin-bottom:4px}
+.view-body{margin:0}
+.mech{color:#9a6708;background:var(--lookup-bg);padding:1px 6px;border-radius:6px;
+  font-weight:600;text-transform:none;letter-spacing:0}
+.fx{font:0.92em ui-monospace,SFMono-Regular,Menlo,monospace;background:#f7f7fb;border:1px solid var(--line);
+  border-radius:8px;padding:8px 10px;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+.fx-eq{color:var(--muted)}
+.fx-chip{background:var(--calc-bg);color:var(--calc);padding:1px 6px;border-radius:5px;font-weight:600}
+.ref{border-bottom:1px dashed var(--calc);font-weight:600}
+
+.rt-headline{margin:0 0 4px}
+.rt-priority{margin:4px 0;padding-left:22px}
+.rt-priority>li{margin:2px 0}
+.rt-value{font-weight:700;color:var(--calc)}
+.rt-otherwise{color:var(--muted);font-style:italic}
+.rt-group-label{font-weight:600}
+.rt-group{margin:2px 0 6px;padding-left:20px}
+
+.gt{margin-top:8px}
+.gt-body{margin:0;color:var(--muted)}
+.gt-reverse{margin-top:6px}
+
+.prov{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+.prov>summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);list-style:none}
+.prov>summary::-webkit-details-marker{display:none}
+.prov>summary::before{content:'▸';display:inline-block;margin-right:6px;color:var(--muted);transition:transform .1s}
+.prov[open]>summary::before{transform:rotate(90deg)}
+.count{font-size:11px;font-weight:700;background:#eee;color:#555;padding:1px 7px;border-radius:999px;margin-left:4px}
+.count-muted{background:#f5f5f5;color:#999}
+.prov-hint{font-size:12px;font-weight:400;color:var(--muted);margin-left:6px}
+.prov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:8px}
+.prov-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.input{display:block;border:1px solid var(--line);border-left:3px solid var(--rel);border-radius:8px;
+  padding:8px 10px;background:#fcfcfe}
+.input.tone-raw{border-left-color:var(--raw)} .input.tone-calc{border-left-color:var(--calc)}
+.input.tone-agg{border-left-color:var(--agg)} .input.tone-lookup{border-left-color:var(--lookup)}
+.input.tone-rel{border-left-color:var(--rel)}
+.input:hover{background:#f4f3fb;text-decoration:none}
+.input-static{cursor:default}
+span.input-static:hover{background:#fcfcfe}
+.input-head{display:flex;align-items:center;gap:6px}
+.input-glyph{font-size:12px;color:var(--muted)}
+.input-name{font-weight:700;color:var(--ink)}
+.input-table{font-size:11px;color:var(--muted);margin-left:auto}
+.input-en{display:block;margin-top:3px;font-size:13px;color:var(--muted)}
+.ref-pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+  border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:#fff;color:var(--ink)}
+.ref-pill.tone-raw{border-color:var(--raw);color:var(--raw)} .ref-pill.tone-calc{border-color:var(--calc);color:var(--calc)}
+.ref-pill.tone-agg{border-color:var(--agg);color:var(--agg)} .ref-pill.tone-lookup{border-color:var(--lookup);color:var(--lookup)}
+.ref-pill.faded{opacity:.6}
+.ref-pill-tbl{font-weight:400;color:var(--muted)}
+
+.field-note{margin:8px 0 0;font-size:13px;font-style:italic;color:var(--muted);
+  border-left:2px solid var(--line);padding-left:10px}
+
+.doc-footer{max-width:960px;margin:40px auto;padding:18px 24px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:13px}
+.doc-footer-legend{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px}
+.chip-raw{background:var(--raw-bg);color:var(--raw)} .chip-calc{background:var(--calc-bg);color:var(--calc)}
+.chip-agg{background:var(--agg-bg);color:var(--agg)} .chip-lookup{background:var(--lookup-bg);color:var(--lookup)}
+.chip-rel{background:var(--rel-bg);color:var(--rel)}
+:target{animation:flash 1.2s ease}
+@keyframes flash{0%{background:var(--calc-bg)}100%{background:var(--card)}}
+
+html[data-lang="en"] .lang-doc[data-lang="en"]{display:block}
+</style>
+<script>
+
+(function(){
+  var LANGS=['en'];
+  var DEFAULT_LANG='en';
+  var ELEMS=['rulespeak','english','formula','desc','inputs','consumers'];
+  var root=document.documentElement;
+
+  var lang=null;
+  try{ lang=new URLSearchParams(location.search).get('lang'); }catch(e){}
+  if(!lang){ try{ lang=localStorage.getItem('rulespeak.lang'); }catch(e){} }
+  if(LANGS.indexOf(lang)<0) lang=DEFAULT_LANG;
+  root.setAttribute('data-lang',lang);
+  root.setAttribute('lang',lang);
+
+  ELEMS.forEach(function(k){
+    var v=null; try{v=localStorage.getItem('rulespeak.show.'+k);}catch(e){}
+    if(v==='1') root.classList.add('show-'+k);
+    else if(v==='0') root.classList.remove('show-'+k);
+  });
+})();
+
+</script>
+</head>
+<body>
+<div class="lang-doc" data-lang="en" lang="en">
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="topbar-brand" href="#en-top">📘 Effortless Claude <span class="topbar-tag">RuleSpeak</span></a>
+    <nav class="crumb" aria-label="You are reading">
+      <span class="crumb-entity"></span>
+      <span class="crumb-sep" hidden>›</span>
+      <span class="crumb-field"></span>
+    </nav>
+    <button type="button" class="gear" aria-haspopup="dialog" aria-expanded="false" title="Documentation options" aria-label="Documentation options">⚙︎</button>
+  </div>
+  <div class="gear-pop" role="dialog" aria-label="Documentation options" hidden>
+    <p class="gear-pop-title">Show in this document</p>
+    <label class="gear-opt" title="The declarative business rule (only if / must / priority)">
+      <input type="checkbox" data-elem="rulespeak" checked>
+      <span class="gear-opt-label">RuleSpeak</span>
+      <span class="gear-opt-hint">The declarative business rule (only if / must / priority)</span>
+    </label>
+    <label class="gear-opt" title="The formula read aloud as a plain sentence">
+      <input type="checkbox" data-elem="english">
+      <span class="gear-opt-label">Plain reading</span>
+      <span class="gear-opt-hint">The formula read aloud as a plain sentence</span>
+    </label>
+    <label class="gear-opt" title="The raw =expression, with clickable field chips">
+      <input type="checkbox" data-elem="formula">
+      <span class="gear-opt-label">Formulas</span>
+      <span class="gear-opt-hint">The raw =expression, with clickable field chips</span>
+    </label>
+    <label class="gear-opt" title="The author's narrative comment on a field, when present">
+      <input type="checkbox" data-elem="desc" checked>
+      <span class="gear-opt-label">Description</span>
+      <span class="gear-opt-hint">The author's narrative comment on a field, when present</span>
+    </label>
+    <label class="gear-opt" title="The fields each rule reads (its DAG inputs / upstream)">
+      <input type="checkbox" data-elem="inputs" checked>
+      <span class="gear-opt-label">Links to inputs</span>
+      <span class="gear-opt-hint">The fields each rule reads (its DAG inputs / upstream)</span>
+    </label>
+    <label class="gear-opt" title="The rules that read this one (its DAG consumers / downstream)">
+      <input type="checkbox" data-elem="consumers">
+      <span class="gear-opt-label">Links to consumers</span>
+      <span class="gear-opt-hint">The rules that read this one (its DAG consumers / downstream)</span>
+    </label>
+    <button type="button" class="gear-reset">Reset to defaults</button>
+  </div>
+</div>
+<header class="doc-header" id="en-top">
+  <div class="doc-header-inner">
+    <h1 class="doc-title">📘 Effortless Claude <span class="doc-title-sub">RuleSpeak</span></h1>
+    <p class="doc-lede">Self-describing rulebook for the effortless-claude skill suite. The skills repo modeled with its own methodology — each skill is a row, each high-level attribute (category, scope gate, audience) is a parent table.</p>
+    <p class="doc-note">Declarative business rules rendered from the rulebook — the single source of truth. Every statement below is the plain-language reading of a formula; nothing here is hand-authored prose.</p>
+    <p class="narr-hint">Use the <button type="button" class="gear-inline gear-open-inline">⚙︎ options</button> in the top-right corner to turn each part of the documentation on or off — RuleSpeak, the literal reading, the raw formula, the author's description, and the links to a rule's inputs and consumers. Your choices are remembered.</p>
+  </div>
+</header>
+<nav class="toc">
+  <h2 class="toc-title">Entities</h2>
+  <ul class="toc-list">
+    <li><a href="#en-t-audiences">Audience</a> <span class="toc-meta">2 rules · 1 links</span></li>
+    <li><a href="#en-t-skillcategories">Skill Category</a> <span class="toc-meta">2 rules · 1 links</span></li>
+    <li><a href="#en-t-scopegatetypes">Scope Gate Type</a> <span class="toc-meta">2 rules · 1 links</span></li>
+    <li><a href="#en-t-skills">Skill</a> <span class="toc-meta">5 rules · 3 links</span></li>
+    <li><a href="#en-t-conceptcategories">Concept Category</a> <span class="toc-meta">2 rules · 1 links</span></li>
+    <li><a href="#en-t-concepts">Concept</a> <span class="toc-meta">1 rules · 2 links</span></li>
+    <li><a href="#en-t-conceptskills">Concept Skill</a> <span class="toc-meta">1 rules · 2 links</span></li>
+    <li><a href="#en-t-gotchas">Gotcha</a> <span class="toc-meta">1 rules · 1 links</span></li>
+    <li><a href="#en-t-gotchaskills">Gotcha Skill</a> <span class="toc-meta">1 rules · 2 links</span></li>
+    <li><a href="#en-t-skillbodies">Skill Body</a> <span class="toc-meta">1 rules · 1 links</span></li>
+    <li><a href="#en-t-skillartifacts">Skill Artifact</a> <span class="toc-meta">2 rules · 1 links</span></li>
+  </ul>
+</nav>
+<section class="entity" id="en-t-audiences" data-entity="Audience">
+  <header class="entity-head">
+    <h2 class="entity-title">Audience</h2>
+    <p class="entity-synopsis">Intended consumer of a skill's behavior. customer = end users of the suite; general = applicable beyond marked Effortless projects.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-audiences-name" data-entity="Audience" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-1</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak <span class="mech" title="Faithful but clunky wording — a flag for an optional reword pass">⚠︎ mechanical</span></span>
+        <p class="view-body">An audience's <a class="ref" href="#en-f-audiences-name">name</a> is computed as the lower-cased <a class="ref" href="#en-f-audiences-audiencelabel">audience label</a> with every a space replaced by a hyphen.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-audiences-audiencelabel">Audience label</a> lowercased with “ ” replaced by “-”.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>SUBSTITUTE(LOWER(<a class="fx-chip" href="#en-f-audiences-audiencelabel">Audience Label</a>), &quot; &quot;, &quot;-&quot;)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-audiences-audiencelabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Audience Label</span><span class="input-table">Audience</span></span>
+          <span class="input-en muted">Human label as written in SKILL.md frontmatter (audience: &lt;label&gt;).</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-consumers elem elem-consumers">
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-audiences-countofskills">Σ Count of Skills <span class="ref-pill-tbl">Audience</span></a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-audiences-audiencelabel">● Audience Label <span class="ref-pill-tbl">Audience</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — kebab-cased audience label.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-audiences-audiencelabel" data-entity="Audience" data-field="Audience Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Audience Label</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="count count-muted">+1 transitive</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-audiences-name">ƒ Name <span class="ref-pill-tbl">Audience</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-audiencelabel">↗ Audience Label <span class="ref-pill-tbl">Skill</span></a>
+        <a class="ref-pill tone-rel faded" href="#en-f-audiences-countofskills">Count of Skills <span class="ref-pill-tbl">Audience</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Human label as written in SKILL.md frontmatter (audience: &lt;label&gt;).</p>
+    </article>
+  <article class="field tone-raw" id="en-f-audiences-description" data-entity="Audience" data-field="Description">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Description</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">What this audience designation means.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-audiences-skills" data-entity="Audience" data-field="Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Skills</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skills">Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <p class="field-note elem elem-desc">Skills tagged with this audience.</p>
+    </article>
+  <article class="field tone-agg" id="en-f-audiences-countofskills" data-entity="Audience" data-field="Count of Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Aggregation">Σ</span>
+      <span class="field-name">Count of Skills</span>
+      <span class="pill pill-type">Aggregation</span>
+      <span class="pill pill-depth">2 hops from ground truth</span>
+      <span class="pill pill-muted">integer</span>
+      <span class="pill pill-dr">DR-2</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">An audience's <a class="ref" href="#en-f-audiences-countofskills">count of skills</a> is the number of <a class="ref" href="#en-t-skills">skills</a> related to the audience.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">Count of <a class="ref" href="#en-t-skills">skills</a> whose <a class="ref" href="#en-f-skills-audience">audience</a> is <a class="ref" href="#en-f-audiences-name">name</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>COUNTIFS(<a class="fx-chip" href="#en-f-skills-audience">Audience</a>, <a class="fx-chip" href="#en-f-audiences-name">Name</a>)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-skills-audience">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Audience</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">audience: value from SKILL.md frontmatter.</span>
+        </a>
+        <a class="input tone-calc" href="#en-f-audiences-name">
+          <span class="input-head"><span class="input-glyph">ƒ</span><span class="input-name">Name</span><span class="input-table">Audience</span></span>
+          <span class="input-en">Audience label lowercased with “ ” replaced by “-”.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-skills-audience">⇢ Audience <span class="ref-pill-tbl">Skill</span></a>
+        <a class="ref-pill tone-raw" href="#en-f-audiences-audiencelabel">● Audience Label <span class="ref-pill-tbl">Audience</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">How many skills declare this audience.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-skillcategories" data-entity="Skill Category">
+  <header class="entity-head">
+    <h2 class="entity-title">Skill Category</h2>
+    <p class="entity-synopsis">Functional grouping of skills as presented in the README. Categories are presentation/discovery groupings, not load-gate semantics (that's ScopeGateTypes).</p>
+  </header>
+  <article class="field tone-calc" id="en-f-skillcategories-name" data-entity="Skill Category" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-3</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak <span class="mech" title="Faithful but clunky wording — a flag for an optional reword pass">⚠︎ mechanical</span></span>
+        <p class="view-body">A skill category's <a class="ref" href="#en-f-skillcategories-name">name</a> is computed as the lower-cased <a class="ref" href="#en-f-skillcategories-categorylabel">category label</a> with every a space replaced by a hyphen.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-skillcategories-categorylabel">Category label</a> lowercased with “ ” replaced by “-”.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>SUBSTITUTE(LOWER(<a class="fx-chip" href="#en-f-skillcategories-categorylabel">Category Label</a>), &quot; &quot;, &quot;-&quot;)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-skillcategories-categorylabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Category Label</span><span class="input-table">Skill Category</span></span>
+          <span class="input-en muted">Display label as used in the README section header.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-consumers elem elem-consumers">
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-skillcategories-countofskills">Σ Count of Skills <span class="ref-pill-tbl">Skill Category</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-categorylabel">↗ Category Label <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-skillcategories-categorylabel">● Category Label <span class="ref-pill-tbl">Skill Category</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — kebab-cased category label.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillcategories-categorylabel" data-entity="Skill Category" data-field="Category Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Category Label</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="count count-muted">+1 transitive</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-skillcategories-name">ƒ Name <span class="ref-pill-tbl">Skill Category</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-categorylabel">↗ Category Label <span class="ref-pill-tbl">Skill</span></a>
+        <a class="ref-pill tone-rel faded" href="#en-f-skillcategories-countofskills">Count of Skills <span class="ref-pill-tbl">Skill Category</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Display label as used in the README section header.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillcategories-description" data-entity="Skill Category" data-field="Description">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Description</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">What unifies the skills in this category.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillcategories-sortorder" data-entity="Skill Category" data-field="Sort Order">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Sort Order</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">integer</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>integer</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Presentation order in the README.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-skillcategories-skills" data-entity="Skill Category" data-field="Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Skills</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skills">Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <p class="field-note elem elem-desc">Skills in this category.</p>
+    </article>
+  <article class="field tone-agg" id="en-f-skillcategories-countofskills" data-entity="Skill Category" data-field="Count of Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Aggregation">Σ</span>
+      <span class="field-name">Count of Skills</span>
+      <span class="pill pill-type">Aggregation</span>
+      <span class="pill pill-depth">2 hops from ground truth</span>
+      <span class="pill pill-muted">integer</span>
+      <span class="pill pill-dr">DR-4</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill category's <a class="ref" href="#en-f-skillcategories-countofskills">count of skills</a> is the number of <a class="ref" href="#en-t-skills">skills</a> related to the skill category.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">Count of <a class="ref" href="#en-t-skills">skills</a> whose <a class="ref" href="#en-f-skills-category">category</a> is <a class="ref" href="#en-f-skillcategories-name">name</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>COUNTIFS(<a class="fx-chip" href="#en-f-skills-category">Category</a>, <a class="fx-chip" href="#en-f-skillcategories-name">Name</a>)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-skills-category">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Category</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">Functional grouping (Orchestration, Project Lifecycle, etc.).</span>
+        </a>
+        <a class="input tone-calc" href="#en-f-skillcategories-name">
+          <span class="input-head"><span class="input-glyph">ƒ</span><span class="input-name">Name</span><span class="input-table">Skill Category</span></span>
+          <span class="input-en">Category label lowercased with “ ” replaced by “-”.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-skills-category">⇢ Category <span class="ref-pill-tbl">Skill</span></a>
+        <a class="ref-pill tone-raw" href="#en-f-skillcategories-categorylabel">● Category Label <span class="ref-pill-tbl">Skill Category</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">How many skills are in this category.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-scopegatetypes" data-entity="Scope Gate Type">
+  <header class="entity-head">
+    <h2 class="entity-title">Scope Gate Type</h2>
+    <p class="entity-synopsis">When the harness loads a skill into context. The four patterns referenced in the skill-writing conventions (project-only / entry-point / tooling / theory).</p>
+  </header>
+  <article class="field tone-calc" id="en-f-scopegatetypes-name" data-entity="Scope Gate Type" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-5</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak <span class="mech" title="Faithful but clunky wording — a flag for an optional reword pass">⚠︎ mechanical</span></span>
+        <p class="view-body">A scope gate type's <a class="ref" href="#en-f-scopegatetypes-name">name</a> is computed as the lower-cased <a class="ref" href="#en-f-scopegatetypes-gatelabel">gate label</a> with every a space replaced by a hyphen.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-scopegatetypes-gatelabel">Gate label</a> lowercased with “ ” replaced by “-”.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>SUBSTITUTE(LOWER(<a class="fx-chip" href="#en-f-scopegatetypes-gatelabel">Gate Label</a>), &quot; &quot;, &quot;-&quot;)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-scopegatetypes-gatelabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Gate Label</span><span class="input-table">Scope Gate Type</span></span>
+          <span class="input-en muted">Short label for this load-gate pattern.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-consumers elem elem-consumers">
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-scopegatetypes-countofskills">Σ Count of Skills <span class="ref-pill-tbl">Scope Gate Type</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-scopegatelabel">↗ Scope Gate Label <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-scopegatetypes-gatelabel">● Gate Label <span class="ref-pill-tbl">Scope Gate Type</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — kebab-cased gate label.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-scopegatetypes-gatelabel" data-entity="Scope Gate Type" data-field="Gate Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Gate Label</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="count count-muted">+1 transitive</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-scopegatetypes-name">ƒ Name <span class="ref-pill-tbl">Scope Gate Type</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-scopegatelabel">↗ Scope Gate Label <span class="ref-pill-tbl">Skill</span></a>
+        <a class="ref-pill tone-rel faded" href="#en-f-scopegatetypes-countofskills">Count of Skills <span class="ref-pill-tbl">Scope Gate Type</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Short label for this load-gate pattern.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-scopegatetypes-description" data-entity="Scope Gate Type" data-field="Description">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Description</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">When this gate fires — paraphrased from the skill description's Scope (load gate) clause.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-scopegatetypes-requiresmarker" data-entity="Scope Gate Type" data-field="Requires Marker">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Requires Marker</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">boolean</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>boolean</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">True iff the gate requires the project to be a marked Effortless project (effortless.json + ERB CLAUDE.md).</p>
+    </article>
+  <article class="field tone-raw" id="en-f-scopegatetypes-loadsonexplicitrequest" data-entity="Scope Gate Type" data-field="Loads on Explicit Request">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Loads on Explicit Request</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">boolean</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>boolean</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">True iff the gate also fires when the user explicitly invokes the skill by phrase, regardless of project marker.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-scopegatetypes-skills" data-entity="Scope Gate Type" data-field="Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Skills</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skills">Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <p class="field-note elem elem-desc">Skills using this gate pattern.</p>
+    </article>
+  <article class="field tone-agg" id="en-f-scopegatetypes-countofskills" data-entity="Scope Gate Type" data-field="Count of Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Aggregation">Σ</span>
+      <span class="field-name">Count of Skills</span>
+      <span class="pill pill-type">Aggregation</span>
+      <span class="pill pill-depth">2 hops from ground truth</span>
+      <span class="pill pill-muted">integer</span>
+      <span class="pill pill-dr">DR-6</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A scope gate type's <a class="ref" href="#en-f-scopegatetypes-countofskills">count of skills</a> is the number of <a class="ref" href="#en-t-skills">skills</a> related to the scope gate type.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">Count of <a class="ref" href="#en-t-skills">skills</a> whose <a class="ref" href="#en-f-skills-scopegate">scope gate</a> is <a class="ref" href="#en-f-scopegatetypes-name">name</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>COUNTIFS(<a class="fx-chip" href="#en-f-skills-scopegate">Scope Gate</a>, <a class="fx-chip" href="#en-f-scopegatetypes-name">Name</a>)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-skills-scopegate">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Scope Gate</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">Load-gate pattern (when the harness pulls this skill into context).</span>
+        </a>
+        <a class="input tone-calc" href="#en-f-scopegatetypes-name">
+          <span class="input-head"><span class="input-glyph">ƒ</span><span class="input-name">Name</span><span class="input-table">Scope Gate Type</span></span>
+          <span class="input-en">Gate label lowercased with “ ” replaced by “-”.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-skills-scopegate">⇢ Scope Gate <span class="ref-pill-tbl">Skill</span></a>
+        <a class="ref-pill tone-raw" href="#en-f-scopegatetypes-gatelabel">● Gate Label <span class="ref-pill-tbl">Scope Gate Type</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">How many skills use this gate pattern.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-skills" data-entity="Skill">
+  <header class="entity-head">
+    <h2 class="entity-title">Skill</h2>
+    <p class="entity-synopsis">One row per SKILL.md under skills/. The 23 currently live skills in the suite. Deprecation history is in DEPRECATED_SKILLS.md, not here.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-skills-name" data-entity="Skill" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-7</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak <span class="mech" title="Faithful but clunky wording — a flag for an optional reword pass">⚠︎ mechanical</span></span>
+        <p class="view-body">A skill's <a class="ref" href="#en-f-skills-name">name</a> is computed as the lower-cased <a class="ref" href="#en-f-skills-slug">slug</a> with every a space replaced by a hyphen.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-skills-slug">Slug</a> lowercased with “ ” replaced by “-”.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>SUBSTITUTE(LOWER(<a class="fx-chip" href="#en-f-skills-slug">Slug</a>), &quot; &quot;, &quot;-&quot;)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-skills-slug">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Slug</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">Skill folder name under skills/ — also the value of the name: field in SKILL.md frontmatter.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-skills-slug">● Slug <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — equals the kebab-cased Slug, which equals the directory name.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skills-slug" data-entity="Skill" data-field="Slug">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Slug</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-skills-name">ƒ Name <span class="ref-pill-tbl">Skill</span></a>
+        <a class="ref-pill tone-calc" href="#en-f-skills-directorypath">ƒ Directory Path <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Skill folder name under skills/ — also the value of the name: field in SKILL.md frontmatter.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skills-description" data-entity="Skill" data-field="Description">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Description</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Short pitch — one sentence on what the skill is for.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skills-whyitexists" data-entity="Skill" data-field="Why It Exists">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Why It Exists</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">The 'why' answer — what failure mode this skill prevents, paraphrased from the README.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-skills-category" data-entity="Skill" data-field="Category">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Category</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skillcategories">Skill Category</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+      <p class="gt-body gt-reverse">Reverse side: <a class="ref-pill tone-rel" href="#en-f-skillcategories-skills">⇢ Skills <span class="ref-pill-tbl">Skill Category</span></a></p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-skillcategories-countofskills">Σ Count of Skills <span class="ref-pill-tbl">Skill Category</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-categorylabel">↗ Category Label <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Functional grouping (Orchestration, Project Lifecycle, etc.).</p>
+    </article>
+  <article class="field tone-rel" id="en-f-skills-scopegate" data-entity="Skill" data-field="Scope Gate">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Scope Gate</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-scopegatetypes">Scope Gate Type</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+      <p class="gt-body gt-reverse">Reverse side: <a class="ref-pill tone-rel" href="#en-f-scopegatetypes-skills">⇢ Skills <span class="ref-pill-tbl">Scope Gate Type</span></a></p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-scopegatetypes-countofskills">Σ Count of Skills <span class="ref-pill-tbl">Scope Gate Type</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-scopegatelabel">↗ Scope Gate Label <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Load-gate pattern (when the harness pulls this skill into context).</p>
+    </article>
+  <article class="field tone-rel" id="en-f-skills-audience" data-entity="Skill" data-field="Audience">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Audience</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-audiences">Audience</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+      <p class="gt-body gt-reverse">Reverse side: <a class="ref-pill tone-rel" href="#en-f-audiences-skills">⇢ Skills <span class="ref-pill-tbl">Audience</span></a></p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-audiences-countofskills">Σ Count of Skills <span class="ref-pill-tbl">Audience</span></a>
+        <a class="ref-pill tone-lookup" href="#en-f-skills-audiencelabel">↗ Audience Label <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">audience: value from SKILL.md frontmatter.</p>
+    </article>
+  <article class="field tone-calc" id="en-f-skills-directorypath" data-entity="Skill" data-field="Directory Path">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Directory Path</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-8</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill's <a class="ref" href="#en-f-skills-directorypath">directory path</a> is computed as “skills/”, followed by the <a class="ref" href="#en-f-skills-slug">slug</a>, followed by a slash.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">(&quot;skills/&quot; joined with <a class="ref" href="#en-f-skills-slug">slug</a>) joined with &quot;/&quot;.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>&quot;skills/&quot; &amp; <a class="fx-chip" href="#en-f-skills-slug">Slug</a> &amp; &quot;/&quot;</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-skills-slug">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Slug</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">Skill folder name under skills/ — also the value of the name: field in SKILL.md frontmatter.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-skills-slug">● Slug <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Filesystem path to the skill directory, relative to repo root.</p>
+    </article>
+  <article class="field tone-lookup" id="en-f-skills-categorylabel" data-entity="Skill" data-field="Category Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Lookup">↗</span>
+      <span class="field-name">Category Label</span>
+      <span class="pill pill-type">Lookup</span>
+      <span class="pill pill-depth">2 hops from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-9</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill's <a class="ref" href="#en-f-skills-categorylabel">category label</a> — taken from the linked <a class="ref" href="#en-f-skills-category">category</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">The <a class="ref" href="#en-f-skillcategories-categorylabel">category label</a> of the linked <a class="ref" href="#en-f-skills-category">category</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>INDEX(<a class="fx-chip" href="#en-f-skillcategories-categorylabel">Category Label</a>, MATCH(<a class="fx-chip" href="#en-f-skills-category">Category</a>, <a class="fx-chip" href="#en-f-skillcategories-name">Name</a>, 0))</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">3</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-skillcategories-categorylabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Category Label</span><span class="input-table">Skill Category</span></span>
+          <span class="input-en muted">Display label as used in the README section header.</span>
+        </a>
+        <a class="input tone-rel" href="#en-f-skills-category">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Category</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">Functional grouping (Orchestration, Project Lifecycle, etc.).</span>
+        </a>
+        <a class="input tone-calc" href="#en-f-skillcategories-name">
+          <span class="input-head"><span class="input-glyph">ƒ</span><span class="input-name">Name</span><span class="input-table">Skill Category</span></span>
+          <span class="input-en">Category label lowercased with “ ” replaced by “-”.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-skillcategories-categorylabel">● Category Label <span class="ref-pill-tbl">Skill Category</span></a>
+        <a class="ref-pill tone-rel" href="#en-f-skills-category">⇢ Category <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Display label of the parent category.</p>
+    </article>
+  <article class="field tone-lookup" id="en-f-skills-scopegatelabel" data-entity="Skill" data-field="Scope Gate Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Lookup">↗</span>
+      <span class="field-name">Scope Gate Label</span>
+      <span class="pill pill-type">Lookup</span>
+      <span class="pill pill-depth">2 hops from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-10</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill's <a class="ref" href="#en-f-skills-scopegatelabel">scope gate label</a> — taken from the linked <a class="ref" href="#en-f-skills-scopegate">scope gate</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">The <a class="ref" href="#en-f-scopegatetypes-gatelabel">gate label</a> of the linked <a class="ref" href="#en-f-skills-scopegate">scope gate</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>INDEX(<a class="fx-chip" href="#en-f-scopegatetypes-gatelabel">Gate Label</a>, MATCH(<a class="fx-chip" href="#en-f-skills-scopegate">Scope Gate</a>, <a class="fx-chip" href="#en-f-scopegatetypes-name">Name</a>, 0))</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">3</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-scopegatetypes-gatelabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Gate Label</span><span class="input-table">Scope Gate Type</span></span>
+          <span class="input-en muted">Short label for this load-gate pattern.</span>
+        </a>
+        <a class="input tone-rel" href="#en-f-skills-scopegate">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Scope Gate</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">Load-gate pattern (when the harness pulls this skill into context).</span>
+        </a>
+        <a class="input tone-calc" href="#en-f-scopegatetypes-name">
+          <span class="input-head"><span class="input-glyph">ƒ</span><span class="input-name">Name</span><span class="input-table">Scope Gate Type</span></span>
+          <span class="input-en">Gate label lowercased with “ ” replaced by “-”.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-scopegatetypes-gatelabel">● Gate Label <span class="ref-pill-tbl">Scope Gate Type</span></a>
+        <a class="ref-pill tone-rel" href="#en-f-skills-scopegate">⇢ Scope Gate <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Display label of the parent scope-gate type.</p>
+    </article>
+  <article class="field tone-lookup" id="en-f-skills-audiencelabel" data-entity="Skill" data-field="Audience Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Lookup">↗</span>
+      <span class="field-name">Audience Label</span>
+      <span class="pill pill-type">Lookup</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-11</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill's <a class="ref" href="#en-f-skills-audiencelabel">audience label</a> — taken from the linked <a class="ref" href="#en-f-skills-audience">audience</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">The <a class="ref" href="#en-f-audiences-audiencelabel">audience label</a> of the linked <a class="ref" href="#en-f-skills-audience">audience</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>INDEX(<a class="fx-chip" href="#en-f-audiences-audiencelabel">Audience Label</a>, MATCH(<a class="fx-chip" href="#en-f-skills-audience">Audience</a>, <a class="fx-chip" href="#en-f-audiences-audiencelabel">Audience Label</a>, 0))</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-audiences-audiencelabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Audience Label</span><span class="input-table">Audience</span></span>
+          <span class="input-en muted">Human label as written in SKILL.md frontmatter (audience: &lt;label&gt;).</span>
+        </a>
+        <a class="input tone-rel" href="#en-f-skills-audience">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Audience</span><span class="input-table">Skill</span></span>
+          <span class="input-en muted">audience: value from SKILL.md frontmatter.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-audiences-audiencelabel">● Audience Label <span class="ref-pill-tbl">Audience</span></a>
+        <a class="ref-pill tone-rel" href="#en-f-skills-audience">⇢ Audience <span class="ref-pill-tbl">Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Display label of the parent audience.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-conceptcategories" data-entity="Concept Category">
+  <header class="entity-head">
+    <h2 class="entity-title">Concept Category</h2>
+    <p class="entity-synopsis">Thematic grouping of cross-skill concepts (analogous to SkillCategories, but for Concepts).</p>
+  </header>
+  <article class="field tone-calc" id="en-f-conceptcategories-name" data-entity="Concept Category" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-12</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak <span class="mech" title="Faithful but clunky wording — a flag for an optional reword pass">⚠︎ mechanical</span></span>
+        <p class="view-body">A concept category's <a class="ref" href="#en-f-conceptcategories-name">name</a> is computed as the lower-cased <a class="ref" href="#en-f-conceptcategories-categorylabel">category label</a> with every a space replaced by a hyphen.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-conceptcategories-categorylabel">Category label</a> lowercased with “ ” replaced by “-”.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>SUBSTITUTE(LOWER(<a class="fx-chip" href="#en-f-conceptcategories-categorylabel">Category Label</a>), &quot; &quot;, &quot;-&quot;)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-conceptcategories-categorylabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Category Label</span><span class="input-table">Concept Category</span></span>
+          <span class="input-en muted">Display label for this concept grouping.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-consumers elem elem-consumers">
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-conceptcategories-countofconcepts">Σ Count of Concepts <span class="ref-pill-tbl">Concept Category</span></a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-conceptcategories-categorylabel">● Category Label <span class="ref-pill-tbl">Concept Category</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — kebab-cased category label.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-conceptcategories-categorylabel" data-entity="Concept Category" data-field="Category Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Category Label</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="count count-muted">+1 transitive</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-conceptcategories-name">ƒ Name <span class="ref-pill-tbl">Concept Category</span></a>
+        <a class="ref-pill tone-rel faded" href="#en-f-conceptcategories-countofconcepts">Count of Concepts <span class="ref-pill-tbl">Concept Category</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Display label for this concept grouping.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-conceptcategories-description" data-entity="Concept Category" data-field="Description">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Description</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">What unifies the concepts in this category.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-conceptcategories-sortorder" data-entity="Concept Category" data-field="Sort Order">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Sort Order</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">integer</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>integer</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Presentation order.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-conceptcategories-concepts" data-entity="Concept Category" data-field="Concepts">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Concepts</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-concepts">Concept</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <p class="field-note elem elem-desc">Concepts in this category.</p>
+    </article>
+  <article class="field tone-agg" id="en-f-conceptcategories-countofconcepts" data-entity="Concept Category" data-field="Count of Concepts">
+    <div class="field-head">
+      <span class="field-glyph" title="Aggregation">Σ</span>
+      <span class="field-name">Count of Concepts</span>
+      <span class="pill pill-type">Aggregation</span>
+      <span class="pill pill-depth">2 hops from ground truth</span>
+      <span class="pill pill-muted">integer</span>
+      <span class="pill pill-dr">DR-13</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A concept category's <a class="ref" href="#en-f-conceptcategories-countofconcepts">count of concepts</a> is the number of <a class="ref" href="#en-t-concepts">concepts</a> related to the concept category.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">Count of <a class="ref" href="#en-t-concepts">concepts</a> whose <a class="ref" href="#en-f-concepts-category">category</a> is <a class="ref" href="#en-f-conceptcategories-name">name</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>COUNTIFS(<a class="fx-chip" href="#en-f-concepts-category">Category</a>, <a class="fx-chip" href="#en-f-conceptcategories-name">Name</a>)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-concepts-category">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Category</span><span class="input-table">Concept</span></span>
+          <span class="input-en muted">Thematic grouping.</span>
+        </a>
+        <a class="input tone-calc" href="#en-f-conceptcategories-name">
+          <span class="input-head"><span class="input-glyph">ƒ</span><span class="input-name">Name</span><span class="input-table">Concept Category</span></span>
+          <span class="input-en">Category label lowercased with “ ” replaced by “-”.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-concepts-category">⇢ Category <span class="ref-pill-tbl">Concept</span></a>
+        <a class="ref-pill tone-raw" href="#en-f-conceptcategories-categorylabel">● Category Label <span class="ref-pill-tbl">Concept Category</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">How many concepts are in this category.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-concepts" data-entity="Concept">
+  <header class="entity-head">
+    <h2 class="entity-title">Concept</h2>
+    <p class="entity-synopsis">Cross-skill vocabulary extracted from surveying all skills/*/SKILL.md — named ideas/terms that recur across multiple skills and that a newcomer needs defined to understand ERB. Hand-authored, not derived from Airtable.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-concepts-name" data-entity="Concept" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-14</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak <span class="mech" title="Faithful but clunky wording — a flag for an optional reword pass">⚠︎ mechanical</span></span>
+        <p class="view-body">A concept's <a class="ref" href="#en-f-concepts-name">name</a> is computed as the lower-cased <a class="ref" href="#en-f-concepts-conceptlabel">concept label</a> with every a space replaced by a hyphen.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-concepts-conceptlabel">Concept label</a> lowercased with “ ” replaced by “-”.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>SUBSTITUTE(LOWER(<a class="fx-chip" href="#en-f-concepts-conceptlabel">Concept Label</a>), &quot; &quot;, &quot;-&quot;)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-concepts-conceptlabel">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Concept Label</span><span class="input-table">Concept</span></span>
+          <span class="input-en muted">Display name of the concept as used across the skills.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-concepts-conceptlabel">● Concept Label <span class="ref-pill-tbl">Concept</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — kebab-cased ConceptLabel.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-concepts-conceptlabel" data-entity="Concept" data-field="Concept Label">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Concept Label</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-concepts-name">ƒ Name <span class="ref-pill-tbl">Concept</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Display name of the concept as used across the skills.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-concepts-description" data-entity="Concept" data-field="Description">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Description</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Concise, concrete, instructional definition — 1 to 4 sentences. Must include the specific fact (exact command/flag/path/rule), not a vague restatement of the label. May end with a 'See &lt;topic&gt;' pointer to a SkillArtifacts row or the skill's full SKILL.md when real depth was deliberately left out.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-concepts-category" data-entity="Concept" data-field="Category">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Category</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-conceptcategories">Concept Category</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+      <p class="gt-body gt-reverse">Reverse side: <a class="ref-pill tone-rel" href="#en-f-conceptcategories-concepts">⇢ Concepts <span class="ref-pill-tbl">Concept Category</span></a></p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-agg" href="#en-f-conceptcategories-countofconcepts">Σ Count of Concepts <span class="ref-pill-tbl">Concept Category</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Thematic grouping.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-concepts-conceptskills" data-entity="Concept" data-field="Concept Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Concept Skills</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-conceptskills">Concept Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <p class="field-note elem elem-desc">Join rows linking this concept to the skill(s) it is most central to.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-conceptskills" data-entity="Concept Skill">
+  <header class="entity-head">
+    <h2 class="entity-title">Concept Skill</h2>
+    <p class="entity-synopsis">Junction table: which skill(s) each Concept is most central to. A many-to-many between Concepts and Skills modeled as two 1-to-many FKs, per ERB DAG conventions.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-conceptskills-name" data-entity="Concept Skill" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-15</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A concept skill's <a class="ref" href="#en-f-conceptskills-name">name</a> is computed as the <a class="ref" href="#en-f-conceptskills-concept">concept</a>, followed by “::”, followed by the <a class="ref" href="#en-f-conceptskills-skill">skill</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-conceptskills-concept">Concept</a>, &quot;::&quot;, joined with <a class="ref" href="#en-f-conceptskills-skill">skill</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>CONCAT(<a class="fx-chip" href="#en-f-conceptskills-concept">Concept</a>, &quot;::&quot;, <a class="fx-chip" href="#en-f-conceptskills-skill">Skill</a>)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-conceptskills-concept">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Concept</span><span class="input-table">Concept Skill</span></span>
+          <span class="input-en muted">The concept.</span>
+        </a>
+        <a class="input tone-rel" href="#en-f-conceptskills-skill">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Skill</span><span class="input-table">Concept Skill</span></span>
+          <span class="input-en muted">The skill this concept is most central to.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-conceptskills-concept">⇢ Concept <span class="ref-pill-tbl">Concept Skill</span></a>
+        <a class="ref-pill tone-rel" href="#en-f-conceptskills-skill">⇢ Skill <span class="ref-pill-tbl">Concept Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — Concept + Skill composite.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-conceptskills-concept" data-entity="Concept Skill" data-field="Concept">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Concept</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-concepts">Concept</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+      <p class="gt-body gt-reverse">Reverse side: <a class="ref-pill tone-rel" href="#en-f-concepts-conceptskills">⇢ Concept Skills <span class="ref-pill-tbl">Concept</span></a></p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-conceptskills-name">ƒ Name <span class="ref-pill-tbl">Concept Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">The concept.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-conceptskills-skill" data-entity="Concept Skill" data-field="Skill">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Skill</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skills">Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-conceptskills-name">ƒ Name <span class="ref-pill-tbl">Concept Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">The skill this concept is most central to.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-gotchas" data-entity="Gotcha">
+  <header class="entity-head">
+    <h2 class="entity-title">Gotcha</h2>
+    <p class="entity-synopsis">Specific anti-patterns per skill — what the plausible-but-wrong approach looks like and what the actual fix is. Extracted from each SKILL.md's explicit warnings; distinct from Concepts (definitions) — these are traps.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-gotchas-name" data-entity="Gotcha" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-16</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak <span class="mech" title="Faithful but clunky wording — a flag for an optional reword pass">⚠︎ mechanical</span></span>
+        <p class="view-body">A gotcha's <a class="ref" href="#en-f-gotchas-name">name</a> is computed as the lower-cased <a class="ref" href="#en-f-gotchas-gotchakey">gotcha key</a> with every a space replaced by a hyphen.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-gotchas-gotchakey">Gotcha key</a> lowercased with “ ” replaced by “-”.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>SUBSTITUTE(LOWER(<a class="fx-chip" href="#en-f-gotchas-gotchakey">Gotcha Key</a>), &quot; &quot;, &quot;-&quot;)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-raw" href="#en-f-gotchas-gotchakey">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Gotcha Key</span><span class="input-table">Gotcha</span></span>
+          <span class="input-en muted">Skill-scoped unique key (Skill::title-slug) supplied at extraction time.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-raw" href="#en-f-gotchas-gotchakey">● Gotcha Key <span class="ref-pill-tbl">Gotcha</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — kebab-cased GotchaKey.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-gotchas-gotchakey" data-entity="Gotcha" data-field="Gotcha Key">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Gotcha Key</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-gotchas-name">ƒ Name <span class="ref-pill-tbl">Gotcha</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Skill-scoped unique key (Skill::title-slug) supplied at extraction time.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-gotchas-title" data-entity="Gotcha" data-field="Title">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Title</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Short name for the trap.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-gotchas-looksright" data-entity="Gotcha" data-field="Looks Right">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Looks Right</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">The plausible-but-wrong approach — what someone would naively try.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-gotchas-actualfix" data-entity="Gotcha" data-field="Actual Fix">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Actual Fix</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">What is actually correct, and why the naive approach fails.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-gotchas-severity" data-entity="Gotcha" data-field="Severity">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Severity</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">critical = silent data corruption, security hole, or breaks the core methodology guarantee; moderate = a bug or wasted work but locally contained.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-gotchas-gotchaskills" data-entity="Gotcha" data-field="Gotcha Skills">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Gotcha Skills</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-gotchaskills">Gotcha Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <p class="field-note elem elem-desc">Join rows linking this gotcha to the skill(s) it applies to.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-gotchaskills" data-entity="Gotcha Skill">
+  <header class="entity-head">
+    <h2 class="entity-title">Gotcha Skill</h2>
+    <p class="entity-synopsis">Junction table: which skill(s) each Gotcha applies to. A many-to-many between Gotchas and Skills modeled as two 1-to-many FKs, per ERB DAG conventions.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-gotchaskills-name" data-entity="Gotcha Skill" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-17</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A gotcha skill's <a class="ref" href="#en-f-gotchaskills-name">name</a> is computed as the <a class="ref" href="#en-f-gotchaskills-gotcha">gotcha</a>, followed by “::”, followed by the <a class="ref" href="#en-f-gotchaskills-skill">skill</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-gotchaskills-gotcha">Gotcha</a>, &quot;::&quot;, joined with <a class="ref" href="#en-f-gotchaskills-skill">skill</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>CONCAT(<a class="fx-chip" href="#en-f-gotchaskills-gotcha">Gotcha</a>, &quot;::&quot;, <a class="fx-chip" href="#en-f-gotchaskills-skill">Skill</a>)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-gotchaskills-gotcha">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Gotcha</span><span class="input-table">Gotcha Skill</span></span>
+          <span class="input-en muted">The gotcha.</span>
+        </a>
+        <a class="input tone-rel" href="#en-f-gotchaskills-skill">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Skill</span><span class="input-table">Gotcha Skill</span></span>
+          <span class="input-en muted">The skill this gotcha applies to.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-gotchaskills-gotcha">⇢ Gotcha <span class="ref-pill-tbl">Gotcha Skill</span></a>
+        <a class="ref-pill tone-rel" href="#en-f-gotchaskills-skill">⇢ Skill <span class="ref-pill-tbl">Gotcha Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — Gotcha + Skill composite.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-gotchaskills-gotcha" data-entity="Gotcha Skill" data-field="Gotcha">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Gotcha</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-gotchas">Gotcha</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+      <p class="gt-body gt-reverse">Reverse side: <a class="ref-pill tone-rel" href="#en-f-gotchas-gotchaskills">⇢ Gotcha Skills <span class="ref-pill-tbl">Gotcha</span></a></p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-gotchaskills-name">ƒ Name <span class="ref-pill-tbl">Gotcha Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">The gotcha.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-gotchaskills-skill" data-entity="Gotcha Skill" data-field="Skill">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Skill</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skills">Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-gotchaskills-name">ƒ Name <span class="ref-pill-tbl">Gotcha Skill</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">The skill this gotcha applies to.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-skillbodies" data-entity="Skill Body">
+  <header class="entity-head">
+    <h2 class="entity-title">Skill Body</h2>
+    <p class="entity-synopsis">Point-in-time SNAPSHOT of each SKILL.md file, captured for the read-only rulebook portal's drift display. SKILL.md remains the hand-authored SSoT (see project CLAUDE.md) — FullText here is NOT a generation source, it is what the file looked like as of the last snapshot. The portal compares this byte-for-byte against the live file to show when a skill has drifted from its last-known-good rulebook snapshot.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-skillbodies-name" data-entity="Skill Body" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-18</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill body's <a class="ref" href="#en-f-skillbodies-name">name</a> is the same as its <a class="ref" href="#en-f-skillbodies-skill">skill</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-skillbodies-skill">Skill</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span><a class="fx-chip" href="#en-f-skillbodies-skill">Skill</a></div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">1</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-skillbodies-skill">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Skill</span><span class="input-table">Skill Body</span></span>
+          <span class="input-en muted">The skill this snapshot belongs to.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">1</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-skillbodies-skill">⇢ Skill <span class="ref-pill-tbl">Skill Body</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — equals Skill.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-skillbodies-skill" data-entity="Skill Body" data-field="Skill">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Skill</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skills">Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">1 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-skillbodies-name">ƒ Name <span class="ref-pill-tbl">Skill Body</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">The skill this snapshot belongs to.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillbodies-path" data-entity="Skill Body" data-field="Path">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Path</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Repo-relative path to the SKILL.md file at snapshot time.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillbodies-fulltext" data-entity="Skill Body" data-field="Full Text">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Full Text</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Verbatim file contents as of the snapshot. NOT regenerated from; compared against the live file to detect drift.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillbodies-bytes" data-entity="Skill Body" data-field="Bytes">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Bytes</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">integer</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>integer</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Byte length of FullText at snapshot time.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillbodies-lines" data-entity="Skill Body" data-field="Lines">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Lines</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">integer</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>integer</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Line count of FullText at snapshot time.</p>
+    </article>
+</section>
+<section class="entity" id="en-t-skillartifacts" data-entity="Skill Artifact">
+  <header class="entity-head">
+    <h2 class="entity-title">Skill Artifact</h2>
+    <p class="entity-synopsis">Hand-maintained reference/subtask docs that go deeper than a compressed skill body can hold — optional, freeform naming, referenced by a Concepts.Description 'See &lt;topic&gt;' pointer or directly by a skill. Tracked here so the rulebook stays the single source of truth end-to-end, even for material that isn't generated.</p>
+  </header>
+  <article class="field tone-calc" id="en-f-skillartifacts-name" data-entity="Skill Artifact" data-field="Name">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Name</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-19</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill artifact's <a class="ref" href="#en-f-skillartifacts-name">name</a> is computed as the <a class="ref" href="#en-f-skillartifacts-skill">skill</a>, followed by “::”, followed by the <a class="ref" href="#en-f-skillartifacts-filename">filename</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body"><a class="ref" href="#en-f-skillartifacts-skill">Skill</a>, &quot;::&quot;, joined with <a class="ref" href="#en-f-skillartifacts-filename">filename</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>CONCAT(<a class="fx-chip" href="#en-f-skillartifacts-skill">Skill</a>, &quot;::&quot;, <a class="fx-chip" href="#en-f-skillartifacts-filename">Filename</a>)</div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-skillartifacts-skill">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Skill</span><span class="input-table">Skill Artifact</span></span>
+          <span class="input-en muted">The skill this artifact belongs to / was written for.</span>
+        </a>
+        <a class="input tone-raw" href="#en-f-skillartifacts-filename">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Filename</span><span class="input-table">Skill Artifact</span></span>
+          <span class="input-en muted">Freeform filename, e.g. 'magic-links-jwt-verification.md'. No enforced naming convention.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-skillartifacts-skill">⇢ Skill <span class="ref-pill-tbl">Skill Artifact</span></a>
+        <a class="ref-pill tone-raw" href="#en-f-skillartifacts-filename">● Filename <span class="ref-pill-tbl">Skill Artifact</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Logical PK — Skill + Filename composite.</p>
+    </article>
+  <article class="field tone-rel" id="en-f-skillartifacts-skill" data-entity="Skill Artifact" data-field="Skill">
+    <div class="field-head">
+      <span class="field-glyph" title="Relationship">⇢</span>
+      <span class="field-name">Skill</span>
+      <span class="pill pill-type">Relationship</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">A pointer to <a href="#en-t-skills">Skill</a>. It is not derived from anything else — it is the link the rest of the DAG hangs off.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-skillartifacts-name">ƒ Name <span class="ref-pill-tbl">Skill Artifact</span></a>
+        <a class="ref-pill tone-calc" href="#en-f-skillartifacts-path">ƒ Path <span class="ref-pill-tbl">Skill Artifact</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">The skill this artifact belongs to / was written for.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillartifacts-filename" data-entity="Skill Artifact" data-field="Filename">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Filename</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <details class="prov prov-consumers elem elem-consumers" open>
+      <summary>Consumers <span class="count">2 direct</span> <span class="prov-hint">rules that read this one</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-calc" href="#en-f-skillartifacts-name">ƒ Name <span class="ref-pill-tbl">Skill Artifact</span></a>
+        <a class="ref-pill tone-calc" href="#en-f-skillartifacts-path">ƒ Path <span class="ref-pill-tbl">Skill Artifact</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Freeform filename, e.g. 'magic-links-jwt-verification.md'. No enforced naming convention.</p>
+    </article>
+  <article class="field tone-calc" id="en-f-skillartifacts-path" data-entity="Skill Artifact" data-field="Path">
+    <div class="field-head">
+      <span class="field-glyph" title="Calculated">ƒ</span>
+      <span class="field-name">Path</span>
+      <span class="pill pill-type">Calculated</span>
+      <span class="pill pill-depth">1 hop from ground truth</span>
+      <span class="pill pill-muted">string</span>
+      <span class="pill pill-dr">DR-20</span>
+    </div>
+    <div class="narr-views">
+      <div class="view elem elem-rulespeak">
+        <span class="view-label">In RuleSpeak</span>
+        <p class="view-body">A skill artifact's <a class="ref" href="#en-f-skillartifacts-path">path</a> is computed as “skills/”, followed by the <a class="ref" href="#en-f-skillartifacts-skill">skill</a>, followed by a slash, followed by the <a class="ref" href="#en-f-skillartifacts-filename">filename</a>.</p>
+      </div>
+      <div class="view elem elem-english">
+        <span class="view-label">In plain words</span>
+        <p class="view-body">((&quot;skills/&quot; joined with <a class="ref" href="#en-f-skillartifacts-skill">skill</a>) joined with &quot;/&quot;) joined with <a class="ref" href="#en-f-skillartifacts-filename">filename</a>.</p>
+      </div>
+      <div class="view elem elem-formula">
+        <span class="view-label">As a formula</span>
+        <div class="view-body fx"><span class="fx-eq">= </span>&quot;skills/&quot; &amp; <a class="fx-chip" href="#en-f-skillartifacts-skill">Skill</a> &amp; &quot;/&quot; &amp; <a class="fx-chip" href="#en-f-skillartifacts-filename">Filename</a></div>
+      </div>
+    </div>
+    <details class="prov prov-inputs elem elem-inputs" open>
+      <summary>Inputs <span class="count">2</span> <span class="prov-hint">fields this rule reads</span></summary>
+      <div class="prov-grid">
+        <a class="input tone-rel" href="#en-f-skillartifacts-skill">
+          <span class="input-head"><span class="input-glyph">⇢</span><span class="input-name">Skill</span><span class="input-table">Skill Artifact</span></span>
+          <span class="input-en muted">The skill this artifact belongs to / was written for.</span>
+        </a>
+        <a class="input tone-raw" href="#en-f-skillartifacts-filename">
+          <span class="input-head"><span class="input-glyph">●</span><span class="input-name">Filename</span><span class="input-table">Skill Artifact</span></span>
+          <span class="input-en muted">Freeform filename, e.g. 'magic-links-jwt-verification.md'. No enforced naming convention.</span>
+        </a>
+      </div>
+    </details>
+    <details class="prov prov-leaves elem elem-inputs">
+      <summary>Ground truth at the leaves <span class="count">2</span> <span class="prov-hint">the raw values this ultimately depends on</span></summary>
+      <div class="prov-pills">
+        <a class="ref-pill tone-rel" href="#en-f-skillartifacts-skill">⇢ Skill <span class="ref-pill-tbl">Skill Artifact</span></a>
+        <a class="ref-pill tone-raw" href="#en-f-skillartifacts-filename">● Filename <span class="ref-pill-tbl">Skill Artifact</span></a>
+      </div>
+    </details>
+    <p class="field-note elem elem-desc">Repo-relative path, conventionally under the skill's directory.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillartifacts-summary" data-entity="Skill Artifact" data-field="Summary">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Summary</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">One sentence: what this artifact covers and why it's split out from the skill body.</p>
+    </article>
+  <article class="field tone-raw" id="en-f-skillartifacts-fulltext" data-entity="Skill Artifact" data-field="Full Text">
+    <div class="field-head">
+      <span class="field-glyph" title="Ground truth">●</span>
+      <span class="field-name">Full Text</span>
+      <span class="pill pill-type">Ground truth</span>
+      <span class="pill pill-muted">string</span>
+    </div>
+    <div class="gt">
+      <p class="gt-body">Ground truth. Written directly to the database (datatype <code>string</code>); not computed from anything else. Everything derived ultimately traces back to values like this one.</p>
+    </div>
+    <p class="field-note elem elem-desc">Verbatim file contents, hand-maintained. Not generated, not overwritten by any transpiler.</p>
+    </article>
+</section>
+<footer class="doc-footer">
+  <p>Rendered from the rulebook by the shared <b>RuleSpeak</b> engine (<code>rulebook-rulespeak-core</code>). The same engine narrates the React Explainer DAG, so every narration mode reads identically across both.</p>
+  <p class="doc-footer-legend"><span class="chip chip-raw">● Ground truth</span> <span class="chip chip-calc">ƒ Calculated</span> <span class="chip chip-agg">Σ Aggregation</span> <span class="chip chip-lookup">↗ Lookup</span> <span class="chip chip-rel">⇢ Relationship</span></p>
+</footer>
+</div>
+<script>
+
+(function(){
+  var LANGS=['en'];
+  var ELEMS=['rulespeak','english','formula','desc','inputs','consumers'];
+  var DEFAULTS={'rulespeak':true,'english':false,'formula':false,'desc':true,'inputs':true,'consumers':false};
+  var root=document.documentElement;
+
+  // ── Language switching. All .lang-select controls stay in sync; the choice
+  //    persists in localStorage and the URL (?lang=…) so links carry it.
+  var selects=Array.prototype.slice.call(document.querySelectorAll('.lang-select'));
+  function currentLang(){ return root.getAttribute('data-lang')||'en'; }
+  function setLang(code,fromHash){
+    if(LANGS.indexOf(code)<0) return;
+    root.setAttribute('data-lang',code);
+    root.setAttribute('lang',code);
+    try{localStorage.setItem('rulespeak.lang',code);}catch(e){}
+    try{
+      var u=new URL(location.href);
+      u.searchParams.set('lang',code);
+      history.replaceState(null,'',u.toString());
+    }catch(e){}
+    selects.forEach(function(s){ s.value=code; });
+    if(!fromHash) rebindSpy();
+  }
+  selects.forEach(function(s){
+    s.addEventListener('change',function(){
+      var was=currentLang();
+      var code=s.value;
+      // Carry the reader to the SAME field in the new language when the hash
+      // points somewhere: swap the language prefix on the anchor.
+      var h=location.hash||'';
+      setLang(code);
+      var m=h.match(/^#([a-z]{2})-(.+)$/);
+      if(m && m[1]===was){
+        var target=document.getElementById(code+'-'+m[2]);
+        if(target){ location.hash='#'+code+'-'+m[2]; }
+      }
+    });
+  });
+
+  // ── Legacy-hash shim: pre-language anchors (#f-…, #t-…, #top) map onto the
+  //    active language's scoped ids so old deep links keep working.
+  (function(){
+    var h=location.hash||'';
+    var m=h.match(/^#((?:f|t)-.+|top)$/);
+    if(m){
+      var scoped=document.getElementById(currentLang()+'-'+m[1]);
+      if(scoped) location.replace('#'+currentLang()+'-'+m[1]);
+    }
+  })();
+
+  // ── Per-element visibility, persisted. Checkboxes exist once per language doc;
+  //    drive them all from the shared <html> classes.
+  var boxes=Array.prototype.slice.call(document.querySelectorAll('.gear-opt input[data-elem]'));
+  function isOn(k){ return root.classList.contains('show-'+k); }
+  function setElem(k,on){
+    root.classList.toggle('show-'+k,on);
+    try{localStorage.setItem('rulespeak.show.'+k,on?'1':'0');}catch(e){}
+    boxes.forEach(function(b){ if(b.getAttribute('data-elem')===k) b.checked=on; });
+  }
+  boxes.forEach(function(b){
+    var k=b.getAttribute('data-elem');
+    b.checked=isOn(k);
+    b.addEventListener('change',function(){ setElem(k,b.checked); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.gear-reset'),function(reset){
+    reset.addEventListener('click',function(){ ELEMS.forEach(function(k){ setElem(k,!!DEFAULTS[k]); }); });
+  });
+
+  // ── Gear popups: each language doc has its own button + popup pair.
+  Array.prototype.forEach.call(document.querySelectorAll('.lang-doc'),function(doc){
+    var gear=doc.querySelector('.gear');
+    var pop=doc.querySelector('.gear-pop');
+    if(!gear||!pop) return;
+    function openPop(o){ pop.hidden=!o; gear.setAttribute('aria-expanded',o?'true':'false'); }
+    gear.addEventListener('click',function(e){ e.stopPropagation(); openPop(pop.hidden); });
+    Array.prototype.forEach.call(doc.querySelectorAll('.gear-open-inline'),function(inline){
+      inline.addEventListener('click',function(e){ e.stopPropagation(); openPop(true); });
+    });
+    document.addEventListener('click',function(e){
+      if(!pop.hidden && !pop.contains(e.target) && e.target!==gear) openPop(false);
+    });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') openPop(false); });
+  });
+
+  // ── Scroll-spy breadcrumb, scoped to the ACTIVE language document.
+  var fields=[],entities=[],cE=null,cF=null,cSep=null;
+  function rebindSpy(){
+    var doc=document.querySelector('.lang-doc[data-lang="'+currentLang()+'"]');
+    if(!doc) return;
+    cE=doc.querySelector('.crumb-entity');
+    cF=doc.querySelector('.crumb-field');
+    cSep=doc.querySelector('.crumb-sep');
+    fields=Array.prototype.slice.call(doc.querySelectorAll('.field[data-field]'));
+    entities=Array.prototype.slice.call(doc.querySelectorAll('.entity[data-entity]'));
+    update();
+  }
+  function setCrumb(entity,field){
+    if(!cE) return;
+    cE.textContent=entity||'';
+    if(field){ cF.textContent=field; cSep.hidden=false; }
+    else { cF.textContent=''; cSep.hidden=true; }
+  }
+  var barH=parseInt(getComputedStyle(root).getPropertyValue('--bar-h'),10)||48;
+  function update(){
+    var line=barH+18, curF=null, curE=null;
+    for(var i=0;i<fields.length;i++){ if(fields[i].getBoundingClientRect().top<=line) curF=fields[i]; else break; }
+    for(var j=0;j<entities.length;j++){ if(entities[j].getBoundingClientRect().top<=line) curE=entities[j]; else break; }
+    if(curF){
+      var fEnt=curF.getAttribute('data-entity');
+      var eName=curE?curE.getAttribute('data-entity'):fEnt;
+      if(eName!==fEnt) setCrumb(eName,null);
+      else setCrumb(fEnt,curF.getAttribute('data-field'));
+    } else if(curE){ setCrumb(curE.getAttribute('data-entity'),null); }
+    else { setCrumb('',null); }
+  }
+  var ticking=false;
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(function(){ update(); ticking=false; }); } }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll,{passive:true});
+  rebindSpy();
+})();
+
+</script>
+</body>
+</html>

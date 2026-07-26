@@ -34,6 +34,32 @@ When the user says "push it online", "publish", "deploy", or "ship the tool" —
 `POST /api/transpilers/:id/deploy` curl (that endpoint was deleted — it created broken,
 un-built Airtable records).
 
+## Standing rule: develop on localhost:300xx first, publish last
+
+**Whenever a tool under `Versioned-Stable-SSoTme-Tools/tools/effortless/*` is being actively
+worked on (edited, debugged, iterated), default to the local-dev loop — never publish first
+and iterate against the live cpln URL.**
+
+1. Run the tool's own `./start.sh` (or `dotnet run` from its `workload/`), which listens on
+   its dev port in the `300xx` range (each tool's `Program.cs` sets this via
+   `defaultPort:` in `EffortlessHelper.StartToolListener` — e.g. `rulebook-to-node-postgres-api`
+   defaults to `30039`, `rulebook-to-vite-admin-portal` to `30040`; read the tool's own
+   `Program.cs`/`start.sh` for its actual number rather than assuming). Override with
+   `PORT=<port> dotnet run` if a specific port is needed for a given debugging session.
+2. Point whatever consumes the tool at that local URL with
+   `effortless -setToolUrl <tool-name>=http://localhost:<port>` (or, for a consumer that
+   already branches on it, its own `LOCAL_TOOL_URLS=1` / `LOCAL_*_PORT` env vars — e.g.
+   `effortless-rulebook-editor`'s `edit-rulebook.sh` does this natively).
+3. Debug and iterate entirely against that local process. Do **not** run `publish-tool.sh`
+   during this phase — a publish here would ship an unfinished tool live for every consumer.
+4. Only once the tool is verified working locally: run `publish-tool.sh` (below) to actually
+   publish, **then** remove the override — `effortless -removeUrl <tool-name>` (or unset the
+   consumer's `LOCAL_TOOL_URLS`) — so normal resolution picks up the newly published version.
+
+If a task involves editing one of these tools' source, assume this loop by default — don't
+ask the user whether to publish first; ask only if it's ambiguous whether the tool is still
+being actively developed or is already considered done for this session.
+
 ## The one command
 
 ```bash

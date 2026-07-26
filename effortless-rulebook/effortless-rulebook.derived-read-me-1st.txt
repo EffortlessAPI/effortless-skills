@@ -2,3 +2,10 @@ Audiences: Name, AudienceLabel, Description, Skills, CountOfSkills
 SkillCategories: Name, CategoryLabel, Description, SortOrder, Skills, CountOfSkills
 ScopeGateTypes: Name, GateLabel, Description, RequiresMarker, LoadsOnExplicitRequest, Skills, CountOfSkills
 Skills: Name, Slug, Description, WhyItExists, Category, ScopeGate, Audience, DirectoryPath, CategoryLabel, ScopeGateLabel, AudienceLabel
+ConceptCategories: Name, CategoryLabel, Description, SortOrder, Concepts, CountOfConcepts
+Concepts: Name, ConceptLabel, Description, Category, ConceptSkills
+ConceptSkills: Name, Concept, Skill
+Gotchas: Name, GotchaKey, Title, LooksRight, ActualFix, Severity, GotchaSkills
+GotchaSkills: Name, Gotcha, Skill
+SkillBodies: Name, Skill, Path, FullText, Bytes, Lines
+SkillArtifacts: Name, Skill, Filename, Path, Summary, FullText

@@ -3,3 +3,5 @@
 effortless.env
 raw_skills/
 .ssotme/**/*
+**/node_modules/**/*
+.claude/skills/**/*

@@ -1,0 +1,78 @@
+# Rulebook Portal — a fully-containerized, READ-ONLY reference implementation
+# proving the pattern: "the rulebook is the only durable state; everything
+# else is an ephemeral, regeneratable-on-demand projection of it."
+#
+# Three services, all disposable, all rebuilt from scratch by
+# `docker compose up --build`:
+#
+#   db   ephemeral Postgres (tmpfs — RAM-backed, wiped on stop). Nothing here
+#        survives a restart; it exists purely to demonstrate the rulebook
+#        materialized as relational tables.
+#   api  Node/Express server, built into its own image (no host npm install).
+#        On boot it waits for `db`, reads effortless-rulebook.json off the
+#        host (read-only bind mount — see below), and GENERICALLY seeds one
+#        Postgres table per rulebook table. Serves a read-only browse API.
+#   web  Vite SPA, built into a static bundle and served by nginx, which also
+#        reverse-proxies /api/* to `api` so the browser only ever talks to one
+#        origin. Also built into its own image — no host npm install.
+#
+# The ONLY inputs that matter are on the host, outside this directory:
+#   ../effortless-rulebook/   (the hub — effortless-rulebook.json)
+#   ../skills/                (live SKILL.md files, compared against the
+#                              SkillBodies snapshot for drift detection)
+#   ../rulespeak/              (generated rulespeak.md, served as-is)
+# These are mounted into the `api` container read-only, so the portal always
+# reflects whatever is currently on disk — no image rebuild needed to pick up
+# a rulebook edit, only `docker compose restart api` (or a fresh `up`).
+#
+# Nothing here is meant to be durable: `docker compose down -v` (or just
+# `down`, since there are no named volumes) discards the db, api, and web
+# containers entirely and a plain `docker compose up --build` regenerates the
+# whole stack from whatever's currently in the rulebook + skills/ + rulespeak/.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rulebook-portal-db
+    environment:
+      POSTGRES_USER: portal
+      POSTGRES_PASSWORD: portal
+      POSTGRES_DB: rulebook
+    ports:
+      - "55432:5432"        # host 55432 -> container 5432 (avoids clashing with local pg on 5432)
+    tmpfs:
+      - /var/lib/postgresql/data   # RAM-backed: truly ephemeral, wiped on stop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portal -d rulebook"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: ./server
+    container_name: rulebook-portal-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: portal
+      PGPASSWORD: portal
+      PGDATABASE: rulebook
+      PORT: 5177
+      REPO_ROOT: /repo
+    ports:
+      - "5177:5177"
+    volumes:
+      # Read-only: the portal only ever READS the rulebook/skills/rulespeak.
+      - ../effortless-rulebook:/repo/effortless-rulebook:ro
+      - ../skills:/repo/skills:ro
+      - ../rulespeak:/repo/rulespeak:ro
+
+  web:
+    build: ./web
+    container_name: rulebook-portal-web
+    depends_on:
+      - api
+    ports:
+      - "8080:80"

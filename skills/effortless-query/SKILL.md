@@ -46,6 +46,13 @@ by reading tokens into context — see `effortless-workflow`).
 If no derived files exist for this project, ask the user whether to install
 `minimize-rulebook` — it makes querying and diffing far more token-efficient.
 
+**For planning specifically, the minimized schema is usually the whole job.**
+Adding a field, tracing a DAG dependency, deciding where a new table hooks
+in, sanity-checking a relationship — all of that can be reasoned about from
+`*.derived-schema.min.json` alone, without ever opening `*.derived-data.json`.
+Only implementation/debugging work that needs to see actual row values
+requires climbing further down the ladder to real data.
+
 ### Token Discipline
 
 > The canonical Token Discipline statement lives in `effortless-orchestrator`.

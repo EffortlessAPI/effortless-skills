@@ -82,7 +82,7 @@ release section is an ISO date.
 - **`omni-send.mjs` prerequisites section** in `effortless-airtable-omni`
   — Node 18+, Playwright + Chromium, headed display, persistent profile,
   network access, valid base id. Stop and tell the user if any are missing.
-- **"Naked Claude" defined on first use** in `effortless-leopold-loop`
+- **"Naked Claude" defined on first use** in `effortless-loop`
   (coding without the rulebook — every layer hand-maintained).
 
 ### Changed
@@ -151,7 +151,7 @@ changelog began:
 - Installer rewritten to discover skills dynamically and clean up
   deprecated ones.
 - `effortless-bootstrap` (the "Shadle steps") and
-  `effortless-leopold-loop` skills introduced.
+  `effortless-loop` skills introduced.
 - Windows install script added.
 
 For the full archaeology, `git log` is authoritative.
