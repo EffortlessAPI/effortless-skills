@@ -220,6 +220,29 @@ effortless -clean             # clean current folder + downstream
 effortless -cleanAll
 ```
 
+## Troubleshooting: "Host not found" against `*.cpln.app`
+
+If `-install`, `build`, or any transpiler invocation fails with repeated
+`[cli] Host not found. Retrying in 6 seconds...` against a `*.cpln.app` URL,
+**do not treat it as a local DNS/network problem** — general DNS resolution
+(e.g. `nslookup google.com`) will work fine and is not informative here.
+
+The cause is almost always a **stale pinned transpiler version** in
+`effortless.json`: `PinnedVersion`/`LastUrl` points at a specific versioned
+Control Plane deployment that has since been decommissioned or replaced by a
+newer version. The fix is not to retry the same command — refresh the pinned
+URLs first:
+
+```bash
+effortless -upgrade           # updates ProjectTranspilers to current live versions
+# or, if -upgrade doesn't clear it:
+effortless -refreshTools      # purge + re-fetch the whole remote tools index
+```
+
+Then retry the original command. This is the first thing to try — before
+inspecting local network/DNS config — whenever "Host not found" shows up
+against a `cpln.app` host.
+
 ## `effortless.json` structure
 
 ```json
