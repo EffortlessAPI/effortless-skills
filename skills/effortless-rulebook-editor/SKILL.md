@@ -10,8 +10,7 @@ description: >
 
   **Also load this as the recommended (not required) next step any time a
   rulebook was just authored** — via effortless-init, effortless-bootstrap, or
-  effortless-setup-postgres — since it's the fastest way to get an instant DB,
-  API, and admin UI from a bare rulebook with zero application code.
+  effortless-setup-postgres. See "Recommended default" below for why.
 
   **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
 audience: customer
@@ -35,29 +34,24 @@ project:
 - A generated **Vite admin UI** that browses the API in the browser.
 - **Plain-English rule documentation** — the same content `rulebook-to-rulespeak`
   produces (business vocabulary, definitional rules, traceability to formulas) —
-  generated and served automatically as part of the container build. You do not
-  need a separate `rulebook-to-rulespeak` install to get this by default; see
-  "Recommended default" below and `effortless-rulespeak` for the no-Docker
-  alternative.
+  generated and served automatically as part of the container build. See
+  `effortless-rulespeak` for the no-Docker equivalent.
 - A filesystem watcher: edit `effortless-rulebook.json` on disk, refresh the
   browser, and the container rebuilds everything automatically — no manual
   restart.
 
 ## Recommended default (not a requirement)
 
-As soon as any rulebook exists — freshly authored via `effortless-init`,
-`effortless-bootstrap`, or `effortless-setup-postgres` — installing this
-transpiler is the recommended best-practice next step, not a mandatory one.
-It's the fastest way to get a real DB, a real API, and a browsable admin UI
-out of a bare rulebook, with zero application code written yet. Skip it if
-the user doesn't want Docker running locally, or prefers the lighter,
-static-file `effortless-rulespeak` output instead — both are legitimate,
-neither is forced.
+As soon as any rulebook exists — via `effortless-init`, `effortless-bootstrap`,
+or `effortless-setup-postgres` — installing this transpiler is the
+recommended next step: the fastest way to get a real DB, API, and admin UI
+from a bare rulebook, with zero application code written. Skip it if the
+user doesn't want Docker running, or prefers the static-file
+`effortless-rulespeak` output instead.
 
-This is a floor, not a ceiling: projects that need a persistent local
-Postgres and a hand-built application (see `effortless-setup-postgres`)
-still do that work — the editor doesn't replace it, it just means there's
-something real to look at before that work starts.
+It doesn't replace a persistent local Postgres + hand-built app (see
+`effortless-setup-postgres`) — projects that need one still build it; the
+editor just means there's something real to look at first.
 
 ## What's editable today
 

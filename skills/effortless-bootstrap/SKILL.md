@@ -133,28 +133,23 @@ This builds out the full analytical power of the rulebook. LLMs are strong at th
 
 ### Step 10.5 — Rulebook editor (recommended default, not required)
 
-Before entering the loop, the best-practice next step is standing up the
-rulebook editor — an instant DB, API, and admin UI (plus plain-English rule
-docs) from the rulebook you just authored, with zero application code. Load
-**effortless-rulebook-editor**:
+Before entering the loop, install **effortless-rulebook-editor** (see that
+skill for why) — the human-readable sanity check for the rulebook you just
+authored, plus an instant DB, API, and admin UI:
 
 ```bash
 effortless -install effortless-rulebook-editor -i effortless-rulebook.json
 ./effortless-rulebook/edit-rulebook.sh
 ```
 
-This is a recommendation, not a requirement — skip it if the user doesn't
-want Docker running. **No-Docker alternative:** load **effortless-rulespeak**
-instead for the lighter, static-file version of the same documentation:
+**No-Docker alternative:** `effortless-rulespeak` for the same documentation
+as static files:
 
 ```bash
 mkdir -p rulespeak && cd rulespeak
 effortless -install rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json
 cd .. && effortless build
 ```
-
-Either way, this is the human-readable sanity check for the rulebook you just
-authored.
 
 ### Step 11: You're in the loop
 

@@ -89,24 +89,17 @@ and edit the rulebook directly.)
 
 ## Step 3.5 — Rulebook editor (recommended default, not required)
 
-As soon as a rulebook hub exists (Step 3, bootstrap, or demo authoring), the
-best-practice next step is standing up the rulebook editor — before Postgres
-or an app is wired up. Load **effortless-rulebook-editor** and, from the same
-folder as the rulebook:
+As soon as the rulebook hub exists, install **effortless-rulebook-editor**
+(see that skill for why) — a real DB, API, and admin UI from a bare rulebook
+with zero application code. From the same folder as the rulebook:
 
 ```bash
 effortless -install effortless-rulebook-editor -i effortless-rulebook.json
 ./effortless-rulebook/edit-rulebook.sh
 ```
 
-This gets a real DB, a real API, and a browsable admin UI — plus plain-English
-rule documentation, generated automatically — from a bare rulebook with zero
-application code written. It's a recommendation, not a requirement: skip it if
-the user doesn't want Docker running locally.
-
-**No-Docker alternative:** if Docker isn't available or wanted, load
-**effortless-rulespeak** instead for the lighter, static-file version of the
-same plain-English documentation:
+**No-Docker alternative:** `effortless-rulespeak` for the same documentation
+as static files:
 
 ```bash
 mkdir -p rulespeak
@@ -115,8 +108,6 @@ effortless -install rulebook-to-rulespeak -i ../effortless-rulebook/effortless-r
 cd ..
 effortless build
 ```
-
-Skip both only if the user explicitly opts out.
 
 ## Step 4 — Write CLAUDE.md (CRITICAL)
 

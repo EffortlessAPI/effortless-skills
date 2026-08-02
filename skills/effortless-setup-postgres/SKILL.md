@@ -340,21 +340,17 @@ cd ..
 Verify (either path): `effortless-rulebook/effortless-rulebook.json` exists. If you installed a `*-to-rulebook` transpiler, `effortless.json` also has a `RelativePath: /effortless-rulebook` entry for it.
 
 **Step 2.5 — Rulebook editor (recommended default, not required):** before
-building out the "real" local Postgres + hand-rolled app in Steps 3+, load
-**effortless-rulebook-editor** and install it against the rulebook you just
-placed. This is a floor, not a replacement for what follows — it gives an
-instant DB, API, and admin UI (plus plain-English rule docs) to look at while
-the rest of this skill's Postgres/app setup is still ahead:
+building the "real" local Postgres + hand-rolled app in Steps 3+, install
+**effortless-rulebook-editor** (see that skill for why) against the rulebook
+you just placed — an instant DB, API, and admin UI to look at first:
 
 ```bash
 effortless -install effortless-rulebook-editor -i effortless-rulebook.json
 ./effortless-rulebook/edit-rulebook.sh
 ```
 
-**No-Docker alternative:** load **effortless-rulespeak** instead for the
-lighter, static-file version of the same plain-English documentation (see
-that skill's "Recommended on rulebook creation" block). Skip both if the
-user doesn't want them.
+**No-Docker alternative:** `effortless-rulespeak` for the same documentation
+as static files.
 
 ### Step 3: Install rulebook-to-postgres
 

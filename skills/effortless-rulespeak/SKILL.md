@@ -7,14 +7,11 @@ description: >
   Installs `rulebook-to-rulespeak` and emits `rulespeak/rulespeak.md` and
   `rulespeak/rulespeak.html` on every build.
 
-  **Recommended, lightweight, no-Docker option whenever a rulebook is
-  created** — the same plain-English documentation is also produced
-  automatically by `effortless-rulebook-editor` (the recommended default
-  for most projects; see that skill). Reach for this skill instead when the
-  project doesn't want a Docker container running, wants portable static
-  HTML/MD files to hand off, or the editor isn't installed for some reason.
-  Neither is mandatory — both are best-practice recommendations, not
-  requirements.
+  **The no-Docker alternative to `effortless-rulebook-editor`**, which
+  produces this same plain-English documentation automatically and is the
+  recommended default for most projects (see that skill). Reach for this
+  skill instead when the project wants portable static HTML/MD files, or
+  doesn't want a Docker container running.
 
   Triggers: "generate rulespeak", "rulebook-to-rulespeak", "english rules
   document", "plain language rules", "business rules doc from rulebook",
@@ -35,12 +32,10 @@ Every calculated, lookup, and aggregation field becomes a definitional rule;
 relationships become fact types; tables become vocabulary.
 
 This is the **lightweight, no-Docker way to get a human-readable sibling** of
-a new rulebook. `effortless-rulebook-editor` (see that skill) produces the
-same plain-English content automatically as part of its container, and is
-the recommended default for most projects. Reach for this skill instead when
-you want portable static files, don't want Docker running, or the editor
-isn't installed. Both are best-practice recommendations — pick one, neither
-is forced.
+a new rulebook. `effortless-rulebook-editor` produces the same content
+automatically as part of its container and is the recommended default —
+reach for this skill instead when you want portable static files or don't
+want Docker running.
 
 For **clickable in-app field exploration** (hover cards, DAG pages), load
 **effortless-explainer-dag** separately when the user asks — that is optional,
@@ -78,16 +73,13 @@ rulespeak/rulespeak.md     ← same content, markdown
 
 4. **Tell the user** where to read the rules in English (`rulespeak/rulespeak.html`).
 
-This is how humans sanity-check what the JSON encodes, so it's worth doing
-even for "just a rulebook" — but it's a recommendation, not a requirement.
-Skip it if the user doesn't want it, or if `effortless-rulebook-editor` is
-already installed (it produces the same content without a separate step).
+This is how humans sanity-check what the JSON encodes, even for "just a
+rulebook."
 
 Parent skills that mention this as the no-Docker option: **effortless-init**
 (Step 3.5), **effortless-bootstrap** (after Step 10), **effortless-demo-app**
 (bootstrap step 7), **effortless-setup-postgres** (after rulebook is in
-place) — each of those now recommends `effortless-rulebook-editor` first and
-this skill as the lighter alternative.
+place).
 
 ## Install (reference)
 
@@ -142,8 +134,7 @@ column contract.
 
 ## See also
 
-- `effortless-rulebook-editor` — the recommended default for most projects;
-  produces this same plain-English content automatically inside its container.
+- `effortless-rulebook-editor` — the recommended default (see top of this file).
 - `effortless-explainer-dag` — on-demand in-app DAG + hover RuleSpeak (not default)
 - `effortless-pipeline` — transpiler install paths and build order
 - `effortless-schema` — load before authoring the rulebook JSON
