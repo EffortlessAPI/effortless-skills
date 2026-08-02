@@ -8,6 +8,12 @@ description: >
   stack (Postgres + generated API + generated Vite UI + plain-English rule docs)
   that watches the rulebook file and rebuilds automatically.
 
+  **Also use when writing ANY app (Vite/React, Next, Flask, plain fetch) against a
+  rulebook** — the container's generated API is the backend, and the "Building an app
+  against the API" section below is the contract: discovery endpoints, the
+  read-snake_case / write-PascalCase rule, and how to read the generated source
+  and RuleSpeak docs from the host.
+
   **Also load this as the recommended (not required) next step any time a
   rulebook was just authored** — via effortless-init, effortless-bootstrap, or
   effortless-setup-postgres. See "Recommended default" below for why.
@@ -19,63 +25,36 @@ audience: customer
 # effortless-rulebook-editor
 
 A one-command, browser-based viewer/editor for `effortless-rulebook.json`,
-backed by a real (if small) live stack — not a static file preview.
+backed by a real live stack — and the fastest backend to build an app against.
 
 ## What it is
 
 `effortless-rulebook-editor` is a meta-transpiler: instead of generating
 application code, it emits the small set of files needed to run a
-self-contained, self-rebuilding Docker container for *any* Effortless
-project:
+self-contained, self-rebuilding Docker container for *any* Effortless project:
 
-- **Postgres**, running inside the container, seeded fresh from the
-  mounted rulebook on every boot.
-- A generated **Node/Express API** that reads that Postgres data.
+- **Postgres**, running inside the container, seeded fresh from the mounted
+  rulebook on every boot.
+- A generated **Node/Express API** with full CRUD (see the surface below).
 - A generated **Vite admin UI** that browses the API in the browser.
-- **Plain-English rule documentation** — the same content `rulebook-to-rulespeak`
-  produces (business vocabulary, definitional rules, traceability to formulas) —
-  generated and served automatically as part of the container build. See
-  `effortless-rulespeak` for the no-Docker equivalent.
-- A filesystem watcher: edit `effortless-rulebook.json` on disk, refresh the
-  browser, and the container rebuilds everything automatically — no manual
-  restart.
+- **Plain-English rule documentation** (RuleSpeak), generated automatically and
+  served at `/api/rulespeak`. See `effortless-rulespeak` for the no-Docker equivalent.
+- A filesystem watcher: edit `effortless-rulebook.json`, refresh, and the
+  container rebuilds everything automatically.
 
 ## Recommended default (not a requirement)
 
-As soon as any rulebook exists — via `effortless-init`, `effortless-bootstrap`,
-or `effortless-setup-postgres` — installing this transpiler is the
-recommended next step: the fastest way to get a real DB, API, and admin UI
-from a bare rulebook, with zero application code written. Skip it if the
-user doesn't want Docker running, or prefers the static-file
-`effortless-rulespeak` output instead.
-
-It doesn't replace a persistent local Postgres + hand-built app (see
-`effortless-setup-postgres`) — projects that need one still build it; the
-editor just means there's something real to look at first.
-
-## What's editable today
-
-**Name, Description, and `_meta`** — via the UI's edit panel on the home
-view (Save button, backed by the generated API's one write endpoint,
-`PATCH /api/meta`). This is intentional, finished infrastructure for exactly
-those three fields, not a placeholder — it's the seed of a larger write-back
-roadmap.
-
-**Everything else — tables, fields, formulas, data rows — is view-only.**
-Browse them in the generated UI; to change them, hand-edit
-`effortless-rulebook.json` and refresh (the container picks it up
-automatically). This still goes through the same rulebook-first workflow as
-any other edit — see `effortless-workflow`.
+As soon as any rulebook exists, installing this transpiler is the recommended
+next step: a real DB, API, and admin UI from a bare rulebook, with zero
+application code. Skip it if the user doesn't want Docker running, or prefers
+the static-file `effortless-rulespeak` output.
 
 ## How to invoke it
 
-**Install it into the SAME folder as the rulebook it edits — never the
-project root.** `edit-rulebook.sh` is only unambiguous when it sits next to
-its own `effortless-rulebook.json`: a project can have more than one rulebook
-(e.g. a second bounded context, or a sandbox variant), and each one gets its
-own editor instance, own generated files, own container. Installing at the
-project root works for exactly one rulebook and silently becomes wrong the
-moment a second one shows up.
+**Install it into the SAME folder as the rulebook it edits — never the project
+root.** `edit-rulebook.sh` is only unambiguous when it sits next to its own
+`effortless-rulebook.json`: a project can have more than one rulebook, and each
+gets its own editor instance, generated files, and container.
 
 From the project root, with the rulebook at `effortless-rulebook/effortless-rulebook.json`:
 
@@ -83,44 +62,197 @@ From the project root, with the rulebook at `effortless-rulebook/effortless-rule
 effortless -install effortless-rulebook-editor -i effortless-rulebook.json
 ```
 
-registered with `RelativePath: "/effortless-rulebook"` in `effortless.json` —
-this lands `edit-rulebook.sh` and the rest of the generated files directly
-inside `effortless-rulebook/`, alongside the rulebook itself:
+registered with `RelativePath: "/effortless-rulebook"` in `effortless.json`, then:
 
 ```bash
-./effortless-rulebook/edit-rulebook.sh
+cd effortless-rulebook && bash edit-rulebook.sh
 ```
 
-For a second rulebook living elsewhere (e.g. `billing-rulebook/billing-rulebook.json`),
-install a second, independent instance the same way, pointed at that folder
-(`RelativePath: "/billing-rulebook"`) — each rulebook gets its own editor,
-its own container name derived from that path, and its own ports.
+For a second rulebook elsewhere, install a second independent instance pointed
+at that folder (`RelativePath: "/billing-rulebook"`).
 
-Then open the URLs the script prints (Postgres and the generated
-API/UI run inside one container). Edit the rulebook file and refresh the
-browser — the container's watcher detects the change and rebuilds.
+**Ports are fixed**, and the script prints them:
 
-Host ports are **unpinned by default** — Docker assigns free ephemeral ports
-and the script prints the actual URLs after starting the container. Set
-`RULEBOOK_EDITOR_API_PORT` / `RULEBOOK_EDITOR_UI_PORT` to pin specific ports
-instead (e.g. for a stable bookmark, or to run multiple rulebooks' editors on
-known ports side by side).
+| Service | URL |
+|---|---|
+| API | `http://localhost:42441` |
+| UI | `http://localhost:42442` |
+| Postgres | `postgresql://postgres:postgres@localhost:5442/effortless-rulebook` |
 
-Tool resolution defaults to normal published/`[latest]` versions. Only set
-`LOCAL_TOOL_URLS=1` if you are actively developing
-`rulebook-to-node-postgres-api` / `rulebook-to-vite-admin-portal` themselves
-and want the container to pick up local `dotnet run` source changes instead.
+`edit-rulebook.sh` **is** the stop → rebuild → restart cycle: it force-removes
+its own container *and* anything squatting on those three ports, then boots
+fresh. It is cheap and idempotent.
+
+> **Anything looks stale → re-run `bash edit-rulebook.sh`. Never hand-roll
+> `docker restart`.** The API reads the *table list* once at boot: adding or
+> removing a TABLE and only triggering a rebuild leaves the API serving the old
+> list (Postgres right, API stale) — which presents as a phantom error. Formula
+> and data changes are picked up live by the watcher; table-set changes need the
+> script re-run.
+
+## Building an app against the API
+
+The container's API is the backend. Don't write an ORM, don't duplicate the
+schema, don't reimplement any rule client-side.
+
+### 1. Discover, don't guess
+
+**`GET /api/docs` is the entry point.** One request returns every route, the
+calling conventions, the table list, and pointers to the docs and generated
+source. It is derived from the live Express route table at boot, so it cannot
+drift out of date the way this file can.
+
+```bash
+curl -s localhost:42441/api/docs | jq
+```
+
+### 2. Check the substrate BEFORE writing app code
+
+```bash
+curl -s localhost:42441/api/view-health
+```
+
+**Must be `{"ok":true,"brokenCount":0}`.** Every read goes through `vw_<table>`;
+a missing or failing view is a genuinely broken API surface, not a cosmetic
+warning. If it isn't clean, **fix the rulebook** — do not build on it and do not
+work around it.
+
+> **Reserved table names.** `__meta__` is reserved: the Postgres generator emits
+> a `__rulebook_meta__` singleton (backing `PATCH /api/meta`), **not** a user
+> table or a `vw_meta` view — so a `__meta__` table in the rulebook builds
+> "successfully" and then shows up as a broken view. Only real business tables
+> belong in the rulebook; project notes go in a README.
+
+### 3. Read the contract
+
+```bash
+curl -s localhost:42441/api/tables/Customers
+```
+
+Returns `{fields, fkFields, pkField, rows}`. `fields[].name` is the write-side
+name; `pkField` is what `:rowId` means. That response *is* the contract.
+
+### 4. Two conventions that will bite you
+
+**Reads are snake_case; writes are PascalCase.**
+
+```jsonc
+// read  → { "customers_id": "alan-turing", "total_sales": "250", "is_vip": true }
+// write → { "TotalSales": 150 }        // ✅ the rulebook field name
+// write → { "total_sales": 150 }       // ❌ 400: "is not a raw field"
+```
+
+Never round-trip a row you just read straight back into a PATCH. Map through
+`fields[].name`.
+
+**Calculated fields are read-only — and must never be recomputed client-side.**
+
+```jsonc
+// PATCH { "IsVIP": true }
+// → 400 "field 'IsVIP' is not a raw field on 'Customers'
+//        (calculated/lookup fields cannot be written directly)"
+```
+
+Write `TotalSales`; `IsVIP` recomputes in Postgres. Render `row.is_vip` and know
+nothing about why. Re-deriving it in the frontend duplicates a business rule
+outside the rulebook — precisely the failure mode this stack exists to prevent.
+
+**Also:** numeric/decimal values arrive as JSON **strings** (`"250"`) — coerce
+for display/sort, send real numbers on write.
+
+### 5. CORS is already open
+
+`Access-Control-Allow-Origin: *`. A Vite dev server on :5173 calls :42441
+directly — **no `server.proxy` block needed.**
+
+### 6. Refresh after a rebuild
+
+There is no websocket push to app clients. Poll `GET /api/admin/build-status`
+until `running:false`, or subscribe to `GET /api/admin/build-log/stream` (SSE),
+then re-fetch. **Never cache schema or rows in module scope** — the schema
+itself changes when the rulebook changes.
+
+### Minimal integration
+
+```jsx
+const API = 'http://localhost:42441'
+
+const { fields, rows, pkField } =
+  await (await fetch(`${API}/api/tables/Customers`)).json()
+
+await fetch(`${API}/api/tables/Customers/rows/${rowId}`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ TotalSales: 150 }),   // NOT { total_sales: 150 }
+})
+// then re-read. is_vip recomputed itself; you never write it.
+```
+
+## Getting the documentation and the generated code
+
+All of it is reachable over HTTP from the host repo — no `docker exec`, no
+guessing at container paths.
+
+| Endpoint | What you get |
+|---|---|
+| `GET /api/docs` | Full route list + conventions + tables (**start here**) |
+| `GET /api/rulespeak` | Business rules in plain English (Markdown; `?format=html` for the rendered doc) |
+| `GET /api/source` | Index of every generated file, grouped by transpiler |
+| `GET /api/source/:group/*` | One generated file as plain text |
+| `GET /api/rulebook/schema/:table` | Fields, types, formulas for one table |
+
+Source groups: `postgres` (DDL, `calc_*` functions, `vw_*` views), `api` (the
+running API's own `index.js` / `db.js` / `custom.js`), `admin-portal`,
+`rulespeak`, `xlsx`.
+
+```bash
+curl -s localhost:42441/api/source | jq '.groups[].key'
+curl -s localhost:42441/api/source/postgres/01-tables.sql
+curl -s localhost:42441/api/rulespeak
+```
+
+Read-only and confined to the generated tree. **To change any of it, edit the
+rulebook — not these files.**
+
+The same tree is also on disk when the editor runs host-backed (`srcIsExternal`
+/ `tempDir`): `effortless-editor-src/` beside the rulebook.
+
+## What's editable
+
+**Everything, through the API.** Row insert / update / delete, bulk update,
+add-field, create-table, CSV import/export, plus `PATCH /api/meta` for
+Name/Description/`_meta`.
+
+Edits land in the container's Postgres and are tracked as *uncommitted changes*
+until written back to `effortless-rulebook.json`:
+
+| Route | Use |
+|---|---|
+| `GET /api/uncommitted-status` | Are there unsaved edits? |
+| `POST /api/save-changes` | Merge edits back into the rulebook file |
+| `POST /api/discard-changes` · `/api/undo-last-change` | Roll back |
+| `POST /api/admin/run-build` | Trigger a rebuild |
+
+Because writes reach the rulebook, they are still rulebook-first — see
+`effortless-workflow`. Structural changes (new formulas, DAG edits) are usually
+still clearest hand-edited in the JSON.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| API serves a table that no longer exists | Re-run `bash edit-rulebook.sh` (table list is boot-time) |
+| `view-health` reports a broken view | Fix the rulebook; check for a reserved name like `__meta__` |
+| `404` on a route you expected | `GET /api/docs` for the real list — don't guess |
+| `"is not a raw field"` | You sent snake_case, or tried to write a calculated field |
+| Port already in use | `edit-rulebook.sh` clears squatters itself; just re-run it |
 
 ## See also
 
 - `effortless-init` / `effortless-bootstrap` / `effortless-setup-postgres` —
   each recommends installing this transpiler right after the rulebook exists.
-- `effortless-rulespeak` — the lighter, no-Docker alternative when you just
-  want the portable `rulespeak.html`/`.md` files and don't want a container.
-- `effortless-schema` / `effortless-query` — for understanding what you're
-  looking at in the generated UI (field types, the derived-file query ladder).
-- `effortless-workflow` — for how edits beyond Name/Description/`_meta`
-  should flow through the rulebook file itself, not around it.
-- `effortless-rulebook-devops` — if the project already has a promotion
-  pipeline (dev/staging/production), the editor is a *dev-only* viewer; it
-  doesn't participate in that pipeline.
+- `effortless-rulespeak` — no-Docker alternative for portable `rulespeak.html`/`.md`.
+- `effortless-schema` / `effortless-query` — field types and the derived-file query ladder.
+- `effortless-workflow` — how edits flow through the rulebook itself.
+- `effortless-rulebook-devops` — the editor is a *dev-only* viewer; it does not
+  participate in a promotion pipeline.
