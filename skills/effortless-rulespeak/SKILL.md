@@ -7,11 +7,14 @@ description: >
   Installs `rulebook-to-rulespeak` and emits `rulespeak/rulespeak.md` and
   `rulespeak/rulespeak.html` on every build.
 
-  **Default whenever a rulebook is created.** Any time an agent authors
-  `effortless-rulebook/effortless-rulebook.json` — "write a rulebook for …",
-  bootstrap, init, demo app, or hand-edit from scratch — install this
-  transpiler and run `effortless build` so the sibling `rulespeak/` folder
-  exists before handing back. Do not wait for the user to ask.
+  **Recommended, lightweight, no-Docker option whenever a rulebook is
+  created** — the same plain-English documentation is also produced
+  automatically by `effortless-rulebook-editor` (the recommended default
+  for most projects; see that skill). Reach for this skill instead when the
+  project doesn't want a Docker container running, wants portable static
+  HTML/MD files to hand off, or the editor isn't installed for some reason.
+  Neither is mandatory — both are best-practice recommendations, not
+  requirements.
 
   Triggers: "generate rulespeak", "rulebook-to-rulespeak", "english rules
   document", "plain language rules", "business rules doc from rulebook",
@@ -31,18 +34,23 @@ a declarative, business-readable document of the same rules the formulas encode.
 Every calculated, lookup, and aggregation field becomes a definitional rule;
 relationships become fact types; tables become vocabulary.
 
-This is the **default human-readable sibling** of every new rulebook — not an
-optional add-on. If you just wrote `effortless-rulebook.json`, you also wire
-RuleSpeak before declaring the task done.
+This is the **lightweight, no-Docker way to get a human-readable sibling** of
+a new rulebook. `effortless-rulebook-editor` (see that skill) produces the
+same plain-English content automatically as part of its container, and is
+the recommended default for most projects. Reach for this skill instead when
+you want portable static files, don't want Docker running, or the editor
+isn't installed. Both are best-practice recommendations — pick one, neither
+is forced.
 
 For **clickable in-app field exploration** (hover cards, DAG pages), load
 **effortless-explainer-dag** separately when the user asks — that is optional,
 not part of the standard rulebook-creation path.
 
-## Default on rulebook creation (do this every time)
+## Recommended on rulebook creation (when not using effortless-rulebook-editor)
 
 Whenever you create or first populate a rulebook hub — regardless of whether
-Postgres, an app, or Airtable comes next:
+Postgres, an app, or Airtable comes next — and you're not already covered by
+an installed `effortless-rulebook-editor`:
 
 1. **Install** (once per project, skip if `effortless.json` already has
    `rulebooktorulespeak`):
@@ -70,13 +78,16 @@ rulespeak/rulespeak.md     ← same content, markdown
 
 4. **Tell the user** where to read the rules in English (`rulespeak/rulespeak.html`).
 
-Do **not** skip this because the user only asked for "a rulebook" — the
-RuleSpeak sibling is how humans sanity-check what the JSON encodes. Only skip
-if the user explicitly says they do not want RuleSpeak.
+This is how humans sanity-check what the JSON encodes, so it's worth doing
+even for "just a rulebook" — but it's a recommendation, not a requirement.
+Skip it if the user doesn't want it, or if `effortless-rulebook-editor` is
+already installed (it produces the same content without a separate step).
 
-Parent skills that must invoke this block: **effortless-init** (Step 3.5),
-**effortless-bootstrap** (after Step 10), **effortless-demo-app** (bootstrap
-step 7), **effortless-setup-postgres** (after rulebook is in place).
+Parent skills that mention this as the no-Docker option: **effortless-init**
+(Step 3.5), **effortless-bootstrap** (after Step 10), **effortless-demo-app**
+(bootstrap step 7), **effortless-setup-postgres** (after rulebook is in
+place) — each of those now recommends `effortless-rulebook-editor` first and
+this skill as the lighter alternative.
 
 ## Install (reference)
 
@@ -131,6 +142,8 @@ column contract.
 
 ## See also
 
+- `effortless-rulebook-editor` — the recommended default for most projects;
+  produces this same plain-English content automatically inside its container.
 - `effortless-explainer-dag` — on-demand in-app DAG + hover RuleSpeak (not default)
 - `effortless-pipeline` — transpiler install paths and build order
 - `effortless-schema` — load before authoring the rulebook JSON

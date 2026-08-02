@@ -339,10 +339,22 @@ cd ..
 
 Verify (either path): `effortless-rulebook/effortless-rulebook.json` exists. If you installed a `*-to-rulebook` transpiler, `effortless.json` also has a `RelativePath: /effortless-rulebook` entry for it.
 
-**Step 2.5 — RuleSpeak sibling (DEFAULT):** load **effortless-rulespeak** and install
-`rulebook-to-rulespeak` into `rulespeak/` (see that skill's "Default on rulebook
-creation" block). Run `effortless build` and confirm `rulespeak/rulespeak.html`
-exists before proceeding to Postgres — even if Step 3 is still ahead.
+**Step 2.5 — Rulebook editor (recommended default, not required):** before
+building out the "real" local Postgres + hand-rolled app in Steps 3+, load
+**effortless-rulebook-editor** and install it against the rulebook you just
+placed. This is a floor, not a replacement for what follows — it gives an
+instant DB, API, and admin UI (plus plain-English rule docs) to look at while
+the rest of this skill's Postgres/app setup is still ahead:
+
+```bash
+effortless -install effortless-rulebook-editor -i effortless-rulebook.json
+./effortless-rulebook/edit-rulebook.sh
+```
+
+**No-Docker alternative:** load **effortless-rulespeak** instead for the
+lighter, static-file version of the same plain-English documentation (see
+that skill's "Recommended on rulebook creation" block). Skip both if the
+user doesn't want them.
 
 ### Step 3: Install rulebook-to-postgres
 
@@ -483,6 +495,7 @@ something goes sideways.
 
 ## See also
 
+- `effortless-rulebook-editor` — Step 2.5's recommended default: instant DB/API/admin UI, before the Postgres+app steps below.
 - `effortless-orchestrator` — for the canonical Token Discipline + the bigger mental model.
 - `effortless-cli` — for installing / updating / using the `effortless` CLI binary if it's missing in preflight.
 - `effortless-cli` / `effortless-pipeline` — for the install / build commands this skill drives.

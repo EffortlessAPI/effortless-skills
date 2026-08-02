@@ -131,10 +131,21 @@ Add the inference layers directly in the rulebook:
 This builds out the full analytical power of the rulebook. LLMs are strong at this
 — formulas, lookups, and rollups are just fields in the JSON.
 
-### Step 10.5 — RuleSpeak sibling (DEFAULT)
+### Step 10.5 — Rulebook editor (recommended default, not required)
 
-Before entering the loop, install the plain-English documentation spoke.
-Load **effortless-rulespeak** and follow its "Default on rulebook creation" block:
+Before entering the loop, the best-practice next step is standing up the
+rulebook editor — an instant DB, API, and admin UI (plus plain-English rule
+docs) from the rulebook you just authored, with zero application code. Load
+**effortless-rulebook-editor**:
+
+```bash
+effortless -install effortless-rulebook-editor -i effortless-rulebook.json
+./effortless-rulebook/edit-rulebook.sh
+```
+
+This is a recommendation, not a requirement — skip it if the user doesn't
+want Docker running. **No-Docker alternative:** load **effortless-rulespeak**
+instead for the lighter, static-file version of the same documentation:
 
 ```bash
 mkdir -p rulespeak && cd rulespeak
@@ -142,8 +153,8 @@ effortless -install rulebook-to-rulespeak -i ../effortless-rulebook/effortless-r
 cd .. && effortless build
 ```
 
-Confirm `rulespeak/rulespeak.html` exists — this is the human-readable sanity
-check for the rulebook you just authored.
+Either way, this is the human-readable sanity check for the rulebook you just
+authored.
 
 ### Step 11: You're in the loop
 
@@ -191,7 +202,8 @@ This output is a **starting point** — it needs to be reviewed, normalized, and
 | Mock data | `bootstrap/mock-data/` | Test data and scenarios |
 | Bootstrap rulebook | `bootstrap/bootstrap-rulebook.json` | Rough first-pass rulebook |
 | Final rulebook | `effortless-rulebook/effortless-rulebook.json` | Production rulebook (the hub / SSoT) |
-| RuleSpeak | `rulespeak/rulespeak.html` | Plain-English rules (default sibling; regenerated on build) |
+| Rulebook editor | `effortless-rulebook/edit-rulebook.sh` | Instant DB/API/admin UI + rule docs (recommended default) |
+| RuleSpeak (no-Docker alt) | `rulespeak/rulespeak.html` | Plain-English rules, static files |
 
 ## See also
 
@@ -199,7 +211,8 @@ This output is a **starting point** — it needs to be reviewed, normalized, and
 - `effortless-conventions` — naming and DAG rules the rulebook must follow.
 - `effortless-schema` — JSON structure the rulebook must conform to.
 - `effortless-loop` — what you enter at Step 11 once the rulebook hub is seeded.
-- `effortless-rulespeak` — Step 10.5; default plain-English sibling on every new rulebook.
+- `effortless-rulebook-editor` — Step 10.5's recommended default: instant DB/API/admin UI.
+- `effortless-rulespeak` — Step 10.5's no-Docker alternative for a static plain-English sibling.
 - `effortless-setup-postgres` — for projects that target Postgres, run once the rulebook is in place.
 - `effortless-airtable` / `effortless-airtable-omni` — *only* for the optional Airtable-first appendix path.
 

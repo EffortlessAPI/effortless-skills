@@ -315,7 +315,8 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-bases` | bases.effortlessapi.com + magic-links + RLS in 5 minutes |
 | `effortless-magic-links` | Magic-link auth on ANY Postgres-backed project |
 | `effortless-excel-export` | Adding Excel export from live Postgres data |
-| `effortless-rulespeak` | **RuleSpeak doc (default on rulebook creation)** — `rulebook-to-rulespeak` → `rulespeak/rulespeak.html` + `.md`. Install and build whenever the hub is first authored |
+| `effortless-rulebook-editor` | **Recommended default on rulebook creation** — instant DB + API + admin UI + plain-English rule docs from a bare rulebook, zero app code. Not required, but the fastest way to have something real to look at |
+| `effortless-rulespeak` | No-Docker alternative to `effortless-rulebook-editor` — `rulebook-to-rulespeak` → static `rulespeak/rulespeak.html` + `.md` |
 | `effortless-explainer-dag` | **Explainer DAG (on demand)** — in-app `rulebook-to-explainer-dag`, `data-er-dag`, hover + full field pages. Load only when user asks; not default for POCs |
 | `effortless-demo-app` | Spin up a complete demo POC from a one-line domain description |
 | `effortless-claude-updates` | Anything about the **skill set** — check, update, author skills |
@@ -335,7 +336,7 @@ Sub-skills load automatically based on what you're doing:
 - **Every field** has a `Description`
 - **Schema is small, data is big** — query for entities, never read whole file
 - **Default change path**: Rulebook-First (edit the hub → build). Airtable/Excel are optional sibling input spokes if the project opted in.
-- **Default on new rulebooks**: install `rulebook-to-rulespeak` → `rulespeak/rulespeak.html` (plain-English sibling; see `effortless-rulespeak`)
+- **Recommended default on new rulebooks**: install `effortless-rulebook-editor` → instant DB + API + admin UI + rule docs (not required — see `effortless-rulebook-editor`; no-Docker alternative is `effortless-rulespeak`)
 - **`effortless build`** runs enabled transpilers; `-id` includes disabled ones
 - **`effortless.json`** defines the build pipeline
 

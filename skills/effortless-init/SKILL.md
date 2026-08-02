@@ -87,11 +87,26 @@ Then `effortless build` to pull the first rulebook. (Tip: many teams keep the gr
 *downstream* — `rulebook-to-airtable` only — as a read-only mirror for review/QA,
 and edit the rulebook directly.)
 
-## Step 3.5 — RuleSpeak sibling (DEFAULT — do not skip)
+## Step 3.5 — Rulebook editor (recommended default, not required)
 
-Whenever a rulebook hub exists (Step 3, bootstrap, or demo authoring), install
-the plain-English sibling **before** handing work back — even if Postgres or an
-app is not wired yet. Load **effortless-rulespeak** and run:
+As soon as a rulebook hub exists (Step 3, bootstrap, or demo authoring), the
+best-practice next step is standing up the rulebook editor — before Postgres
+or an app is wired up. Load **effortless-rulebook-editor** and, from the same
+folder as the rulebook:
+
+```bash
+effortless -install effortless-rulebook-editor -i effortless-rulebook.json
+./effortless-rulebook/edit-rulebook.sh
+```
+
+This gets a real DB, a real API, and a browsable admin UI — plus plain-English
+rule documentation, generated automatically — from a bare rulebook with zero
+application code written. It's a recommendation, not a requirement: skip it if
+the user doesn't want Docker running locally.
+
+**No-Docker alternative:** if Docker isn't available or wanted, load
+**effortless-rulespeak** instead for the lighter, static-file version of the
+same plain-English documentation:
 
 ```bash
 mkdir -p rulespeak
@@ -101,10 +116,7 @@ cd ..
 effortless build
 ```
 
-Confirm `rulespeak/rulespeak.html` and `rulespeak/rulespeak.md` exist. Open the
-HTML in a browser to verify the rules read correctly in English.
-
-Skip only if the user explicitly opts out of RuleSpeak.
+Skip both only if the user explicitly opts out.
 
 ## Step 4 — Write CLAUDE.md (CRITICAL)
 
@@ -162,9 +174,10 @@ On "do a turn" / "rebuild", load **effortless-loop**.
 - Build: `effortless build` from project root
 - Start: `./start.sh` from project root
 
-## RuleSpeak (plain-English rules)
-- Generated at `rulespeak/rulespeak.html` and `rulespeak/rulespeak.md` on every build
-- Install: see **effortless-rulespeak** (default whenever the rulebook hub is created)
+## Rulebook editor (recommended default)
+- Instant DB + API + admin UI + plain-English rule docs from a bare rulebook.
+- Install: see **effortless-rulebook-editor** (recommended default step whenever the rulebook hub is created; not required)
+- No-Docker alternative: **effortless-rulespeak** generates the same plain-English docs as static `rulespeak/rulespeak.html` / `.md` files
 
 ## ERB Skills
 All conventions live in the effortless-* skills. Routing starts at **effortless-orchestrator**.
@@ -287,6 +300,7 @@ If the project uses nvm, bake the version switch into start.sh — see effortles
 
 ## See also
 
+- `effortless-rulebook-editor` — Step 3.5's recommended default: instant DB/API/admin UI from the bare rulebook.
 - `effortless-setup-postgres` — superset for Postgres projects (preflight + init-db + this).
 - `effortless-cli` — `effortless -init`, `-login`, `-setAccountAPIKey`, install/update of the CLI binary itself.
 - `effortless-pipeline` — `effortless.json` structure and transpiler installation paths.

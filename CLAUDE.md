@@ -9,38 +9,36 @@ This is the **SSoT repo for the effortless-claude skill suite itself** — the 3
 
 ## What's special about this ERB project
 
-- **Hand-authored rulebook, now the authoritative hub.** `effortless-rulebook/effortless-rulebook.json` is written/edited by hand or through the **Rulebook Portal** (see below), not generated from Airtable. There is no `airtable-to-rulebook` transpiler in the pipeline.
-- **The rulebook is internally complete.** The `SkillBodies` section stores the **full text of every skill's `SKILL.md` verbatim** (byte-for-byte, in `FullText`). *If you have the rulebook, you have the skills.* Skills-table rows stay thin (Description, Category, ScopeGate, Audience); the body text lives in the parallel `SkillBodies` section.
-- **The rulebook describes AND contains the skill suite.** Tables: `Skills`, `SkillCategories`, `ScopeGateTypes`, `Audiences`, plus `SkillBodies`. Each skill folder under `skills/` corresponds to one row in `Skills` and one row in `SkillBodies`.
+- **A rulebook exists alongside the skills, describing them.** `effortless-rulebook/effortless-rulebook.json` mirrors the skill suite — tables `Skills`, `SkillCategories`, `ScopeGateTypes`, `Audiences`, plus `SkillBodies` (which stores each skill's `SKILL.md` text in `FullText`). There is no `airtable-to-rulebook` transpiler in the pipeline; the rulebook is hand-authored or edited through the **Rulebook Portal**.
+- **A portal exists that CAN regenerate `SKILL.md` from the rulebook** (see below), and that direction — rulebook as the single source of truth, `SKILL.md` as a generated artifact — is the intended end state. **It is not the current state.** Treat it as a work in progress, not a completed cutover.
 
-## SSoT discipline — the rulebook is authoritative; SKILL.md files are GENERATED
+## SSoT discipline — `SKILL.md` files are still authoritative today
 
-> **This inverted on 2026-07-26.** Before that, `skills/*/SKILL.md` was the source of truth and the rulebook merely described the suite. **That is no longer true.**
+> **Reality check, current as of this file's last edit:** the most recent skill changes in this repo's git history are commits that touch `skills/*/SKILL.md` directly, with no corresponding edit to `effortless-rulebook.json` in the same commit. That means the rulebook can and does **lag behind** the skills. Don't trust a claim that the rulebook is current without checking `git log` on both paths first.
 
-- **`effortless-rulebook/effortless-rulebook.json` is the single source of truth** for both skill *metadata* (Skills/Categories/ScopeGates/Audiences) and skill *body text* (`SkillBodies.FullText`).
-- **`skills/<name>/SKILL.md` files are GENERATED artifacts** — regenerated from `SkillBodies.FullText` on every portal Commit. **Do not hand-edit a `SKILL.md` expecting it to persist** — the next Commit overwrites it from the rulebook. Edit the rulebook (via the portal, or the `SkillBodies` row directly with permission) instead.
-- Downstream of the rulebook, in order: `skills/*/SKILL.md` → `install.sh` → `~/.claude/skills/`, and `raw_skills.zip`. Never edit an installed copy directly; never edit a generated `SKILL.md` directly.
-- **Companion files are NOT generated** and are safe to edit directly: `skills/effortless-airtable-omni/omni-send.mjs`, `skills/*/REFERENCE.md`, `skills/effortless-rulebook-devops/reference/`. Only `SKILL.md` is rulebook-owned.
+- **`skills/<name>/SKILL.md` is the actual source of truth.** Hand-editing it directly is the normal, correct way to change a skill today — not a shortcut that gets silently overwritten.
+- **The rulebook-as-SSoT / portal-Commit-regenerates-everything model is the target design, not yet the practice.** The portal (see below) is real, working infrastructure and *can* perform that regeneration when run — but nothing in the current workflow forces every `SKILL.md` edit through it, and recent history shows edits routinely bypass it. Don't assume "the rulebook must reflect this because a Commit ran" — verify.
+- **Derived/minimized artifacts** (any `.min.md`-style condensed file, `raw_skills.zip`, `install.sh`'s output) are downstream of `SKILL.md`, not the rulebook, whenever the rulebook is stale relative to the skills. If you need the authoritative text of a skill, read `skills/<name>/SKILL.md` — not the rulebook, not a minimized derivative.
+- **Companion files** — `skills/effortless-airtable-omni/omni-send.mjs`, `skills/*/REFERENCE.md`, `skills/effortless-rulebook-devops/reference/` — are always hand-edited directly regardless of any of the above.
 
-## The Rulebook Portal (the editing surface)
+## The Rulebook Portal (an editing surface, not the enforced one)
 
-`portal/` is a Vite + Node + docker-compose app for editing the rulebook. It is the intended editing surface for the skills.
+`portal/` is a Vite + Node + docker-compose app for editing the rulebook and, when Committed, regenerating `SKILL.md` files from it. It is useful, working infrastructure for the eventual rulebook-first model — but do not assume it is where skill edits actually happen today, and do not assume the rulebook it edits is currently in sync with `skills/`.
 
 - **Run it:** `cd portal && ./start.sh` → UI at http://localhost:5173, API at :5177, ephemeral Postgres at :55432.
-- **Ephemeral by design:** on boot the portal seeds a **scratch Postgres** (tmpfs, in a Docker container) from the rulebook. Edits live only in that scratch DB — *an edit is only as stable as it is until you Commit.* Losing the container loses only uncommitted edits.
-- **Commit is atomic-set regeneration:** DB → rewrite `effortless-rulebook.json` (style-preserving, so diffs stay minimal) → regenerate **all** `SKILL.md` from `SkillBodies.FullText` → rebuild `raw_skills.zip` → run `minimize-rulebook` (`effortless build`) → run `lint-skills.sh`. Everything updates together as one set.
-- **Lossless guarantee:** a no-op Commit is a zero-diff and every `SKILL.md` regenerates byte-identically to `SkillBodies.FullText`. This is the invariant that makes the rulebook safe to treat as authoritative.
+- **Ephemeral by design:** on boot the portal seeds a **scratch Postgres** (tmpfs, in a Docker container) from the rulebook — which itself may already be stale relative to `skills/`. Edits live only in that scratch DB until Commit.
+- **Commit, if run, is atomic-set regeneration:** DB → rewrite `effortless-rulebook.json` → regenerate **all** `SKILL.md` from `SkillBodies.FullText` → rebuild `raw_skills.zip` → run `minimize-rulebook` → run `lint-skills.sh`. This is real and it works — but it will **overwrite hand-edits to `SKILL.md`** with whatever is in the (possibly stale) rulebook. Do not run a portal Commit casually on a repo where `SKILL.md` files have been hand-edited more recently than the rulebook, without reconciling first.
 
-## Workflow
+## Workflow (current practice)
 
-- Modifying a skill (metadata or body) → edit in the **portal**, then **Commit** (regenerates the whole set). Or edit the rulebook's `Skills`/`SkillBodies` row directly with permission, then run the same regenerate/build steps.
-- Adding a new skill → add a `Skills` row AND a `SkillBodies` row (with the full `SKILL.md` text in `FullText`), then Commit.
-- Adding a new category or scope-gate pattern → add a row to `SkillCategories` or `ScopeGateTypes` first, then reference it from the relevant `Skills` row.
-- Run `bash lint-skills.sh` before opening a PR (the portal Commit already runs it).
+- **Modifying a skill (metadata or body) → edit `skills/<name>/SKILL.md` directly.** This is the actual, expected path. Optionally also update the corresponding `SkillBodies` row in the rulebook to keep it from drifting further — treat that as best-effort housekeeping, not a requirement for the skill edit to "count."
+- Adding a new skill → add the `skills/<name>/SKILL.md` file (and its folder). Add matching `Skills`/`SkillBodies` rows to the rulebook if you're keeping it in sync; not required.
+- Run `bash lint-skills.sh` before opening a PR.
+- If someone wants to move this repo toward the rulebook-first end state for real, that's a distinct, deliberate project (reconcile the rulebook against current `skills/`, then actually route edits through the portal going forward) — don't assume it's already been done because this file once said so.
 
 ## Ground rules for Claude in this repo
 
 - **Don't auto-commit.** The user reviews and commits manually. Setup/install/portal steps don't bypass this.
-- **Don't hand-edit generated `SKILL.md` files** — they're regenerated from the rulebook. Edit the rulebook.
-- **Don't edit the installed copies under `~/.claude/skills/effortless-*` directly** — they're downstream of `skills/`, which is itself downstream of the rulebook.
+- **Hand-editing `SKILL.md` files directly is correct and expected** — they are not silently regenerated out from under you in current practice. (This differs from the aspirational rulebook-first design described above; don't conflate the two.)
+- **Don't edit the installed copies under `~/.claude/skills/effortless-*` directly** — they're downstream of `skills/`.
 - **Keep skills concise** (~150 lines target). Skills are read by Claude, not human onboarders.
