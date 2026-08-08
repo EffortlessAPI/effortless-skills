@@ -306,6 +306,7 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-query` | Querying the rulebook JSON — listing tables, extracting schema, finding relationships |
 | `effortless-schema` | Understanding the JSON structure — field types, datatypes, formula syntax, `_meta` |
 | `effortless-conventions` | Naming, DAG, PK/FK rules, no many-to-many |
+| `effortless-xlsx-to-rulebook` | Porting an Excel/Sheets spreadsheet into a rulebook — the syntax gaps (1-hop-only being the big one) |
 | `effortless-workflow` | Editing the hub — directly, via Airtable, or via reverse-sync; permission checkpoints |
 | `effortless-pipeline` | `effortless.json`, transpilers, build mechanics |
 | `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `*b-customize-*` |

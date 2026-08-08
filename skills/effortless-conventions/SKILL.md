@@ -134,6 +134,18 @@ The rulebook IS a DAG. Understanding this is essential.
 - **Level 2+**: Calculated fields that depend on other calculated fields
 - Formula parsing must respect this ordering — compute Level 0 first, then Level 1, etc.
 
+### Cross-table reads are 1 hop only
+
+Same acyclicity discipline, applied to *reads* not just structure: a `lookup`
+or `aggregation` field crosses exactly **one** FK edge — current table to one
+directly-related table. No formula chains two relationships (`A -> B -> C`)
+or filters `A` by a condition that lives on `C`. If a value needs to cross
+two hops, flatten it: add a same-row field on `B` that captures the fact one
+hop from `C`, then read *that* field from `A` one hop from `B`. See
+`effortless-schema`'s "Hard limit: 1 hop only" for the formula-syntax detail
+and `effortless-cmcc`'s anti-pattern checklist for why this is load-bearing,
+not a current-tooling gap.
+
 ### Visualizing the DAG
 ```
 Departments

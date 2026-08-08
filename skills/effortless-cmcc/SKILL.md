@@ -122,6 +122,7 @@ substrate constraint it violates, and the CMCC-shaped fix.
 | New "auth users" / "lookup" / "small admin" table created directly in Postgres | **SSoT** — the rulebook is where *all* business entities live, no exceptions | Add the table to `effortless-rulebook.json` (or via Airtable, if the project opted into that input spoke); rebuild. |
 | Triggers / stored procedures hiding business rules in Postgres | **SSoT + substrate equivalence** — rules in one substrate can't be projected to others | Move the logic into the rulebook as a formula or aggregation; let every substrate render it. |
 | Comment in code: "TODO: keep this in sync with X" | **SSoT** — synchronization-by-convention is drift waiting to happen | The fact that you wrote that comment IS the diagnostic. Find the rulebook entry that should generate both. |
+| A formula that chains a lookup through 2+ hops (`A -> B -> C`), or filters one table by a condition on a table 2 hops away (e.g. `INDEX/MATCH` with a non-FK, condition-based `MATCH`) | **L/A** (Lookup, Aggregation) — both are defined as exactly 1 hop; the spreadsheet this rulebook may trace back to could do N-hop chains, the rulebook cannot | Flatten: add the intermediate fact as its own field on `B` (1 hop from `C`), then reference *that* field from `A` (1 hop from `B`). Two 1-hop fields, never one 2-hop formula. See `effortless-schema`'s "Hard limit: 1 hop only." |
 
 **The escalation rule.** When you catch yourself reaching for any of these, the
 right move is almost never "do it anyway, just this once." Three steps in order:
