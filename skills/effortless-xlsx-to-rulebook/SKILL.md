@@ -7,8 +7,11 @@ description: >
   Triggers: "convert this spreadsheet to a rulebook", "turn this Excel sheet
   into a rulebook", "this used to be a spreadsheet", "port this Google Sheet",
   "xlsx-to-rulebook", "why doesn't this formula work in the rulebook", a
-  formula that worked in Excel/Sheets failing at `effortless build` time, or
-  any INDEX/MATCH/VLOOKUP-shaped formula being carried over from a sheet.
+  formula that worked in Excel/Sheets failing at `effortless build` time,
+  any INDEX/MATCH/VLOOKUP-shaped formula being carried over from a sheet, or
+  a column whose cells hold a comma/semicolon-delimited list, a JSON
+  blob/object, or any other collapsed sub-graph that should decompose into
+  first-class rows/tables.
 
   **Scope (load gate):** Effortless projects only — project root must contain
   `effortless.json` AND a CLAUDE.md identifying the project as ERB
@@ -72,6 +75,53 @@ not something threaded through a query at read time.
 | Circular references (rare, but some legacy sheets have iterative-calc mode on) | Hard error — the rulebook is a DAG, cycles are never allowed. `effortless-conventions` covers this at the table level too (no many-to-many). |
 | Merged cells / formatting-as-data (e.g. color coding meaning something) | Not portable at all — formatting isn't data. If a color means something ("red = overdue"), that's a missing `raw`/`calculated` field the sheet never made explicit; add it. |
 | A named range spanning multiple tables' worth of concept (e.g. one "Lookup" tab backing several relationships) | Split it: one rulebook table per real entity. A single junk-drawer lookup tab in Excel usually hides 2–3 real entities once you ask "what is each row actually *of*." |
+| A single cell holding a collapsed sub-graph — a comma/semicolon-delimited enum list, a JSON object/array pasted into a cell, a "tags" or "notes" column encoding several facts in one string | Decompose it into first-class rows/tables, same as everything else. See "Collapsed sub-graphs in a single cell" below. |
+
+## Collapsed sub-graphs in a single cell
+
+Spreadsheets have no native way to express "this cell is actually several
+related facts," so authors collapse them into one cell by convention instead:
+a `Tags` column with `"urgent, needs-review, blocked"`, a `Contacts` column
+with `"alice@x.com; bob@x.com"`, a `Metadata` column holding a hand-typed
+JSON blob (`{"color":"red","priority":2}`), or a consistently-shaped
+mini-record packed into a delimited string. Excel has no opinion on this —
+it's just text in a cell. A rulebook does: **SDLAF has no "opaque blob"
+primitive.** Schema, Data, Lookups, Aggregations, and Formulas are the whole
+vocabulary, and every one of them presupposes the thing being modeled is
+already a named field or a named table — not a string a downstream reader
+has to re-parse to find the facts hiding inside it. See `effortless-cmcc` for
+why: an unparsed delimited list or embedded JSON blob is exactly the kind of
+"design-time semantics that didn't factor into SDLAF" the conjecture predicts
+shouldn't survive contact with the substrate, because the facts inside it
+*are* expressible (they're finite, they're known at design time) — they're
+just not yet witnessed as their own rows.
+
+**The fix is the same move as flattening a 2-hop lookup: promote the hidden
+structure to a first-class citizen of the DAG.**
+
+- **Delimited enum list in one cell** (`"urgent, needs-review, blocked"` on a
+  `Ticket` row) → this is a hidden many-to-many, which means a junction table
+  per `effortless-conventions`: a `Tags` table (one row per distinct tag) and
+  a `TicketTags` junction table (one row per ticket-tag pairing), never a
+  `SPLIT()`-and-hope formula trying to fake set membership out of a string.
+- **Consistent JSON object pasted into a cell** (`{"color":"red","priority":2}`
+  repeated, same shape, down a column) → each key becomes its own `raw`
+  field on the table, or — if the object represents a related concept in its
+  own right rather than scalar attributes of the row it's on — its own
+  related table with a proper FK back, per the same "what is each row
+  actually *of*" test used for junk-drawer lookup tabs.
+- **JSON array in a cell** (a list of sub-records, not just scalars) → almost
+  always a missed child table. One rulebook row per array element, FK'd back
+  to the parent row, the same as any other 1-to-many the sheet never made
+  explicit because a single cell was standing in for a whole related table.
+
+The test is always the same one used elsewhere in this skill: **ask what
+each hidden piece actually *is*, not how it happens to be encoded.** A
+comma-separated list is encoding a set of related rows. A repeated JSON
+shape is encoding a table the sheet never got its own tab. Once decomposed,
+these are ordinary raw fields, lookups, and relationships — nothing about
+them is special after decomposition; the entire fix is refusing to leave
+them collapsed.
 
 ## Practical porting workflow
 
@@ -79,7 +129,9 @@ not something threaded through a query at read time.
    laid out. A sheet's tab structure often reflects presentation, not the
    underlying DAG — see `effortless-conventions` for table-naming and
    junction-table guidance (a many-to-many-shaped tab becomes a real junction
-   entity, never a raw pivot).
+   entity, never a raw pivot). This includes entities hiding *inside* a
+   single cell, not just across tabs — see "Collapsed sub-graphs in a single
+   cell" above.
 2. **Port raw columns as `raw` fields, formulas as `calculated`/`lookup`/
    `aggregation` fields**, matching the type table in `effortless-schema`.
 3. **For every formula that crosses a table boundary, count the hops before
