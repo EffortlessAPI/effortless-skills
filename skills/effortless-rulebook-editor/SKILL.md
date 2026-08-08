@@ -51,25 +51,44 @@ the static-file `effortless-rulespeak` output.
 
 ## How to invoke it
 
-**Install it into the SAME folder as the rulebook it edits — never the project
-root.** `edit-rulebook.sh` is only unambiguous when it sits next to its own
-`effortless-rulebook.json`: a project can have more than one rulebook, and each
-gets its own editor instance, generated files, and container.
+**MUST be installed FROM the same folder as the `effortless-rulebook.json` it
+edits — never from the project root, even if `RelativePath` looks like it
+would land there.** `edit-rulebook.sh` is only unambiguous when it sits next
+to its own `effortless-rulebook.json`: a project can have more than one
+rulebook, and each needs its own editor instance, generated files, and
+container. Running the install from the project root against a nested
+rulebook (e.g. `effortless-rulebook/effortless-rulebook.json`) does **not**
+work around this — the CLI resolves `-i effortless-rulebook.json` relative to
+the current working directory, so from the root it reports "No INPUT files
+matched" and writes the generated files to the wrong place (observed: one
+directory *above* the project root entirely, sibling to the project instead of
+inside it).
 
-From the project root, with the rulebook at `effortless-rulebook/effortless-rulebook.json`:
+`cd` into the rulebook's own folder first, then install from there:
 
 ```bash
+cd effortless-rulebook   # the folder that directly contains effortless-rulebook.json
 effortless -install effortless-rulebook-editor -i effortless-rulebook.json
 ```
 
-registered with `RelativePath: "/effortless-rulebook"` in `effortless.json`, then:
+This registers `RelativePath: "/effortless-rulebook"` in `effortless.json` and
+generates `edit-rulebook.sh` directly inside `effortless-rulebook/`, next to
+the rulebook file itself — no `-p rulebookPath=` override needed. Then:
 
 ```bash
-cd effortless-rulebook && bash edit-rulebook.sh
+bash edit-rulebook.sh        # still inside effortless-rulebook/
 ```
 
-For a second rulebook elsewhere, install a second independent instance pointed
-at that folder (`RelativePath: "/billing-rulebook"`).
+For a second rulebook elsewhere (e.g. `billing-rulebook/billing-rulebook.json`),
+`cd` into *that* folder and repeat — a fully independent install, its own
+`edit-rulebook.sh`, own container, own `RelativePath: "/billing-rulebook"`.
+
+**Verify after installing, before launching:** `edit-rulebook.sh` must exist
+in the same folder as `effortless-rulebook.json` (`ls` that folder). If it
+isn't there, or if the install command printed a "No INPUT files matched"
+warning, the install ran from the wrong directory — remove the generated
+`docker/` folder and any `ProjectTranspilers` entry it added to
+`effortless.json`, then redo it from inside the rulebook's folder.
 
 **Ports are fixed**, and the script prints them:
 
@@ -246,6 +265,7 @@ still clearest hand-edited in the JSON.
 | `404` on a route you expected | `GET /api/docs` for the real list — don't guess |
 | `"is not a raw field"` | You sent snake_case, or tried to write a calculated field |
 | Port already in use | `edit-rulebook.sh` clears squatters itself; just re-run it |
+| `view-health` / `/api/tables/:table` reports `relation "vw_<name>" does not exist` for a table whose name starts with a run of capitals (e.g. `AILevels`, `AIStrategies`) | Known bug in `rulebook-to-node-postgres-api`: its view-name lookup does a naive `tableName.toLowerCase()` (`AILevels` → `vw_ailevels`), while `rulebook-to-postgres` derives the real view with a proper acronym-aware snake_case split (`AILevels` → `vw_ai_levels`) — the two disagree and only the SQL side is right (confirm with `\dv` in psql). Workaround until the API generator is fixed: avoid table names starting with a 2+ letter all-caps acronym directly followed by another capitalized word; e.g. `AILevels` → `PlayerLevels` or `AiLevels`. |
 
 ## See also
 
