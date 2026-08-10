@@ -51,44 +51,73 @@ the static-file `effortless-rulespeak` output.
 
 ## How to invoke it
 
-**MUST be installed FROM the same folder as the `effortless-rulebook.json` it
-edits — never from the project root, even if `RelativePath` looks like it
-would land there.** `edit-rulebook.sh` is only unambiguous when it sits next
-to its own `effortless-rulebook.json`: a project can have more than one
-rulebook, and each needs its own editor instance, generated files, and
-container. Running the install from the project root against a nested
-rulebook (e.g. `effortless-rulebook/effortless-rulebook.json`) does **not**
-work around this — the CLI resolves `-i effortless-rulebook.json` relative to
-the current working directory, so from the root it reports "No INPUT files
-matched" and writes the generated files to the wrong place (observed: one
-directory *above* the project root entirely, sibling to the project instead of
-inside it).
-
-`cd` into the rulebook's own folder first, then install from there:
+**`-p rulebookPath=` is REQUIRED. `-i` alone is not enough, and `cd`-ing to
+the right folder does not save you.** Install from the rulebook's own folder,
+and pass the two `-p` params verbatim:
 
 ```bash
 cd effortless-rulebook   # the folder that directly contains effortless-rulebook.json
-effortless -install effortless-rulebook-editor -i effortless-rulebook.json
+effortless -install effortless-rulebook-editor \
+  -i effortless-rulebook.json \
+  -p rulebookPath=effortless-rulebook.json \
+  -p dockerfilePath=docker/Dockerfile
 ```
 
-This registers `RelativePath: "/effortless-rulebook"` in `effortless.json` and
-generates `edit-rulebook.sh` directly inside `effortless-rulebook/`, next to
-the rulebook file itself — no `-p rulebookPath=` override needed. Then:
+That produces the correct — and only correct — layout:
+
+```
+effortless-rulebook/
+├── effortless-rulebook.json
+├── edit-rulebook.sh        # next to the rulebook
+└── docker/                 # Dockerfile + siblings, BELOW edit-rulebook.sh
+```
+
+### Why `-p rulebookPath=` is not optional
+
+**`-i` and `-p rulebookPath=` are different things and do not substitute for
+each other.** The tool reads `-p` params only; `-i` never reaches the path
+logic. Its default is `rulebookPath = "../effortless-rulebook.json"`, whose
+dirname is `..` — so with `-i` alone every generated file is emitted **one
+level up, into the project root**, no matter what `RelativePath` says and no
+matter which directory you ran the install from.
+
+That default assumes an install in a *sibling* folder (the `/postgres`
+pattern, rulebook one level up). This transpiler installs *into*
+`/effortless-rulebook`, where the rulebook is in the **same** folder — so the
+default is off by exactly one level for this tool's own canonical location.
+Passing `rulebookPath=effortless-rulebook.json` makes the dirname `.` and the
+files land in place.
+
+**Root placement is not merely untidy — it breaks the container.**
+`edit-rulebook.sh` bind-mounts *its own containing folder* as
+`/app/effortless-rulebook`. From the project root that mounts the **entire
+repo** — `node_modules/`, `.git/`, `dist/` — as the rulebook directory.
+
+**Do not "fix" a root install by moving the files.** `git mv` into
+`effortless-rulebook/` looks right until the next `effortless build`
+re-emits all six files to the root, leaving duplicates in both places. The
+`CommandLine` in `effortless.json` is the only durable fix.
 
 ```bash
 bash edit-rulebook.sh        # still inside effortless-rulebook/
 ```
 
 For a second rulebook elsewhere (e.g. `billing-rulebook/billing-rulebook.json`),
-`cd` into *that* folder and repeat — a fully independent install, its own
-`edit-rulebook.sh`, own container, own `RelativePath: "/billing-rulebook"`.
+`cd` into *that* folder and repeat, passing `-p rulebookPath=billing-rulebook.json`
+— its own `edit-rulebook.sh`, own container, own `RelativePath: "/billing-rulebook"`.
 
-**Verify after installing, before launching:** `edit-rulebook.sh` must exist
-in the same folder as `effortless-rulebook.json` (`ls` that folder). If it
-isn't there, or if the install command printed a "No INPUT files matched"
-warning, the install ran from the wrong directory — remove the generated
-`docker/` folder and any `ProjectTranspilers` entry it added to
-`effortless.json`, then redo it from inside the rulebook's folder.
+**Verify after installing, before launching** — check the emitted paths, since
+this is the one thing that reliably goes wrong:
+
+```bash
+ls edit-rulebook.sh docker/Dockerfile   # from inside the rulebook folder
+```
+
+Both must be present *there*, and `docker/` and `edit-rulebook.sh` must **not**
+exist in the project root. If they landed in the root, do not move them: fix
+the `CommandLine` for the `effortlessrulebookeditor` entry in `effortless.json`
+to include both `-p` params above, delete the stray root copies, and re-run
+`effortless build -id effortlessrulebookeditor`.
 
 **Ports are fixed**, and the script prints them:
 
@@ -260,6 +289,8 @@ still clearest hand-edited in the JSON.
 
 | Symptom | Fix |
 |---|---|
+| `docker/` + `edit-rulebook.sh` generated in the **project root** instead of the rulebook folder — and they come back in the root after every build, or end up duplicated in both places | The `CommandLine` is missing `-p rulebookPath=`. `-i` alone always emits `../` (see "Why `-p rulebookPath=` is not optional"). Add `-p rulebookPath=<rulebook>.json -p dockerfilePath=docker/Dockerfile` to that transpiler's `CommandLine` in `effortless.json`, delete the root copies, rebuild. Re-running the install or `cd`-ing elsewhere will **not** fix it. |
+| Container is slow to boot / mounts far more than expected | `docker inspect <container> --format '{{range .Mounts}}{{.Source}}{{"\n"}}{{end}}'` — the source must be the **rulebook folder**, not the repo root. Root means the misplaced-install row above. |
 | API serves a table that no longer exists | Re-run `bash edit-rulebook.sh` (table list is boot-time) |
 | `view-health` reports a broken view | Fix the rulebook; check for a reserved name like `__meta__` |
 | `404` on a route you expected | `GET /api/docs` for the real list — don't guess |

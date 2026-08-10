@@ -138,9 +138,17 @@ skill for why) — the human-readable sanity check for the rulebook you just
 authored, plus an instant DB, API, and admin UI:
 
 ```bash
-effortless -install effortless-rulebook-editor -i effortless-rulebook.json
-./effortless-rulebook/edit-rulebook.sh
+cd effortless-rulebook
+effortless -install effortless-rulebook-editor \
+  -i effortless-rulebook.json \
+  -p rulebookPath=effortless-rulebook.json \
+  -p dockerfilePath=docker/Dockerfile
+bash edit-rulebook.sh
 ```
+
+Both `-p` params are **required**: without them the tool emits `edit-rulebook.sh`
+and `docker/` into the project root, where the script bind-mounts the whole repo.
+See `effortless-rulebook-editor` for why.
 
 **No-Docker alternative:** `effortless-rulespeak` for the same documentation
 as static files:
