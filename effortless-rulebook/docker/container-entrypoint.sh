@@ -13,8 +13,8 @@
 #      host.docker.internal (LOCAL DEV, the default -- see NETWORKING MODE
 #      below) or leave normal effortless tool resolution in place (PRODUCTION)
 #   3. run `effortless build` once (generates SQL + runs init-db.sh against
-#      the local Postgres + generates the Node API + Vite UI + RuleSpeak +
-#      RuleSpeak-DE + XLSX export)
+#      the local Postgres + generates the Node API + Vite UI + RuleSpeak® +
+#      RuleSpeak®-DE + XLSX export)
 #   4. start the generated Node API and Vite UI (Vite binds the INTERNAL port
 #      5175 -- boot-server.js proxies 5174 -> 5175 once the build succeeds)
 #   5. watch the mounted effortless-rulebook.json AND the boot server's

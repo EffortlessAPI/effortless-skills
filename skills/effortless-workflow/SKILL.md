@@ -67,7 +67,7 @@ reading the whole file into context and hand-editing tokens — the mutation is
 the same either way, but code avoids paying for the read.
 
 1. **Edit `effortless-rulebook.json` directly** (with permission). Add/modify table objects, fields, formulas, lookups.
-2. **`effortless build`** — regenerates every enabled output spoke (Postgres SQL, RuleSpeak at `rulespeak/rulespeak.html`, etc.).
+2. **`effortless build`** — regenerates every enabled output spoke (Postgres SQL, RuleSpeak® at `rulespeak/rulespeak.html`, etc.).
 3. If the project is also Airtable-connected and you want the human-friendly view in step: reverse-sync (Spoke 3) before the build.
 
 ```

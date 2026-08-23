@@ -187,7 +187,7 @@ function proxyToInternalUI(req, res) {
   req.pipe(proxyReq);
 }
 
-// Static output from the three "document" transpilers (RuleSpeak EN/DE,
+// Static output from the three "document" transpilers (RuleSpeak® EN/DE,
 // XLSX export) -- these are plain files dropped by `effortless build` into
 // fixed container directories (see effortless.editor.json's RelativePath for
 // each), not apps with their own server. Whitelisted prefix -> directory map

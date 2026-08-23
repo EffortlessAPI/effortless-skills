@@ -1,4 +1,4 @@
-# 📘 Effortless Claude — RuleSpeak
+# 📘 Effortless Claude — RuleSpeak®
 
 _Self-describing rulebook for the effortless-claude skill suite. The skills repo modeled with its own methodology — each skill is a row, each high-level attribute (category, scope gate, audience) is a parent table._
 
@@ -118,7 +118,7 @@ but clunky — a flag for an optional downstream reword pass, not a defect._
 
 ## 5 Traceability to Schema
 
-_The expression column is the rule's definition in RuleSpeak notation —
+_The expression column is the rule's definition in RuleSpeak® notation —
 the same logic the rulebook stores, written for a business reader._
 
 | Schema element | Kind | Expression |
@@ -149,5 +149,5 @@ the same logic the rulebook stores, written for a business reader._
 _This document is rendered in **RuleSpeak®**, the declarative business-rule
 notation created by **Ronald G. Ross**, and follows the conventions of
 **SBVR** (Semantics of Business Vocabulary and Business Rules). With thanks to
-Ronald G. Ross for RuleSpeak and his foundational work on business rules —
+Ronald G. Ross for RuleSpeak® and his foundational work on business rules —
 [www.RonRoss.info](https://www.RonRoss.info)._

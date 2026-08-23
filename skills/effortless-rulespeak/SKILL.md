@@ -1,7 +1,7 @@
 ---
 name: effortless-rulespeak
 description: >
-  Use when generating plain-English RuleSpeak documentation from an
+  Use when generating plain-English RuleSpeak® documentation from an
   effortless-rulebook.json — declarative business rules, vocabulary, fact
   types, definitional rules (DR-n), and traceability back to formulas.
   Installs `rulebook-to-rulespeak` and emits `rulespeak/rulespeak.md` and
@@ -24,9 +24,9 @@ description: >
 audience: customer
 ---
 
-# Effortless RuleSpeak — rulebook → plain English
+# Effortless RuleSpeak® — rulebook → plain English
 
-`rulebook-to-rulespeak` renders `effortless-rulebook.json` into **RuleSpeak** —
+`rulebook-to-rulespeak` renders `effortless-rulebook.json` into **RuleSpeak®** —
 a declarative, business-readable document of the same rules the formulas encode.
 Every calculated, lookup, and aggregation field becomes a definitional rule;
 relationships become fact types; tables become vocabulary.
@@ -106,7 +106,7 @@ Output (regenerated on every build):
 
 | File | Purpose |
 |------|---------|
-| `rulespeak/rulespeak.html` | Browser-readable RuleSpeak (prefer this when handing off) |
+| `rulespeak/rulespeak.html` | Browser-readable RuleSpeak® (prefer this when handing off) |
 | `rulespeak/rulespeak.md` | Same content in markdown |
 
 ## What the document contains
@@ -121,7 +121,7 @@ Output (regenerated on every build):
 
 ## After rulebook edits
 
-RuleSpeak is an **output spoke** — it regenerates on every `effortless build`.
+RuleSpeak® is an **output spoke** — it regenerates on every `effortless build`.
 After any hub change, rebuild; do not hand-edit `rulespeak/*`.
 
 ## Optional: semantic obligations
@@ -135,7 +135,7 @@ column contract.
 ## See also
 
 - `effortless-rulebook-editor` — the recommended default (see top of this file).
-- `effortless-explainer-dag` — on-demand in-app DAG + hover RuleSpeak (not default)
+- `effortless-explainer-dag` — on-demand in-app DAG + hover RuleSpeak® (not default)
 - `effortless-pipeline` — transpiler install paths and build order
 - `effortless-schema` — load before authoring the rulebook JSON
-- `effortless-init` — Step 3.5 wires RuleSpeak after the hub exists
+- `effortless-init` — Step 3.5 wires RuleSpeak® after the hub exists

@@ -4,7 +4,7 @@ description: >
   Use when adding the Explainer DAG to any Effortless project — a
   generated, embedded visualization of the rulebook's calculated-field
   DAG that lets users click any cell/field and see exactly how it was
-  derived (raw inputs → lookups → calcs → aggregations), with RuleSpeak
+  derived (raw inputs → lookups → calcs → aggregations), with RuleSpeak®
   prose baked in at transpile time. Works in React, Vue, plain HTML,
   Flask/Jinja, HTMX, etc. via the portable `rulebook-to-explainer-dag`
   transpiler (vanilla JS + CSS, no React dependency).
@@ -31,7 +31,7 @@ audience: customer
 > asks for clickable in-app field provenance or DAG pages.
 
 Portable inference visualizer generated from `effortless-rulebook.json`.
-Users hover a derived cell for RuleSpeak + upstream chips, double-click
+Users hover a derived cell for RuleSpeak® + upstream chips, double-click
 (or follow a link) for the full field DAG page. **Purely additive** — mark
 cells with `data-er-dag`, mount scripts + routes, done.
 
@@ -135,7 +135,7 @@ Verify output exists, e.g. `web/public/rulebook-explainer-dag/`.
 
 | File | Purpose |
 |------|---------|
-| `embedded-graph.js` | Baked rulebook + RuleSpeak fields/obligations |
+| `embedded-graph.js` | Baked rulebook + RuleSpeak® fields/obligations |
 | `dag-resolver.js` | DAG resolution (`EffortlessDagResolver`) |
 | `routing.js` | hash / path / modal / callback routing |
 | `explainer-dag.js` | Init, cell enhancement, page renderers |
@@ -336,7 +336,7 @@ Replace old `<DagCell table="…" field="…">` with a plain wrapper:
 - `Field` = PascalCase rulebook field name (not snake_case view column)
 - Wrong casing → badge silently skipped; verify against rulebook JSON
 
-**Interaction:** hover ƒ badge → RuleSpeak hover card; double-click cell
+**Interaction:** hover ƒ badge → RuleSpeak® hover card; double-click cell
 → full DAG page; badge links respect `callback`/`path`/`hash` routing.
 
 ---
@@ -404,7 +404,7 @@ After build + web restart:
 
 1. [ ] `/rulebook-explainer-dag/embedded-graph.js` loads (network tab)
 2. [ ] ƒ toggle appears; toggling hides/shows cell badges
-3. [ ] Derived cell → hover shows RuleSpeak + upstream chips
+3. [ ] Derived cell → hover shows RuleSpeak® + upstream chips
 4. [ ] Double-click → `/dag/Table/Field` with formula, inputs, leaves,
        downstream
 5. [ ] Click upstream chip → navigates to that field's DAG

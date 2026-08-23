@@ -84,7 +84,7 @@ directly — stop. Use `effortless -install` to add transpilers instead.
    Use the CLI — consult `effortless-cli` skill for the exact install command if needed.
 6. **Load `effortless-schema` skill**, then write `effortless-rulebook/effortless-rulebook.json`
   **completely in one Write call** — full schema, mock data, all entities.
-7. **Install RuleSpeak (DEFAULT)** — load **effortless-rulespeak**, then:
+7. **Install RuleSpeak® (DEFAULT)** — load **effortless-rulespeak**, then:
   `mkdir -p rulespeak && cd rulespeak && effortless -install rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json && cd ..`
 8. Write `CLAUDE.md` and `start.sh`. NOT `effortless.json` — that was generated in step 3.
 9. `effortless build` — **run it the moment you've decided to.** Regenerates
@@ -398,7 +398,7 @@ user sees *something running in a browser* very early in the demo.
   placeholder renders before moving on.
     This is the first time the user sees *anything* — make it count.
 
-### F. RuleSpeak (plain-English rules doc)
+### F. RuleSpeak® (plain-English rules doc)
 
 **Already wired in bootstrap step 7** — do not skip or repeat unless the
 transpiler entry is missing from `effortless.json`.

@@ -1,6 +1,6 @@
 {
   "Name": "effortless-rulebook-editor-runtime",
-  "Description": "Generic in-container pipeline: rulebook -> Postgres -> read-only Node API + Vite admin portal (with RuleSpeak, RuleSpeak-DE, and XLSX export tabs). Baked into the effortless-rulebook-editor image; not project-specific.",
+  "Description": "Generic in-container pipeline: rulebook -> Postgres -> read-only Node API + Vite admin portal (with RuleSpeak®, RuleSpeak®-DE, and XLSX export tabs). Baked into the effortless-rulebook-editor image; not project-specific.",
   "SSoTmeProjectId": "",
   "ShowHidden": false,
   "ShowAllFiles": false,
@@ -48,7 +48,7 @@
       "RelativePath": "/admin-portal",
       "CommandLine": "rulebook-to-vite-admin-portal -i ../effortless-rulebook/effortless-rulebook.json",
       "IsDisabled": false,
-      "Description": "Generate the read-only Vite admin UI, unified with tabs for the Postgres schema, RuleSpeak (EN/DE), and XLSX export"
+      "Description": "Generate the read-only Vite admin UI, unified with tabs for the Postgres schema, RuleSpeak® (EN/DE), and XLSX export"
     },
     {
       "IsSSoTTranspiler": false,
@@ -56,7 +56,7 @@
       "RelativePath": "/rulespeak",
       "CommandLine": "rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json",
       "IsDisabled": false,
-      "Description": "Generate the plain-English RuleSpeak document (rulespeak.html), served under the portal's RuleSpeak tab"
+      "Description": "Generate the plain-English RuleSpeak® document (rulespeak.html), served under the portal's RuleSpeak® tab"
     },
     {
       "IsSSoTTranspiler": false,
@@ -64,7 +64,7 @@
       "RelativePath": "/rulespeak-de",
       "CommandLine": "rulebook-to-rulespeak-de -i ../effortless-rulebook/effortless-rulebook.json",
       "IsDisabled": false,
-      "Description": "Generate the German RuleSpeak document (rulespeak.html), served under the portal's RuleSpeak (DE) tab"
+      "Description": "Generate the German RuleSpeak® document (rulespeak.html), served under the portal's RuleSpeak® (DE) tab"
     },
     {
       "IsSSoTTranspiler": false,

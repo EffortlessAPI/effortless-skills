@@ -27,7 +27,7 @@ release section is an ISO date.
   `publish-tool.sh` (flips `[latest]` live) from `build-and-push-cpln-workload.sh`
   (build only) and from `effortless build` (consumes a published tool). Triggers
   on "publish/push/deploy/ship/release the tool".
-- **Default RuleSpeak on rulebook creation** — `effortless-rulespeak`,
+- **Default RuleSpeak® on rulebook creation** — `effortless-rulespeak`,
   `effortless-init` (Step 3.5), `effortless-bootstrap` (Step 10.5),
   `effortless-demo-app` (bootstrap step 7), and `effortless-setup-postgres`
   (Step 2.5) now require installing `rulebook-to-rulespeak` and generating
@@ -43,12 +43,12 @@ release section is an ISO date.
   and **even** `UI_PORT = API_PORT + 1`. `./start.sh` (no args) always kills
   both ports and restarts API + SPA, printing `http://localhost:` links for
   both. Optional subcommands: `build`, `db` only — no `all`/`server`/`web`.
-- **`effortless-demo-app`** — POC bootstrap step F now installs RuleSpeak
+- **`effortless-demo-app`** — POC bootstrap step F now installs RuleSpeak®
   instead of the Explainer DAG; no `data-er-dag` wiring in default demos.
 - **`effortless-explainer-dag`** — explicitly on-demand only; not part of
   standard POC path.
 - **`effortless-orchestrator`** / **`effortless-pipeline`** — document
-  RuleSpeak as default doc output; Explainer DAG as optional add-on.
+  RuleSpeak® as default doc output; Explainer DAG as optional add-on.
 
 ### Added
 - **Load-bearing axioms.** Every non-trivial skill now opens with a 1–2

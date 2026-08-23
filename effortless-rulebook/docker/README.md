@@ -7,7 +7,7 @@ containerized rulebook editor/viewer for any Effortless project:
   CLI, baked once at image-build time.
 - `container-entrypoint.sh` -- boot sequence: start `boot-server.js`
   immediately (before anything else), start Postgres, run `effortless build`
-  (rulebook -> SQL -> API -> UI -> RuleSpeak -> RuleSpeak-DE -> XLSX export),
+  (rulebook -> SQL -> API -> UI -> RuleSpeak® -> RuleSpeak®-DE -> XLSX export),
   start the generated API + UI, then watch the mounted rulebook (and the
   boot page's Rebuild button) for changes and rebuild.
 - `boot-server.js` -- owns the external UI port for the container's whole
@@ -52,7 +52,7 @@ that save path.
 
 The admin portal isn't just a table browser -- it's the single front end for
 everything this stack generates from the rulebook, as tabs alongside Tables:
-- **RuleSpeak** / **RuleSpeak (DE)** -- the plain-English (and German)
+- **RuleSpeak®** / **RuleSpeak® (DE)** -- the plain-English (and German)
   business-rules documents, rendered inline via iframe, served straight from
   the container's `/app/rulespeak` and `/app/rulespeak-de` output.
 - **Export** -- a one-click download of the Excel workbook snapshot

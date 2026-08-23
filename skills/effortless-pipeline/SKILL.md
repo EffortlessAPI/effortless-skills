@@ -50,7 +50,7 @@ below for that case.
 | `init-db` | SQL -> Postgres | Runs `init-db.sh` to bootstrap the database |
 | `json-hbars-transform` | JSON + Handlebars -> Docs | Generates documentation (README.SCHEMA.md etc.) |
 | `rulebook-to-xlsx` | JSON -> Excel | Generates spreadsheet export |
-| `rulebook-to-rulespeak` | JSON -> Markdown + HTML | Plain-English RuleSpeak (`rulespeak/rulespeak.html`, `rulespeak.md`) — **default whenever a rulebook is created** |
+| `rulebook-to-rulespeak` | JSON -> Markdown + HTML | Plain-English RuleSpeak® (`rulespeak/rulespeak.html`, `rulespeak.md`) — **default whenever a rulebook is created** |
 | `airtable-to-odxml` | Airtable -> ODXML | Generates XML metadata for .NET |
 | `odxml-to-csharp-pocos` | ODXML -> C# | Generates Entity Framework classes |
 

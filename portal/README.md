@@ -62,7 +62,7 @@ processes.
    which reverse-proxies `/api/*` to the `api` container so the browser only
    ever talks to one origin. The UI lets you browse every table, drill into
    relationship links, view the drift report, and read the generated
-   RuleSpeak document.
+   RuleSpeak® document.
 
 ## Integrity
 
