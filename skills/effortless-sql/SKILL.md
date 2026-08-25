@@ -273,6 +273,60 @@ mirrors). Never hand-migrate a policy or a role schema.
 
 See `effortless-rbac` for the RBAC model itself.
 
+## Converting a legacy project to the derived-layer format
+
+Older projects keep domain tables in `01b-customize-schema.sql` and loose
+`*b-customize-*.sql` files beside the rulebook. Converting is mechanical and
+worth doing: promoted tables gain views, calculated fields, RuleSpeak and the
+Explainer DAG they were silently missing.
+
+**1. Inventory the customize file.** Sort every statement into three piles:
+
+| Pile | Examples | Destination |
+|---|---|---|
+| Domain entities | anything with a lifecycle, a money amount, or an FK into a rulebook table | **the rulebook** |
+| Columns `ALTER`ed onto rulebook tables | `created_at`, `notes`, a bolted-on FK | **the rulebook**, on that table |
+| Deployment plumbing + indexes | sessions, API tokens, sync logs, `CREATE INDEX` | **ERBCustomizations** |
+
+The giveaway for pile 1 is the table's own comment. If it describes what the
+business does ("what we owe each consignor, per sale"), it is domain data.
+
+**2. Promote pile 1 into the rulebook.** Define each table with its raw fields,
+`relationship` fields for FKs (plus the matching inverse on the target table),
+and `lookup` fields for anything the app currently JOINs to get. This is the
+moment to reclaim hand-maintained columns as calculated fields — a `status` the
+app keeps in step by hand is usually derivable:
+
+```jsonc
+{ "name": "IsPaid", "datatype": "boolean", "type": "calculated",
+  "formula": "=IF({{PaidAt}}=\"\", FALSE, TRUE)" }
+```
+
+**3. Move pile 3 into `ERBCustomizations`.** One row, `CustomizationType:
+"Schema"`, with the SQL in `SQLCode`. The rulebook now holds the whole model.
+
+**4. Delete empty stub rows.** A row whose `SQLCode` is only a boilerplate
+header emits an empty file and implies a customization that doesn't exist.
+Delete duplicates too — two rows naming the same file under different names
+(`01b-…` and `03a-…`) is the mismatch that hides real content from the build
+report.
+
+**5. Rebuild and verify.** Check that each promoted table now has a `vw_*` view
+and that its calculated fields compute. Then run `update-effortless-schema.sql`
+against a scratch copy and confirm view/function counts return to the same
+numbers and row counts are unchanged.
+
+> **Watch the column names.** Rulebook FK fields generate as the field name
+> (`product`, `sales_order`), not the old hand-written `product_id`. Any index
+> you carry over must be updated to match, or it will fail with
+> `column "…_id" does not exist`.
+
+**6. Migrate the data.** Steps 1-5 change the schema. Existing rows in the old
+tables still need moving, and app code still reads the old column names. On a
+dev database a reset handles it; anywhere else this is a real data migration.
+
+---
+
 ## Generated SQL Details
 
 ### Table Creation (01)
