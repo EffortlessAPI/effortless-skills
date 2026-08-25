@@ -13,8 +13,6 @@ audience: customer
 
 # The Effortless Loop
 
-Also called the Leopold loop, after Ben Leopold, our first beta tester.
-
 The loop is the iterative ERB development cycle — the **core workflow** that makes ERB feel effortless compared to hand-coding without the rulebook (a mode called **"naked Claude"** — every layer of schema, migration, DTO, ORM model, API serializer, and client type written and maintained by hand). When the user mentions the loop in any form, they are invoking this entire mental model — load this skill so you respond in the right paradigm.
 
 > **"Naked Claude"** (used in passing throughout this skill): coding without
