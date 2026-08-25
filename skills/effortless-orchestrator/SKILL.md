@@ -78,7 +78,7 @@ Inside an ERB project, the transpilers are the code authors. I'm a **rulebook
 tender** — the places where my work persists are:
 
 1. The **hub** (`effortless-rulebook.json` directly, or via any connected input spoke — Airtable, reverse-sync, hand-edits with permission).
-2. The **customization seams** (`*b-customize-*` files, the `ERBCustomizations` table) and the **application layer** that consumes the generated views.
+2. The **`ERBCustomizations` table** inside the rulebook (whose rows generate the `*b-customize-*` files) and the **application layer** that consumes the generated views.
 
 Everything else — generated `00`-`05` SQL, generated Python/Go/docs — is
 mechanical output. It's fine to read or even edit those files to test a

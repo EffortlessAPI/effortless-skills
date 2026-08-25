@@ -30,7 +30,7 @@ So for local-dev schema, RLS, calculated fields, or seed data, the path that sur
 1. **Edit `effortless-rulebook.json` directly** (with permission) → `effortless build`. Often the simplest path — the rulebook is JSON and edits are surgical.
 2. **Edit via Airtable** (when the project is Airtable-connected) → `effortless build` pulls Airtable into the rulebook, then regenerates downstream.
 3. **Edit the rulebook directly, then reverse-sync to Airtable** so the human-friendly editing surface stays in step → `effortless build -id` from `push-to-airtable/`, then normal `effortless build` from root.
-4. **Edit a `*b-customize-*.sql` file** — appropriate for infrastructure the rulebook doesn't model (auth tenants, JWT helpers, role GRANTs). For business entities the hub is usually a better fit; see `effortless-sql`.
+4. **Add an `ERBCustomizations` row to the rulebook** — for substrate-specific SQL the rulebook's field model can't express (auth tenants, JWT helpers, role GRANTs, indexes). The SQL lives IN the rulebook; the `*b-customize-*.sql` files are generated from it. Never hand-author those files — see `effortless-sql`.
 
 Patterns that *look* like persistence but don't survive a rebuild:
 
@@ -136,7 +136,7 @@ When the user says "make a Foo table" / "add a Bar entity" / "I need an X table"
 
 A few near-cousins that won't persist for a *business* entity on local-dev:
 
-- Hand-writing the table in `01b-customize-schema.sql` — survives the build, but `01b` is sized for infrastructure (auth tenants, JWT helpers, role GRANTs); business entities work better in the hub where they get views and calculated fields for free.
+- Hand-writing the table in `01b-customize-schema.sql` — **never do this.** That file is generated from the rulebook's `ERBCustomizations` table, so a hand edit is lost on the next build. Tables belong in the rulebook, where they get views and calculated fields.
 - Writing a migration file or `CREATE TABLE app.users (...)` against the local DB — wiped on next `init-db.sh` (see the local-dev-Postgres section above).
 
 ## Don't drive git on the user's behalf
@@ -160,7 +160,7 @@ can't create formula fields, no API key, project isn't Airtable-connected at all
    - **Rulebook-direct**: edit `effortless-rulebook.json` directly, then `effortless build`
    - **Airtable UI**: user makes the change in Airtable's UI, then runs `effortless build`
    - **Reverse-sync**: edit the JSON directly, push to Airtable via `effortless build -id` from `push-to-airtable/`, then `effortless build`
-   - **Customization files**: `*b-customize-*` for logic the hub doesn't model
+   - **`ERBCustomizations` rows** (in the rulebook) for SQL the hub's field model doesn't express
 3. Wait for direction before proceeding.
 
 ---
