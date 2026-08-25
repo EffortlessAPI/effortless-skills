@@ -129,10 +129,10 @@ right move is almost never "do it anyway, just this once." Three steps in order:
 
 1. **Re-shape as SDLAF.** 90% of the time, the urge is actually a Lookup,
    Aggregation, or Formula in disguise. Express it in the rulebook.
-2. **Add an `ERBCustomizations` row.** If the rulebook's field model genuinely
-   can't express the rule (rare), write the SQL into an `ERBCustomizations` row
-   — still inside the rulebook — and leave a one-line comment naming *why*. The
-   `*b-customize-*` files are generated from those rows; never author one.
+2. **Use a customization.** If the rulebook's field model genuinely can't
+   express the rule (rare), write the SQL as an `ERBCustomizations` row
+   (preferred — it travels with the rulebook) or in a `*b-customize-*` file,
+   and leave a one-line comment naming *why* the rulebook can't express it.
 3. **Flag a missing primitive.** If you escalate to a seam more than occasionally
    for similar reasons, the rulebook IR or the transpiler is genuinely missing
    something. That's a finding worth surfacing, not a workaround to normalize.

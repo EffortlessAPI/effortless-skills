@@ -16,9 +16,9 @@ audience: customer
 > them. Edits there are not "forbidden"; they just don't survive the next
 > build. To make a change stick, edit the hub (`effortless-rulebook.json`,
 > via whichever input spoke you prefer). If the hub genuinely can't express
-> what you need, add an `ERBCustomizations` row — the SQL lives inside the
-> rulebook, and the `*b-customize-*.sql` files are generated from it. Never
-> hand-author those files. You also rarely need to read the
+> what you need, use a customization: an `ERBCustomizations` row (preferred —
+> the SQL travels with the rulebook) or a hand-edited `*b-customize-*.sql` file.
+> Neither is for defining tables or columns. You also rarely need to read the
 > generated SQL into context — `psql -c "\d vw_<table>"` gives you the same
 > view structure for ~zero tokens.
 
@@ -154,39 +154,55 @@ ERB projects. Migrations that carry hundreds of lines of view DDL are doing, by
 hand and fallibly, work that one generated script does correctly every time.
 A migration should contain **only** additive table/column changes.
 
-### The `*b-customize-*.sql` files are OUTPUT, not input
+### Two customization mechanisms
 
-These files are **generated from the rulebook's `ERBCustomizations` table**, the
-same way `03-create-views.sql` is generated from the rulebook's field
-definitions. They are build artifacts.
+There are two, and they are not the same thing. Both work; one is the direction
+the format is going.
 
-**Never author one by hand.** A hand-written `.sql` file beside the rulebook is:
+#### `*b-customize-*.sql` files — hand-edited, on-disk
 
-- **invisible to the model** — nothing in the rulebook knows it exists
-- **absent from RuleSpeak and the Explainer DAG** — it documents nothing
-- **unversioned** — it isn't carried by `ERBVersions`, so a promotion can't see it
-- **lost on relocation** — move or regenerate the project and it doesn't follow
-- **brittle** — the rulebook is no longer a complete description of the system,
-  so "rebuild from the rulebook" silently produces something different
+Emitted **once**, as an empty header stub, and only when asked. After that the
+build never touches them: they carry `overwrite: "Never"`, so a rebuild skips a
+file that already exists. **You edit them by hand and your edits persist.**
 
-That last point is the whole reason the format exists. If the rulebook is the
-source of truth, then a file the rulebook has never heard of is a hole in the
-source of truth.
+`reset-rulebook-db.sh` runs the numbered scripts in order, picking up each `NNb-`
+file after its `NN-` counterpart:
 
-| File | Generated from `ERBCustomizations` row of type |
-|---|---|
-| `01b-customize-schema.sql` | `Schema` |
-| `02b-customize-functions.sql` | `Functions` |
-| `03b-customize-views.sql` | `Views` |
-| `04b-customize-policies.sql` | `RLS` |
-| `05b-customize-data.sql` | `Data` |
+```
+00-bootstrap → 01-drop-and-create → 01b-customize-schema
+             → 02-create-functions → 02b-customize-functions
+             → 03-create-views     → 03b-customize-views
+             → 04-create-policies  → 04b-customize-policies
+             → 05-insert-data      → 05b-customize-data
+```
 
-Emitted only when a matching row exists. No row, no file.
+| File | Runs after | Holds |
+|---|---|---|
+| `01b-customize-schema.sql` | `01` | indexes, FK constraints |
+| `02b-customize-functions.sql` | `02` | hand-written functions |
+| `03b-customize-views.sql` | `03` | hand-written views |
+| `04b-customize-policies.sql` | `04` | RLS beyond the generated set |
+| `05b-customize-data.sql` | `05` | idempotent seed data |
 
-> **Nothing is authored in these files — not tables, not columns, not indexes.**
-> Tables and columns are rulebook tables and fields. Everything else is an
-> `ERBCustomizations` row. If you find yourself opening one of these files to
-> edit it, you are editing a build artifact and your change will be lost.
+#### `ERBCustomizations` rows — in the rulebook (the new way)
+
+The same SQL, stored as rows in the rulebook's `ERBCustomizations` table and
+emitted into their own folder, each running as a separate script ordered by its
+sort position. Prefer this: the SQL travels **with** the rulebook, so it is
+carried by `ERBVersions`, survives relocation, and keeps the rulebook a complete
+description of the system.
+
+#### What belongs in either — and what never does
+
+Both mechanisms are for SQL the rulebook's **field model** cannot express:
+indexes, FK constraints, hand-tuned functions, materialized views, RLS policies,
+role GRANTs, idempotent seed data.
+
+> **Neither is a place to define tables or add columns.** A table created in
+> `01b`, or in a Schema customization, gets **no view, no calculated fields, no
+> RuleSpeak and no Explainer DAG** — it opts out of everything ERB does, on
+> exactly the data that most needs it. Tables and columns are rulebook tables
+> and fields, always. `01b` in particular should hold little more than indexes.
 
 ### ERBCustomizations — the rulebook holds the whole model
 

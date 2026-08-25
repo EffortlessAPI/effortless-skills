@@ -30,7 +30,7 @@ So for local-dev schema, RLS, calculated fields, or seed data, the path that sur
 1. **Edit `effortless-rulebook.json` directly** (with permission) → `effortless build`. Often the simplest path — the rulebook is JSON and edits are surgical.
 2. **Edit via Airtable** (when the project is Airtable-connected) → `effortless build` pulls Airtable into the rulebook, then regenerates downstream.
 3. **Edit the rulebook directly, then reverse-sync to Airtable** so the human-friendly editing surface stays in step → `effortless build -id` from `push-to-airtable/`, then normal `effortless build` from root.
-4. **Add an `ERBCustomizations` row to the rulebook** — for substrate-specific SQL the rulebook's field model can't express (auth tenants, JWT helpers, role GRANTs, indexes). The SQL lives IN the rulebook; the `*b-customize-*.sql` files are generated from it. Never hand-author those files — see `effortless-sql`.
+4. **Add a customization** — for substrate-specific SQL the rulebook's field model can't express (auth tenants, JWT helpers, role GRANTs, indexes). Prefer an `ERBCustomizations` row, so the SQL travels with the rulebook; a hand-edited `*b-customize-*.sql` file also works. Neither defines tables or columns — see `effortless-sql`.
 
 Patterns that *look* like persistence but don't survive a rebuild:
 
@@ -136,7 +136,7 @@ When the user says "make a Foo table" / "add a Bar entity" / "I need an X table"
 
 A few near-cousins that won't persist for a *business* entity on local-dev:
 
-- Hand-writing the table in `01b-customize-schema.sql` — **never do this.** That file is generated from the rulebook's `ERBCustomizations` table, so a hand edit is lost on the next build. Tables belong in the rulebook, where they get views and calculated fields.
+- Hand-writing the table in `01b-customize-schema.sql` — the edit persists (that file is never overwritten), but the table gets no view, no calculated fields, no RuleSpeak and no Explainer DAG. Tables belong in the rulebook; `01b` is for indexes.
 - Writing a migration file or `CREATE TABLE app.users (...)` against the local DB — wiped on next `init-db.sh` (see the local-dev-Postgres section above).
 
 ## Don't drive git on the user's behalf

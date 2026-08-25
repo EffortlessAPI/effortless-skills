@@ -450,5 +450,5 @@ If down, run `bash magic-links-refactor/test-env/scripts/dev-stack-up.sh`.
 
 - `effortless-magic-links` — the generic magic-links flow for any Postgres app (when the DB is NOT on bases.effortlessapi.com).
 - `effortless-orchestrator` — for "AppUsers belongs in the rulebook, not in `app.app_users` by hand".
-- `effortless-sql` — for putting `auth.trusted_tenants` and `app.jwt_*()` helpers in `ERBCustomizations` rows rather than hand-written files.
+- `effortless-sql` — for placing `auth.trusted_tenants` and `app.jwt_*()` helpers in a customization (`ERBCustomizations` row preferred, `*b-customize-*` file also works).
 - `effortless-setup-postgres` — if you're standing up a brand-new local Postgres ERB project first.
