@@ -8,6 +8,24 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **`effortless-progress-report`** (new skill) — a project's delivery status,
+  kept in its own rulebook and projected into a report rather than written as a
+  document. Installs `rulebook-to-progress-report`, which emits one
+  self-contained interactive HTML report (narrative argument + priced plan +
+  a scope selector that re-derives every figure, the prose included, as stories
+  are added or removed), a standalone narrative, and a `report-summary.md` build
+  log naming the sections still speaking in the tool's generic voice.
+  The larger half of the skill is **adding a delivery spine to a rulebook that
+  has none** — `UserStories`, `AcceptanceCriteria`, `BuildPhases`,
+  `EffortClasses`, `DeliveryDisciplines` and the feature graph that joins them —
+  with a minimum-viable spine to copy and the five things people get wrong
+  (`Epic` is read directly and not inferred; the demanding band must be named
+  `G3`; client-visible shares must sum to 100; no `ComplexityWeight` may be 0;
+  exactly one phase carries `IsCurrentBid`). `REFERENCE.md` mirrors the tool's
+  `RULEBOOK-CONTRACT.md` in full — every table, field, placeholder and refusal.
+  Carries the standing rule that **no hours, headcount or team size** reach
+  client-facing output, and that price is a raw commercial input rather than a
+  multiple of effort.
 - **`effortless-setup-sql-server`** (new skill) — first-run setup for SQL Server
   substrate projects: install `rulebook-to-sql-server` from `/sql-server/`,
   patch `init-db.sh` connection defaults, register `-exec ./init-db.sh` in
