@@ -147,6 +147,21 @@ echo "Destination: $SKILLS_DEST"
 echo "Mode:        copy"
 echo ""
 
+# Guard: if the suite is already installed as the `effortless` plugin, loose
+# copies under ~/.claude/skills would duplicate every skill and never update.
+if grep -q '"effortless-skills"' "$HOME/.claude/plugins/installed_plugins.json" 2>/dev/null; then
+  echo "WARNING: the 'effortless' Claude Code plugin is already installed"
+  echo "         (effortless@effortless-skills). Installing loose copies as well"
+  echo "         gives Claude two copies of every skill; the loose ones never update."
+  echo "         Prefer updating the plugin instead: claude plugin update effortless@effortless-skills"
+  echo ""
+  if ! ask_yes_no "Install loose copies anyway?" n; then
+    echo "Aborted."
+    exit 0
+  fi
+  echo ""
+fi
+
 # Pre-flight: show what will happen for each skill
 echo "--- Plan ---"
 echo ""

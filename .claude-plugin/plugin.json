@@ -1,0 +1,13 @@
+{
+  "name": "effortless",
+  "displayName": "Effortless Rulebook (ERB) skills",
+  "description": "The effortless-claude skill suite — 36 scope-gated skills for Effortless Rulebook (ERB) projects: rulebook-first schema, the effortless CLI and build pipeline, Postgres/SQL Server substrates, Airtable spokes, magic-links, dev-ops, RuleSpeak docs, and the CMCC theory behind it.",
+  "author": {
+    "name": "EffortlessAPI",
+    "url": "https://github.com/EffortlessAPI"
+  },
+  "homepage": "https://github.com/EffortlessAPI/effortless-skills",
+  "repository": "https://github.com/EffortlessAPI/effortless-skills",
+  "license": "MIT",
+  "keywords": ["effortless", "erb", "rulebook", "cmcc", "ssotme", "postgres"]
+}

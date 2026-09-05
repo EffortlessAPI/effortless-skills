@@ -1,13 +1,10 @@
 ---
 name: effortless-setup-postgres
 description: >
-  Use when setting up an Effortless project with a postgres database. This is the
-  FIRST thing to do in any Effortless project that targets postgres — it installs
-  the pipeline, gets a rulebook in place (hand-authored, or seeded from an
-  Airtable base / Excel / other surface if the project has one), generates SQL,
-  and creates the database. Must be run before writing any application code.
-
-  **Scope (load gate):** Effortless projects, OR when the user explicitly asks to set up a new Postgres-backed Effortless project.
+  First-run setup for a Postgres-targeted Effortless project — preflight, install the
+  pipeline, get a rulebook in place, generate SQL, init the local DB. Do this before
+  writing any app code. Triggers: "set up effortless with postgres", "new postgres
+  effortless project".
 audience: customer
 ---
 

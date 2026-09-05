@@ -1,16 +1,10 @@
 ---
 name: effortless-cli
 description: >
-  Use for the `effortless` CLI — both **installing/updating the binary** AND
-  **using its commands**. Triggers: "install effortless", "install the CLI",
-  "update effortless cli", "the cli isn't installed", `effortless: command
-  not found`, version mismatches, login flow, `effortless -init`,
-  `effortless build`, `-setAccountAPIKey`, `-install <transpiler>`, transpiler
-  management, build flags, project file structure. The CLI is also known as
-  `ssotme`, `aicapture`, or `aic` — always use `effortless` in docs/scripts.
-  For the **skill set** (different artifact), use effortless-claude-updates.
-
-  **Scope (load gate):** Effortless projects, OR when the user explicitly asks to install / update / use the Effortless CLI. CLI-management work doesn't require an Effortless-marked project.
+  The `effortless` CLI (aka ssotme/aicapture/aic) — install/update the binary and use
+  its commands: `effortless: command not found`, login, `-init`, `build`,
+  `-setAccountAPIKey`, `-install <transpiler>`, build flags, project file structure. Not
+  the skill set (that is effortless-claude-updates).
 audience: customer
 ---
 

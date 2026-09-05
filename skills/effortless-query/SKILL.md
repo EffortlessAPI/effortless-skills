@@ -1,12 +1,9 @@
 ---
 name: effortless-query
 description: >
-  Use when querying an effortless-rulebook.json file — listing tables, extracting
-  schema without data, finding FK relationships, inspecting calculated fields and
-  formulas. Activates for any project with effortless-rulebook.json or
-  effortless-rulebook/ directory.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  Query effortless-rulebook.json without reading it whole — list tables, extract schema,
+  find FK relationships, inspect calculated fields and formulas; the derived
+  minimize-rulebook ladder. ERB projects only.
 audience: customer
 ---
 

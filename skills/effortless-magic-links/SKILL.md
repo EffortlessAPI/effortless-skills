@@ -1,16 +1,10 @@
 ---
 name: effortless-magic-links
 description: >
-  Use when the user wants to add passwordless email-code (magic-link) auth to
-  any project backed by a Postgres database — not just bases.effortlessapi.com.
-  Covers minting a tenant on magiclink.effortlessapi.com, storing the
-  public key for JWT verification, wiring app-side `Authorization: Bearer`
-  middleware, and (optionally) installing the `app.jwt_*()` SQL helpers so
-  RLS policies can filter by the verified email. Triggers: "add magic links
-  to this app", "secure this app with magic links", "passwordless auth on a
-  postgres app", "wire JWT auth into this project".
-
-  **Scope (load gate):** Loads only on explicit user request — applies to any Postgres app, not just Effortless-marked projects. Do not auto-load just because a project uses Postgres.
+  Add passwordless email-code (magic-link) auth to any Postgres-backed app — mint a
+  tenant on magiclink.effortlessapi.com, verify JWTs app-side, optional app.jwt_*() SQL
+  helpers for RLS. Triggers: "add magic links", "passwordless auth", "wire JWT auth into
+  this project". Explicit request only.
 audience: general
 ---
 

@@ -1,14 +1,9 @@
 ---
 name: effortless-excel-export
 description: >
-  Use when adding Excel export to any Effortless project backed by a Postgres
-  database. Covers: building a rulebook-export.json from live DB data, running
-  the rulebook-to-xlsx transpiler, wiring a server endpoint, and adding a
-  download link to the React app.
-
-  **Scope (load gate):** Effortless projects with a Postgres DB and a running
-  Express server. Requires `effortless.json` + CLAUDE.md identifying project as
-  ERB methodology.
+  Add Excel export to an Effortless project with Postgres + Express — build
+  rulebook-export.json from live DB data, run rulebook-to-xlsx, wire the endpoint and a
+  download link. ERB projects only.
 audience: customer
 ---
 

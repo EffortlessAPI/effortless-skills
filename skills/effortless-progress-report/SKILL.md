@@ -1,26 +1,12 @@
 ---
 name: effortless-progress-report
 description: >
-  Use when a project needs to say WHERE IT STANDS and WHAT IT COSTS from its own
-  rulebook — a delivery report, a status report, a priced plan, a scope
-  selector, a client-facing proposal, or a "what's left / what's accepted"
-  roll-up. Installs `rulebook-to-progress-report`, which turns
-  `effortless-rulebook.json` into one self-contained interactive HTML report
-  plus a standalone narrative, with every figure derived rather than typed.
-
-  Also use when a rulebook does NOT yet carry a delivery spine and the user
-  wants one — this skill adds `UserStories`, `AcceptanceCriteria`, `BuildPhases`,
-  `EffortClasses`, `DeliveryDisciplines` and friends to an existing rulebook so
-  the project can manage its own status in its own single source of truth.
-
-  Triggers: "generate a progress report", "delivery report", "status report from
-  the rulebook", "rulebook-to-progress-report", "how far along is this project",
-  "what's accepted so far", "priced plan", "build a proposal from the rulebook",
-  "scope selector", "add user stories to the rulebook", "add acceptance criteria",
-  "track delivery in the rulebook", "what's left to build".
-
-  **Scope (load gate):** Effortless projects — project root has `effortless.json`
-  and a rulebook hub. Does not require Airtable or Postgres.
+  Delivery / status / priced-plan reports derived from the rulebook via
+  rulebook-to-progress-report; also adds the delivery spine (UserStories,
+  AcceptanceCriteria, BuildPhases, EffortClasses) to a rulebook that lacks one.
+  Triggers: "progress report", "delivery report", "how far along is this", "what's
+  accepted / what's left", "priced plan", "add user stories to the rulebook". ERB
+  projects only.
 audience: customer
 ---
 

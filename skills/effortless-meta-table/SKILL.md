@@ -1,16 +1,10 @@
 ---
 name: effortless-meta-table
 description: >
-  Use when a rulebook needs a general-purpose, global name/value settings entity
-  — the `__meta__` table. This is the one place for "random"/global/third-party/
-  configuration values, choices, parameters, thresholds, and reusable phrase atoms
-  that do not belong to any domain entity. It is a deliberately transpiler-IGNORED
-  bag of key/value rows (NOT the `_meta` conversion-metadata section, and NOT a
-  domain table). Triggers: "add a __meta__ table", "global settings table",
-  "key/value config in the rulebook", "where do I put global parameters/phrases/
-  thresholds", "a settings entity that won't generate a Postgres table".
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  The `__meta__` table — a transpiler-ignored, global name/value settings entity for
+  parameters, thresholds, choices and phrase atoms that belong to no domain entity (not
+  the `_meta` section). Triggers: "add a __meta__ table", "global settings table",
+  "where do I put global parameters". ERB projects only.
 audience: customer
 ---
 

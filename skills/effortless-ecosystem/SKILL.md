@@ -1,14 +1,9 @@
 ---
 name: effortless-ecosystem
 description: >
-  Use when the user asks what repos exist in the effortless / SSoTme ecosystem,
-  where to find the source for a specific tool, "is there a repo for X",
-  "what transpilers exist", "show me the open source projects", or any question
-  about how the various GitHub repos fit together. Also load proactively when
-  framing the methodology — the catalog here is the canonical "what's actually
-  out there" so messaging stays consistent across sessions.
-
-  **Scope (load gate):** Loads when the user asks about the Effortless / SSoTme ecosystem of repos. Does not require a marked Effortless project.
+  Catalog of public repos in the SSoTme / effortlessapi GitHub orgs — "is there a repo
+  for X", "where is the source for this tool", "what transpilers exist", how the repos
+  fit together. Also load when framing the methodology so messaging stays consistent.
 audience: customer
 ---
 

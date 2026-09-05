@@ -1,13 +1,10 @@
 ---
 name: effortless-schema
 description: >
-  Use to understand the **structure** of effortless-rulebook.json — top-level
-  keys, table objects, the field schema definition, field types (raw,
-  calculated, lookup, relationship, aggregation), datatypes, formula syntax,
-  and the `_meta` section. This skill is JSON-structure only; for naming /
-  DAG / FK *rules*, use effortless-conventions.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  The JSON structure of effortless-rulebook.json — top-level keys, table objects, field
+  schema, field types (raw, calculated, lookup, relationship, aggregation), datatypes,
+  formula syntax, `_meta`. Structure only; naming/DAG rules are effortless-conventions.
+  ERB projects only.
 audience: customer
 ---
 

@@ -1,11 +1,8 @@
 ---
 name: effortless-conventions
 description: >
-  Use when you need ERB naming conventions, DAG structure rules, PascalCase table
-  names, primary key and foreign key patterns, the Name field requirement, or
-  understanding why many-to-many relationships are not allowed.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  ERB naming and DAG rules — PascalCase plural tables, the Name field, PK/FK patterns,
+  singular FK / plural reverse FK, why many-to-many is not allowed. ERB projects only.
 audience: customer
 ---
 

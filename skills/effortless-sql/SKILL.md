@@ -1,11 +1,9 @@
 ---
 name: effortless-sql
 description: >
-  Use when working with ERB-generated SQL — reading from vw_* views vs base tables,
-  understanding generated files (00-05), using *b-customize-* files, SQL function
-  patterns (calc_*, get_*), view structure, or ERBCustomizations table.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  ERB-generated SQL — read vw_* views vs write base tables, generated files 00–05,
+  *b-customize-* seams, calc_*/get_* functions, view structure, ERBCustomizations. ERB
+  projects only.
 audience: customer
 ---
 

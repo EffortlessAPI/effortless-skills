@@ -1,15 +1,10 @@
 ---
 name: effortless-ssotme-protocol
 description: >
-  Use when writing or editing effortless.json files, registering transpilers,
-  or explaining the ssotme:// protocol. This is the canonical reference for the
-  exact effortless.json schema — load it any time you are about to emit a
-  ProjectTranspilers entry or a full effortless.json payload. Prevents the
-  most common hallucination errors: wrong key names (Transpilers vs
-  ProjectTranspilers), invented fields, wrong CLI flag shapes.
-
-  **Scope (load gate):** Any Effortless project. Load proactively before
-  emitting any effortless.json content, even partial snippets.
+  Canonical effortless.json schema and the ssotme:// protocol — load before emitting any
+  ProjectTranspilers entry or effortless.json payload, even partial. Prevents wrong key
+  names (Transpilers vs ProjectTranspilers), invented fields, wrong CLI flag shapes. Any
+  Effortless project.
 audience: customer
 ---
 

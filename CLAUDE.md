@@ -5,7 +5,9 @@ Marker pair (`effortless.json` + this file) tells Claude to load the project-onl
 
 ## What this repo is
 
-This is the **SSoT repo for the effortless-claude skill suite itself** — the 31 skills under `skills/` that get installed to `~/.claude/skills/` via `install.sh`. It is also a (lightweight) ERB project that *describes itself* with its own methodology.
+This is the **SSoT repo for the effortless-claude skill suite itself** — the 36 skills under `skills/`. It is packaged as a Claude Code **plugin** (`.claude-plugin/plugin.json`, plugin name `effortless`; `skills/` is auto-discovered) with its own marketplace (`.claude-plugin/marketplace.json` → `effortless@effortless-skills`). `install.sh` is the legacy path that copies `skills/*` into `~/.claude/skills/`.
+
+**Skill descriptions share one character budget in every session's system prompt.** Keep each `description:` ≤ ~350 characters (triggers + one-phrase scope tag); the canonical load-gate policy lives in `effortless-orchestrator`, not in each description. When the budget overflows, Claude Code silently drops descriptions from the least-used skills and they stop triggering — that already happened once at ~30K total characters. It is also a (lightweight) ERB project that *describes itself* with its own methodology.
 
 ## What's special about this ERB project
 

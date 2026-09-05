@@ -1,0 +1,18 @@
+{
+  "name": "effortless-skills",
+  "owner": {
+    "name": "EffortlessAPI",
+    "url": "https://github.com/EffortlessAPI"
+  },
+  "metadata": {
+    "description": "Marketplace for the Effortless Rulebook (ERB) Claude Code plugin."
+  },
+  "plugins": [
+    {
+      "name": "effortless",
+      "source": "./",
+      "description": "The effortless-claude skill suite — 36 scope-gated skills for Effortless Rulebook (ERB) projects.",
+      "category": "development"
+    }
+  ]
+}

@@ -1,16 +1,9 @@
 ---
 name: effortless-airtable
 description: >
-  Use when making schema or data changes via the Airtable API in a project that
-  has *explicitly opted in* to Airtable as an input spoke — adding fields,
-  creating tables, modifying existing fields, or understanding Airtable API
-  limitations (e.g., formula fields cannot be created via API). Airtable is one
-  optional editing surface (sibling to Excel/Notion), not the framework's center.
-  Only relevant if the project is Airtable-connected (see "Is this an Airtable
-  project?" below); otherwise this is a Rulebook-First project (the best-practice
-  default) and edits go to the hub directly.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  Airtable REST API schema/data changes (scalar fields, tables, CRUD, API limits) in an
+  ERB project that has explicitly opted into Airtable as an input spoke. Only applies if
+  the project is Airtable-connected; otherwise edits go to the rulebook directly.
 audience: customer
 ---
 

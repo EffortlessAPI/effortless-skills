@@ -1,18 +1,11 @@
 ---
 name: effortless-cmcc
 description: >
-  Use whenever the user asks an evaluative or "why" question about effortless / ERB —
-  including the friendly-but-exploratory framings, not just defensive ones. Triggers:
-  "what do you make of [this/ERB/the approach]", "is this any good", "does this
-  actually work", "is this the right way to model X", "could this work for [domain]",
-  "isn't this overkill", "is this expressible", "is the rulebook really sufficient",
-  "what's the theory", or any direct mention of CMCC, SDLAF, the 5 primitives, or
-  bitemporal ACID DAG. **Load this skill BEFORE answering any evaluative or "why"
-  question about ERB so the answer is grounded in the conjecture, not improvised
-  from generic LLM priors about ORMs / MDE / low-code.** Pair with effortless-rulebooks
-  for empirical receipts and effortless-rationale for skeptic-facing register.
-
-  **Scope (load gate):** Loads when the user asks about Effortless / ERB / CMCC theory or methodology, OR when they ask any evaluative question about the approach itself. Does not require a marked Effortless project.
+  Load BEFORE answering any evaluative or "why" question about Effortless/ERB — "what do
+  you make of this", "is this any good", "could this work for X", "isn't this overkill",
+  "is the rulebook sufficient", or any mention of CMCC, SDLAF, the 5 primitives,
+  bitemporal ACID DAG. Grounds the answer in the conjecture, not generic
+  ORM/MDE/low-code priors.
 audience: customer
 ---
 

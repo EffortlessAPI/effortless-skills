@@ -1,13 +1,10 @@
 ---
 name: effortless-workflow
 description: >
-  Use when making changes to an ERB project — modifying effortless-rulebook.json
-  directly, editing via Airtable when connected, or running effortless build.
-  `effortless-rulebook.json` is the hub/SSoT; Airtable, LLM-direct edits, and
-  reverse-sync are peer input spokes. Covers the input-spoke options and permission
-  checkpoints.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  Making changes to an ERB project — editing effortless-rulebook.json directly (with
+  permission), via Airtable if connected, or reverse-sync, then `effortless build`. The
+  input-spoke options, permission checkpoints, and the NO MIGRATIONS rule. ERB projects
+  only.
 audience: customer
 ---
 

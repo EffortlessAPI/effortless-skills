@@ -1,19 +1,11 @@
 ---
 name: effortless-mcp
 description: >
-  Use for the **Effortless MCP server** — the always-on Model Context Protocol
-  endpoint that exposes the entire Effortless transpiler catalog (~54 tools)
-  plus the effortless-claude skill set (resources) to any MCP-compatible
-  agent (Claude Code, Cursor, Windsurf, ChatGPT, etc.). Triggers: "install
-  the effortless mcp server", "wire up effortless mcp", "configure cursor
-  for effortless", "what mcp tools does effortless expose", "call
-  effortless_build via mcp", `effortless_ping`/`effortless_build`/
-  `query_rulebook`/`validate_dag` tool names, `effortless://skills/...`
-  resource URIs, "run the mcp server locally", "stdio mode", "bake skills
-  into the mcp image". For the **CLI binary**, use effortless-cli; for the
-  **skill set source**, use effortless-claude-updates.
-
-  **Scope (load gate):** Loads ONLY on explicit user request — never auto-load. Does NOT require an Effortless-marked project — the MCP server is wire-compatible with any MCP client and useful even outside ERB projects (e.g. driving builds from Cursor in a non-ERB repo that just consumes a generated artifact).
+  The Effortless MCP server — the always-on endpoint exposing the transpiler catalog and
+  skills to any MCP client (Claude Code, Cursor, Windsurf, ChatGPT). Triggers:
+  "install/wire up the effortless mcp server", "configure cursor for effortless",
+  effortless_ping / effortless_build / query_rulebook / validate_dag,
+  effortless://skills/ URIs, stdio mode. Explicit request only.
 audience: customer
 ---
 

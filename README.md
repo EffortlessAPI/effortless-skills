@@ -4,7 +4,7 @@ A [Claude Code](https://claude.ai/claude-code) skill suite for working with **Ef
 
 ## What This Does
 
-Effortless Claude installs a set of modular skills into `~/.claude/skills/`. These skills are **scope-gated** — they don't activate willy-nilly across every Claude session. They load when:
+Effortless Claude is a Claude Code **plugin** (installable from this repo's own marketplace — see [Installation](#installation)) that ships a set of modular skills. These skills are **scope-gated** — they don't activate willy-nilly across every Claude session. They load when:
 
 - You're in a project that has been **explicitly marked as Effortless** (the project root contains both `effortless.json` and a `CLAUDE.md` that identifies the project as following ERB methodology), **or**
 - You **explicitly invoke** them by phrase — e.g. "make this an effortless project", "install the effortless CLI", "explain CMCC", "set up magic links on this app".
@@ -157,7 +157,37 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 ## Installation
 
-### Option A: Ask Claude Code to install it
+### Option A: Install as a Claude Code plugin (recommended)
+
+This repo is a Claude Code plugin **and** its own marketplace. In any Claude Code session:
+
+```
+/plugin marketplace add EffortlessAPI/effortless-skills
+/plugin install effortless@effortless-skills
+```
+
+Or from a terminal:
+
+```bash
+claude plugin marketplace add EffortlessAPI/effortless-skills
+claude plugin install effortless@effortless-skills
+```
+
+That's it — all 36 skills are available as `effortless:<skill-name>` (e.g. `/effortless:effortless-init`), and Claude auto-loads them by the same scope gates described above. Updates arrive through the plugin manager (`/plugin` → Marketplaces → Update, or `claude plugin update effortless@effortless-skills`); there is nothing to `git pull` or re-run.
+
+To enable it only in specific projects rather than globally, put this in that project's `.claude/settings.json`:
+
+```json
+{ "enabledPlugins": { "effortless@effortless-skills": true } }
+```
+
+> **If you previously installed with `install.sh`**, run `bash install.sh --uninstall` first (or delete `~/.claude/skills/effortless-*`). Otherwise Claude sees two copies of every skill — the plugin's and the loose ones — and the loose copies never update.
+
+### Legacy: copy skills into `~/.claude/skills/` with `install.sh`
+
+The pre-plugin path. Still supported, but it copies files that never update themselves.
+
+#### Ask Claude Code to install it
 
 In any Claude Code session:
 
@@ -171,7 +201,7 @@ Clone https://github.com/EffortlessAPI/effortless-claude and run install.sh
 Clone https://github.com/EffortlessAPI/effortless-claude and run install-windows.sh
 ```
 
-### Option B: One-liner
+#### One-liner
 
 **macOS / Linux:**
 ```bash
@@ -183,7 +213,7 @@ git clone https://github.com/EffortlessAPI/effortless-claude.git /tmp/effortless
 git clone https://github.com/EffortlessAPI/effortless-claude.git /tmp/effortless-claude && bash /tmp/effortless-claude/install-windows.sh && rm -r /tmp/effortless-claude
 ```
 
-### Option C: Clone and install
+#### Clone and install
 
 ```bash
 git clone https://github.com/EffortlessAPI/effortless-claude.git
@@ -192,7 +222,7 @@ bash install.sh              # macOS / Linux
 bash install-windows.sh      # Windows (Git Bash)
 ```
 
-### Installer flags
+#### Installer flags
 
 ```
 bash install.sh                # interactive — asks before overwriting
@@ -204,7 +234,9 @@ bash install.sh --help         # show flags
 
 ## Updating
 
-You can ask Claude — `effortless-claude-updates` is the skill that drives this:
+**Plugin install:** `/plugin` → Marketplaces → Update `effortless-skills`, or `claude plugin update effortless@effortless-skills`.
+
+**Legacy install:** you can ask Claude — `effortless-claude-updates` is the skill that drives this:
 
 ```
 "Are my effortless skills up to date?"
@@ -240,7 +272,10 @@ In a project that **isn't** marked Effortless, the project-only skills should st
 ## Project Structure
 
 ```
-effortless-claude/
+effortless-skills/
+├── .claude-plugin/
+│   ├── plugin.json                     ← plugin manifest (skills/ is auto-discovered)
+│   └── marketplace.json                ← self-hosted marketplace: `effortless@effortless-skills`
 ├── skills/
 │   ├── effortless-orchestrator/        ← top-level mental model + routing
 │   ├── effortless-init/                ← initialize a project as Effortless
@@ -269,8 +304,8 @@ effortless-claude/
 │   └── effortless-ecosystem/           ← repo catalog (SSoTme + effortlessapi orgs)
 ├── CHANGELOG.md                        ← dated entries for repo-shape changes
 ├── DEPRECATED_SKILLS.md                ← deprecation registry (parsed by installer)
-├── install.sh                          ← macOS / Linux installer
-├── install-windows.sh                  ← Windows (Git Bash) installer
+├── install.sh                          ← legacy macOS / Linux installer (copies into ~/.claude/skills)
+├── install-windows.sh                  ← legacy Windows (Git Bash) installer
 ├── lint-skills.sh                      ← structural lint (frontmatter / naming / dep-registry)
 ├── LICENSE                             ← MIT
 └── README.md
@@ -283,7 +318,13 @@ Each skill's `SKILL.md` is the source of truth for that skill's behavior. To sug
 1. Open an issue, or
 2. Submit a PR editing the relevant `skills/effortless-*/SKILL.md`
 
-For local development, install with `--symlink` so your edits to the source repo are reflected immediately:
+For local development, load the checkout directly as a plugin — edits are picked up on the next `/reload-plugins`, and the local copy shadows any installed `effortless` plugin for that session:
+
+```bash
+claude --plugin-dir /path/to/effortless-skills
+```
+
+(Legacy alternative: install with `--symlink` so your edits to the source repo are reflected immediately:)
 
 ```bash
 bash install.sh --symlink

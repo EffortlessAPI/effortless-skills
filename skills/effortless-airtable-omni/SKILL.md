@@ -1,14 +1,9 @@
 ---
 name: effortless-airtable-omni
 description: >
-  Use ONLY for Airtable schema changes that the API cannot handle — formula fields,
-  lookup fields, rollup fields, and new table creation (which requires the Name formula).
-  All scalar field changes and CRUD operations go through the Airtable API directly.
-  Only relevant if the project is Airtable-connected (see the "Is this an Airtable
-  project?" gate in `effortless-airtable`); otherwise this is a Rulebook-First project
-  and this skill does not apply.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology, AND the project must be Airtable-connected. Do NOT load otherwise.
+  Airtable schema changes the REST API cannot make — formula, lookup, rollup fields and
+  new tables (Name formula) — driven through OMNI via omni-send.mjs. Airtable-connected
+  ERB projects only; scalar fields and CRUD go through effortless-airtable instead.
 audience: customer
 deprecated_skill_names:
   - effortless-omni-prompt
@@ -119,7 +114,8 @@ Before `omni-send.mjs` will run end-to-end, all of these must be true:
    `node --version` should report ≥ 18. If the user is still on Node 16,
    point them at `effortless-cli` — the same Node 20 guidance applies.
 2. **Playwright + a Chromium browser.** Project-local install is preferred so
-   the script runs reliably from `~/.claude/skills/effortless-airtable-omni/`:
+   the script runs reliably from the skill's own directory (see "Usage" for
+   where that is):
    ```bash
    npx playwright --version 2>/dev/null \
      || { npm install -D playwright && npx playwright install chromium; }
@@ -154,17 +150,27 @@ cat effortless.json | jq -r '.ProjectSettings[] | select(.Name == "baseId") | .V
 
 #### Usage
 
-The script lives at `~/.claude/skills/effortless-airtable-omni/omni-send.mjs`. Invoke it with:
+The script is `omni-send.mjs`, shipped next to this SKILL.md. Where that is
+depends on how the suite was installed — as the `effortless` plugin
+(`$CLAUDE_PLUGIN_ROOT/skills/effortless-airtable-omni/`) or via the legacy
+`install.sh` (`~/.claude/skills/effortless-airtable-omni/`). Resolve it once:
+
+```bash
+OMNI="${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/skills/effortless-airtable-omni/omni-send.mjs}"
+[ -f "$OMNI" ] || OMNI=$(find ~/.claude/skills ~/.claude/plugins -path '*effortless-airtable-omni/omni-send.mjs' 2>/dev/null | head -1)
+```
+
+Then invoke it with:
 
 ```bash
 # First run — log in to Airtable (session persists at /tmp/airtable-omni-profile)
-node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> --login
+node "$OMNI" <baseId> --login
 
 # Send a prompt to OMNI
-node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> 'Add a Formula field called "Name" with formula: LOWER(SUBSTITUTE({DisplayName}, " ", "-"))'
+node "$OMNI" <baseId> 'Add a Formula field called "Name" with formula: LOWER(SUBSTITUTE({DisplayName}, " ", "-"))'
 
 # Take a screenshot of current Airtable state
-node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> --screenshot
+node "$OMNI" <baseId> --screenshot
 ```
 
 **Output convention:**
@@ -200,11 +206,11 @@ Send one computed field at a time. More reliable than batching:
 
 ```bash
 # Formula
-node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs $BASE_ID \
+node "$OMNI" $BASE_ID \
   'For the table "Orders", add a Formula field called "Name" with formula: LOWER(SUBSTITUTE({OrderNumber}, " ", "-"))'
 
 # Lookup
-node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs $BASE_ID \
+node "$OMNI" $BASE_ID \
   'For the table "Orders", add a Lookup field called "CustomerEmail" that looks up "Email" through the "Customer" linked record.'
 ```
 

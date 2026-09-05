@@ -1,17 +1,9 @@
 ---
 name: effortless-bases
 description: >
-  Use when the user wants to spin up a Postgres base on
-  bases.effortlessapi.com, get its credentials, apply schema, and
-  (optionally) secure it with magic-links + RLS. Covers the
-  actually-deployed API surface — the Node management server
-  (`bases.effortlessapi.com`) plus the .NET CRUD/source-of-truth
-  (`bases-api.effortlessapi.com`) — including the auth flow that
-  actually works against both. Triggers: "create a bases base",
-  "spin up a base", "set up a secure base", "wire magic links into
-  this app on bases.effortlessapi.com", "publish to bases".
-
-  **Scope (load gate):** Loads only on explicit user request — applies to any Postgres-backed app on bases.effortlessapi.com, not just Effortless-marked projects. Do not auto-load just because a project uses Postgres.
+  Spin up, credential, apply schema to, and secure (magic-links + RLS) a Postgres base
+  on bases.effortlessapi.com. Triggers: "create a bases base", "spin up a base", "set up
+  a secure base", "publish to bases". Any Postgres app; explicit request only.
 audience: customer
 ---
 

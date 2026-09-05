@@ -1,26 +1,11 @@
 ---
 name: effortless-rulespeak
 description: >
-  Use when generating plain-English RuleSpeak® documentation from an
-  effortless-rulebook.json — declarative business rules, vocabulary, fact
-  types, definitional rules (DR-n), and traceability back to formulas.
-  Installs `rulebook-to-rulespeak` and emits `rulespeak/rulespeak.md` and
-  `rulespeak/rulespeak.html` on every build.
-
-  **The no-Docker alternative to `effortless-rulebook-editor`**, which
-  produces this same plain-English documentation automatically and is the
-  recommended default for most projects (see that skill). Reach for this
-  skill instead when the project wants portable static HTML/MD files, or
-  doesn't want a Docker container running.
-
-  Triggers: "generate rulespeak", "rulebook-to-rulespeak", "english rules
-  document", "plain language rules", "business rules doc from rulebook",
-  "rulespeak.md", "create a rulebook", "write a rulebook for".
-
-  **Scope (load gate):** Effortless projects with a rulebook hub, OR any
-  task that creates a new rulebook (load alongside effortless-schema).
-  Does not require Airtable. For interactive in-app field provenance, use
-  effortless-explainer-dag on demand instead.
+  Generate plain-English RuleSpeak® docs from a rulebook — installs
+  rulebook-to-rulespeak, emits rulespeak/rulespeak.md + .html each build. The no-Docker
+  alternative to effortless-rulebook-editor. Triggers: "generate rulespeak", "plain
+  language rules", "business rules doc", "create/write a rulebook for". ERB projects, or
+  any task that creates a rulebook.
 audience: customer
 ---
 

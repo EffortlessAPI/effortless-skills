@@ -1,15 +1,10 @@
 ---
 name: effortless-rulebooks
 description: >
-  Use when the user wants empirical proof that CMCC actually works — show me the
-  receipts, does this run in code, ExplainDAG, witnessed inference graph,
-  conformance testing, answer-key.json, the rulebooks repo, "is-everything-a-language",
-  StarTrek demo, Jessica Talisman workflow, multi-substrate equivalence, ARM64 +
-  COBOL substrate, or any request to demonstrate that the conjecture holds in a
-  runnable way. Also use when the user asks "what's in the effortless-rulebooks
-  repo" or links to github.com/effortlessapi/effortless-rulebooks.
-
-  **Scope (load gate):** Loads when the user asks for empirical proof of CMCC / wants to see ExplainDAG / asks about the effortless-rulebooks repo. Does not require a marked Effortless project.
+  Empirical proof that CMCC works — ExplainDAG, witnessed inference graph, conformance
+  testing, answer-key.json, multi-substrate equivalence (incl. ARM64 + COBOL), StarTrek
+  demo, and the github.com/effortlessapi/effortless-rulebooks repo. Triggers: "show me
+  the receipts", "does this run in code", "what's in the rulebooks repo".
 audience: customer
 ---
 

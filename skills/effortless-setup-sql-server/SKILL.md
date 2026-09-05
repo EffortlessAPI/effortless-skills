@@ -1,18 +1,10 @@
 ---
 name: effortless-setup-sql-server
 description: >
-  Use when setting up an Effortless project with SQL Server as the execution
-  substrate — installing `rulebook-to-sql-server`, generating T-SQL under
-  `sql-server/`, running `init-db.sh` via sqlcmd, and wiring an Express app
-  to `mssql`. Mirrors `effortless-setup-postgres` for the SQL Server path.
-
-  Triggers: "rulebook-to-sql-server", "sql-server transpiler", "setup SQL
-  Server", "switch from Postgres to SQL Server", "mssql demo app", "sqlcmd
-  init-db".
-
-  **Scope (load gate):** Effortless projects with `effortless.json` + ERB
-  CLAUDE.md, OR when the user explicitly asks to install/use
-  rulebook-to-sql-server.
+  First-run setup with SQL Server as the substrate — install rulebook-to-sql-server,
+  T-SQL under sql-server/, init-db.sh via sqlcmd, Express + mssql. Mirrors
+  effortless-setup-postgres. Triggers: "rulebook-to-sql-server", "setup SQL Server",
+  "switch from Postgres to SQL Server", "mssql demo app".
 audience: customer
 ---
 

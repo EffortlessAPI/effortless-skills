@@ -1,20 +1,11 @@
 ---
 name: effortless-publish-tool
 description: >
-  Use whenever the user asks to **publish, push, deploy, or release a new version of a
-  transpiler tool** in `Versioned-Stable-SSoTme-Tools` — e.g. "publish rulebook-to-sql-server",
-  "push the tool online", "deploy the new version", "ship this transpiler", "release it",
-  "make a new version live". This is the EXACT, supported, scripted path that mirrors the
-  green 🚀 Deploy button in the transpiler-server UI. It is NOT the same as `effortless build`
-  (that CONSUMES a published tool) and NOT `build-and-push-cpln-workload.sh` alone (that only
-  builds the image without flipping `[latest]` live).
-
-  **Do not invent a publish procedure.** There is exactly one scripted path:
-  `scripts/publish-tool.sh <transpilerId> <category>/<tool-name>`. If the transpiler-server
-  isn't on port 3000, find the port — don't conclude it's "down". See below.
-
-  **Scope (load gate):** Loads when the user wants to publish/push/deploy a transpiler tool
-  from the `Versioned-Stable-SSoTme-Tools` repo. Requires that repo (and `cpln` authenticated).
+  Publish / push / deploy / release a new version of a transpiler tool in
+  Versioned-Stable-SSoTme-Tools — the one scripted path (scripts/publish-tool.sh)
+  mirroring the 🚀 Deploy button. Triggers: "publish rulebook-to-X", "ship this
+  transpiler", "make the new version live". Not `effortless build`, not
+  build-and-push-cpln-workload.sh alone. Requires that repo.
 audience: general
 ---
 

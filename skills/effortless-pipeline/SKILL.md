@@ -1,12 +1,9 @@
 ---
 name: effortless-pipeline
 description: >
-  Use when working with the ERB build pipeline — effortless.json configuration,
-  transpiler catalog, effortless build commands, the -id flag, transpiler
-  installation, or understanding how the build flows from the rulebook hub
-  through to generated code.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  The ERB build pipeline — effortless.json, ProjectTranspilers, the transpiler catalog,
+  `effortless build` vs `-id`, transpiler install paths, how the build flows from the
+  rulebook hub to generated code. ERB projects only.
 audience: customer
 ---
 

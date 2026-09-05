@@ -1,18 +1,11 @@
 ---
 name: effortless-init
 description: >
-  Use when initializing a new effortless project: "make this an effortless
-  project", "init effortless", "init effortless project", "set up effortless
-  here", "connect to Airtable", "hook up Airtable", or when an existing project
-  is missing CLAUDE.md / start.sh / the standard ERB directory layout.
-  Covers `effortless -init`, the standard directory structure, the project-level
-  CLAUDE.md template, start.sh, and the optional step of connecting an upstream
-  editing surface (Airtable/Excel) as an input spoke.
-  For Postgres-targeted first-run (preflight checks, init-db, full 7-step
-  bootstrap), use effortless-setup-postgres instead — that skill is a superset
-  for postgres projects.
-
-  **Scope (load gate):** Effortless projects, OR when the user explicitly asks to make a project Effortless / set up Effortless tooling.
+  Initialize an Effortless project — `effortless -init`, the standard directory layout,
+  the project CLAUDE.md marker, start.sh, optional Airtable/Excel input spoke. Triggers:
+  "make this an effortless project", "init effortless", "set up effortless here",
+  "connect to Airtable", or a project missing CLAUDE.md/start.sh. Postgres first-run:
+  use effortless-setup-postgres.
 audience: customer
 ---
 
@@ -163,7 +156,7 @@ This is an Effortless Rulebook (ERB) project. All development follows the effort
 - API Key: stored in ~/.ssotme/ssotme.key (set via `effortless -setAccountAPIKey airtable=...`)
 - Use the Airtable REST API for scalar field changes and CRUD.
 - Use OMNI (Playwright) for formula / lookup / rollup fields and new tables:
-  `node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs {baseId} '<prompt>'`
+  `node "$OMNI" {baseId} '<prompt>'` (`$OMNI` resolved as in `effortless-airtable-omni` → Usage)
 
 ## The Effortless Loop
 CHANGE RULE (in rulebook JSON, or Airtable if connected) → `effortless build` → CONSUME generated views in app code → repeat.

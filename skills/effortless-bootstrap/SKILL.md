@@ -1,14 +1,10 @@
 ---
 name: effortless-bootstrap
 description: >
-  Use when the user wants to bootstrap a new effortless project from raw text,
-  requirements, or a description of a platform. Also known as the "Shadle steps"
-  or "effortless-shadle-steps". Covers the full pipeline from raw input text
-  through vocabulary extraction, glossary, narrative, mock data, schema
-  normalization, to a populated effortless-rulebook.json (optionally mirrored to
-  Airtable for teams that want a grid).
-
-  **Scope (load gate):** Effortless projects, OR when the user explicitly asks to bootstrap a new Effortless project from raw text/requirements.
+  Bootstrap a new Effortless project from raw text or requirements — the "Shadle steps":
+  vocabulary → glossary → narrative → mock data → normalized schema → populated
+  effortless-rulebook.json. Triggers: "bootstrap an effortless project from this text",
+  "shadle steps".
 audience: customer
 ---
 
@@ -177,7 +173,7 @@ works. It replaces Steps 8–11 above with an Airtable round-trip:
 1. **OMNI prompts for initial tables** — per table, create the `Name` formula
    (`SUBSTITUTE(LOWER({Label}), " ", "-")`) and the fields that build that compound
    key. Only these structural fields at first. See `effortless-airtable-omni`.
-2. **Create tables via OMNI** — `node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> '<per-table prompt>'`.
+2. **Create tables via OMNI** — `node "$OMNI" <baseId> '<per-table prompt>'` (`$OMNI` resolved as in `effortless-airtable-omni` → Usage).
 3. **Add descriptions + mock data via the Airtable REST API** — see `effortless-airtable` for the `PATCH .../fields/{id}` and record-create calls.
 4. **Extend the model** in Airtable (lookups/rollups via OMNI, scalars via the API).
 5. **Pull the grid into the hub** — `cd effortless-rulebook/ && effortless airtable-to-rulebook -account airtable -o effortless-rulebook.json`. This establishes Airtable as a connected *input spoke*; the rulebook is still the SSoT.

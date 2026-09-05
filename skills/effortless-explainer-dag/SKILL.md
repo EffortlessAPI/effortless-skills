@@ -1,26 +1,11 @@
 ---
 name: effortless-explainer-dag
 description: >
-  Use when adding the Explainer DAG to any Effortless project — a
-  generated, embedded visualization of the rulebook's calculated-field
-  DAG that lets users click any cell/field and see exactly how it was
-  derived (raw inputs → lookups → calcs → aggregations), with RuleSpeak®
-  prose baked in at transpile time. Works in React, Vue, plain HTML,
-  Flask/Jinja, HTMX, etc. via the portable `rulebook-to-explainer-dag`
-  transpiler (vanilla JS + CSS, no React dependency).
-
-  Triggers: "add the explainer dag", "wire up the explainer", "install the
-  effortless explainer dag", "show the DAG in the UI", "rulebook-to-explainer-dag",
-  "explain a calculated field visually", "make calculated fields clickable",
-  "data-er-dag", "explainer DAG".
-
-  **Scope (load gate):** Loads **on demand only** — when the user explicitly
-  wants in-app field provenance / DAG visualization. **Not** part of the default
-  demo/POC bootstrap (that uses `rulebook-to-rulespeak` via effortless-rulespeak).
-  Effortless projects with a web UI (any stack). Does not require Airtable.
-  **This is the ONLY skill for explainer DAG work.** Do not load
-  `effortless-react-explainer-dag` (deprecated — wrong transpiler, wrong
-  integration model).
+  Add the in-app Explainer DAG (rulebook-to-explainer-dag, data-er-dag) — click any
+  field to see how it was derived; any web stack. Triggers: "add the explainer dag",
+  "show the DAG in the UI", "make calculated fields clickable". On demand only, not part
+  of the default POC; the only skill for this (effortless-react-explainer-dag is
+  deprecated).
 audience: customer
 ---
 

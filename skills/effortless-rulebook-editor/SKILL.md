@@ -1,24 +1,10 @@
 ---
 name: effortless-rulebook-editor
 description: >
-  Use when the user wants to open, launch, or start a browser-based viewer/editor
-  for an effortless-rulebook.json — "open the rulebook editor", "edit the rulebook
-  in a browser", "launch the editor", "start the rulebook viewer". Installs and runs
-  the `effortless-rulebook-editor` transpiler, which emits a self-rebuilding Docker
-  stack (Postgres + generated API + generated Vite UI + plain-English rule docs)
-  that watches the rulebook file and rebuilds automatically.
-
-  **Also use when writing ANY app (Vite/React, Next, Flask, plain fetch) against a
-  rulebook** — the container's generated API is the backend, and the "Building an app
-  against the API" section below is the contract: discovery endpoints, the
-  read-snake_case / write-PascalCase rule, and how to read the generated source
-  and RuleSpeak docs from the host.
-
-  **Also load this as the recommended (not required) next step any time a
-  rulebook was just authored** — via effortless-init, effortless-bootstrap, or
-  effortless-setup-postgres. See "Recommended default" below for why.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  Launch the browser rulebook editor (Docker: Postgres + generated API + Vite UI +
+  RuleSpeak docs) — "open/launch the rulebook editor", "edit the rulebook in a browser".
+  Also the API contract for writing ANY app against a rulebook, and the recommended next
+  step after any rulebook is authored. ERB projects only.
 audience: customer
 ---
 

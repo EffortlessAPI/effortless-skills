@@ -8,6 +8,33 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **Claude Code plugin packaging** — `.claude-plugin/plugin.json` (plugin
+  `effortless`; `skills/` is auto-discovered) and `.claude-plugin/marketplace.json`
+  (self-hosted marketplace `effortless-skills`, source `./`). Install with
+  `/plugin marketplace add EffortlessAPI/effortless-skills` then
+  `/plugin install effortless@effortless-skills`; develop with
+  `claude --plugin-dir <clone>`. `install.sh` / `install-windows.sh` remain as the
+  legacy copy-into-`~/.claude/skills` path and now warn (and ask) when the plugin
+  is already installed, since loose copies alongside the plugin duplicate every
+  skill and never update.
+
+### Changed
+- **Every skill description trimmed** (~30K → ~10K characters across the 36
+  skills). Descriptions share one character budget in the system prompt; at the
+  old size Claude Code was silently dropping the descriptions of the least-used
+  skills (seven of them, including the just-added `effortless-progress-report`),
+  so those skills could never trigger. The repeated "Scope (load gate)" paragraph
+  is gone from the descriptions; the canonical load-gate policy now lives in one
+  table in `effortless-orchestrator`, which also gained routing rows for every
+  skill that was missing from its table.
+- `effortless-airtable-omni` (and the three skills that call it) no longer
+  hardcode `~/.claude/skills/...` for `omni-send.mjs` — the path is resolved
+  from `$CLAUDE_PLUGIN_ROOT` (plugin) or found under `~/.claude` (legacy).
+- `effortless-claude-updates` now covers the plugin install/update path and
+  points at `EffortlessAPI/effortless-skills` (the actual remote) rather than
+  `effortless-claude`.
+
+### Added (earlier, unreleased)
 - **`effortless-progress-report`** (new skill) — a project's delivery status,
   kept in its own rulebook and projected into a report rather than written as a
   document. Installs `rulebook-to-progress-report`, which emits one

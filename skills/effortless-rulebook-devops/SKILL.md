@@ -1,30 +1,11 @@
 ---
 name: effortless-rulebook-devops
 description: >
-  Best-practice dev-ops for an Effortless Rulebook (ERB) project: a rulebook-first
-  pipeline promoted across up to **four tiers** — **dev** and **staging** on
-  localhost (always fake/mock data), **beta/UAT** and **production** on a live
-  remote server — governed by ONE migration ledger, a version that is always
-  **derived** (never stored), and two independent axes (**DB migration version**
-  + **code build**). Ships a **Deployment Management** admin console (the migration
-  × environment matrix, drift/version grading, ERBVersions changelog, and the whole
-  action rail), an environment/DB switcher, and the guardrails that keep staging &
-  production reachable ONLY through ledger-tracked migrations. Triggers: "set up
-  rulebook dev-ops", "deployment management page", "dev/staging/beta/production
-  model", "promote a release", "cut a version / take a code snapshot", "migration
-  matrix", "derive a migration from the diff", "environment switcher", "000-seed
-  migration", "push code to production".
-
-  This skill is HEAVY and meant to be invoked ONCE per project to scaffold the whole
-  model; afterwards the project's Deployment Management page + the day-to-day
-  promotion protocol drive it. Most projects use only 2 or 3 tiers — the model
-  scales down cleanly (see §1).
-
-  **Scope (load gate):** Effortless projects only — project root must contain
-  `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology.
-  This skill DOES manage remote environments (beta/production on a live box) as a
-  first-class concern; it also supports an all-localhost rehearsal posture for
-  projects that have not gone remote yet (see §2). Do NOT load for non-ERB projects.
+  Scaffold rulebook-first dev-ops across dev/staging (localhost) and beta/production
+  (remote): one migration ledger, derived version, Deployment Management console,
+  environment switcher. Triggers: "set up rulebook dev-ops", "deployment management
+  page", "promote a release", "cut a version", "migration matrix", "push code to
+  production". Heavy; invoke once per project. ERB projects only.
 audience: customer
 ---
 

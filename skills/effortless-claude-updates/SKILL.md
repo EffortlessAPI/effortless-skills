@@ -1,40 +1,47 @@
 ---
 name: effortless-claude-updates
 description: >
-  Use for anything about the effortless-claude **skill set** itself — both
-  CHECKING for updates and APPLYING them. Triggers: "are my effortless skills
-  up to date", "check for effortless skill updates", "update effortless
-  skills", "reinstall effortless skills", "refresh effortless skills",
-  "what's new in effortless-claude", "add a new effortless skill", "edit a
-  skill". NOT for the CLI binary — for that, use effortless-cli.
-
-  **Scope (load gate):** Loads only on explicit user request about the skill set itself. Does NOT require an Effortless-marked project (skill maintenance is project-independent).
+  The effortless skill set itself — check for updates, apply them, add/edit/deprecate a
+  skill. Triggers: "are my effortless skills up to date", "update/reinstall/refresh
+  effortless skills", "what's new in effortless-claude", "add a new effortless skill".
+  Not the CLI binary (that is effortless-cli).
 audience: customer
 ---
 
 # Effortless Skill Set — Check, Update, Author
 
-The effortless-claude skill set lives in two places:
+The SSoT is `skills/` in a git clone of `EffortlessAPI/effortless-skills`. There are two ways it gets installed — **find out which one the user has first**, because the check/update steps differ:
 
-| Location | Role |
-|---|---|
-| `<clone>/skills/` (a git clone of `effortlessapi/effortless-claude`) | **SSoT** — all edits happen here |
-| `~/.claude/skills/effortless-*` | **Installed copies** — what Claude Code loads at runtime |
+| Install path | How to detect | Runtime location |
+|---|---|---|
+| **Plugin** (recommended): `effortless@effortless-skills` | `grep '"effortless-skills"' ~/.claude/plugins/installed_plugins.json` | managed by the plugin manager; skills appear as `effortless:<name>` |
+| **Legacy** `install.sh` copies | `ls ~/.claude/skills/effortless-*` | `~/.claude/skills/effortless-*` |
 
-**Never edit installed copies directly.** Edit in the SSoT clone, then run `install.sh`.
+**Never edit installed copies directly** (either path). Edit in the SSoT clone.
 
-## Check: is my local clone behind upstream?
+**Both present?** That's the footgun: two copies of every skill, and the loose ones never update. Fix: `bash <clone>/install.sh --uninstall` (or delete `~/.claude/skills/effortless-*`) and keep the plugin.
+
+## Plugin path: check + update
+
+```
+/plugin                                   # → Marketplaces → effortless-skills → Update
+claude plugin update effortless@effortless-skills     # non-interactive equivalent
+```
+
+Not installed yet? `/plugin marketplace add EffortlessAPI/effortless-skills` then `/plugin install effortless@effortless-skills`. No clone needed. The rest of this skill (clone-based check, `install.sh`) applies only to the legacy path — except **Author**, which always works against a clone.
+
+## Legacy path — Check: is my local clone behind upstream?
 
 This is read-only. Don't `git pull` or `git fetch` — just compare.
 
 ### 1. Locate the clone
 
 ```bash
-for d in ~/effortless-claude ~/src/effortless-claude ~/code/effortless-claude \
-         ~/projects/effortless-claude ./effortless-claude; do
+for d in ~/effortless-skills ~/src/effortless-skills ~/code/effortless-skills \
+         ~/projects/effortless-skills ./effortless-skills ~/effortless-claude ./effortless-claude; do
   if [ -d "$d/.git" ]; then
     remote=$(git -C "$d" remote get-url origin 2>/dev/null)
-    case "$remote" in *effortlessapi/effortless-claude*) echo "$d";; esac
+    case "$remote" in *[Ee]ffortless[Aa][Pp][Ii]/effortless-skills*|*effortlessapi/effortless-claude*) echo "$d";; esac
   fi
 done
 ```
@@ -45,14 +52,14 @@ If none found, ask the user. No clone → no update path; recommend cloning.
 
 ```bash
 LOCAL=$(git -C <clone> rev-parse HEAD)
-gh api "repos/effortlessapi/effortless-claude/compare/$LOCAL...main" \
+gh api "repos/EffortlessAPI/effortless-skills/compare/$LOCAL...main" \
   --jq '{ahead: .ahead_by, behind: .behind_by, commits: [.commits[] | {sha: .sha[0:7], msg: .commit.message | split("\n")[0]}]}'
 ```
 
 Fallback if `gh` is missing:
 
 ```bash
-curl -s 'https://api.github.com/repos/effortlessapi/effortless-claude/commits?per_page=20' \
+curl -s 'https://api.github.com/repos/EffortlessAPI/effortless-skills/commits?per_page=20' \
   | python3 -c "import sys,json; [print(c['sha'][:7], c['commit']['author']['date'], c['commit']['message'].split(chr(10))[0]) for c in json.load(sys.stdin)]"
 ```
 
@@ -70,7 +77,7 @@ From the last 20 upstream commits, compute median gap in days:
 | 7–30 days | Monthly |
 | > 30 days | On demand only |
 
-## Update: apply the latest
+## Legacy path — Update: apply the latest
 
 **Per the read-only-git memory: ASK before running git commands.** The user authorizes each step.
 
@@ -115,13 +122,15 @@ audience: customer
 ---
 ```
 
-Then `bash install.sh --yes`. Discovery is automatic.
+Then `bash install.sh --yes` (legacy) — or, when developing against the plugin, start Claude with `claude --plugin-dir <clone>` and run `/reload-plugins` after edits. Discovery is automatic either way; `skills/` is the plugin's skill directory.
+
+**Keep the description short.** All 36 descriptions share one character budget in every session's system prompt; when it overflows, Claude Code silently drops descriptions from the least-used skills and they stop triggering. Target ≤ 350 characters: triggers + one-phrase scope tag. The full load-gate policy lives in `effortless-orchestrator`, not in each description.
 
 ### Edit an existing skill
 
 1. Edit `<clone>/skills/<skill-name>/SKILL.md`
-2. `bash install.sh --yes` (skip if you're using `--symlink` mode)
-3. Next Claude Code conversation picks it up.
+2. `bash lint-skills.sh`
+3. Legacy: `bash install.sh --yes` (skip in `--symlink` mode). Plugin: `/reload-plugins` under `--plugin-dir`, or push and let users update.
 
 ### Skill-writing principles
 

@@ -1,14 +1,11 @@
 ---
 name: effortless-orchestrator
 description: >
-  Top-level orchestrator for Effortless Rulebook (ERB) projects — rulebook-first
-  schema-first business rules, `effortless.json` build pipelines,
-  effortless-rulebook.json ontologies, rulebook-to-postgres code generation, or
-  any project containing an effortless-rulebook/ directory or effortless.json file.
-  Provides the ERB mental model, axioms, guardrails, token discipline, and routes
-  to specialized sub-skills. Load this first on any ERB project.
-
-  **Scope (load gate):** Effortless projects (project root has `effortless.json` + a CLAUDE.md identifying the project as ERB methodology), OR when the user explicitly asks to set up / install / update Effortless tooling.
+  Top-level entry point for Effortless Rulebook (ERB) projects — any project with
+  effortless.json or an effortless-rulebook/ directory, or any request to set up /
+  install / update Effortless tooling. Holds the mental model, axioms, guardrails, token
+  discipline, the load-gate policy for every effortless-* skill, and the routing table.
+  Load this first.
 audience: customer
 ---
 
@@ -41,10 +38,17 @@ A project is **Effortless** if and only if BOTH are true:
 1. `effortless.json` (or legacy `ssotme.json`) exists at the project root.
 2. A `CLAUDE.md` at the project root explicitly identifies the project as following the Effortless Rulebook (ERB) methodology.
 
-**This dual marker is the load gate for every effortless-* skill.** None of these skills should activate willy-nilly — they apply only inside projects that have been deliberately marked as Effortless. The two exceptions are:
+**This dual marker is the load gate for every effortless-* skill.** None of these skills should activate willy-nilly — they apply only inside projects that have been deliberately marked as Effortless. The individual skill descriptions carry only a one-phrase scope tag; **this section is the canonical load-gate policy** they all defer to.
 
-- **Entry-point skills** (`effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-cli`, `effortless-claude-updates`) — these can also load when the user explicitly asks to set up / install / update Effortless tooling, since their job is to *create* the marker or manage the tooling itself.
-- **Tooling skills** (`effortless-bases`, `effortless-magic-links`) — these load only on explicit user request because they apply to any Postgres project, not just Effortless ones.
+### Load-gate policy (canonical — every skill defers here)
+
+| Class | Loads when | Skills |
+|---|---|---|
+| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project) |
+| **Airtable-connected only** | Both markers AND `effortless.json` registers `airtable-to-rulebook`. | `effortless-airtable`, `effortless-airtable-omni` |
+| **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-claude-updates` |
+| **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem` |
+| **Explicit request only** | Only when the user asks by name/phrase. Never auto-load just because a project uses Postgres, Docker, etc. | `effortless-bases`, `effortless-magic-links`, `effortless-mcp`, `effortless-publish-tool`, `effortless-video` |
 
 If you're in a project that lacks the marker and the user hasn't explicitly invoked Effortless tooling, do **not** load these skills. If the user wants to convert an existing project into an Effortless project, route to **effortless-init**.
 
@@ -282,7 +286,7 @@ Formula, lookup, or rollup?
                              the rulebook is JSON, formulas/lookups/rollups are
                              just fields)
   Airtable-connected, optional → OMNI via Playwright (effortless-airtable-omni)
-                             node ~/.claude/skills/effortless-airtable-omni/omni-send.mjs <baseId> '<prompt>'
+                             node "$OMNI" <baseId> '<prompt>'  ($OMNI: see effortless-airtable-omni → Usage)
 
 CRUD on records?
   Rulebook-First (default) → write to Postgres tables; reverse-sync if you need
@@ -301,7 +305,15 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-cli` | CLI commands AND install/update of the `effortless` binary itself |
 | `effortless-init` | Initializing a new effortless project (project structure, CLAUDE.md, start.sh, Airtable connection) |
 | `effortless-setup-postgres` | First-run setup for Postgres-targeted projects (preflight + init-db + everything in -init) |
+| `effortless-setup-sql-server` | Same first-run setup with SQL Server as the substrate (`rulebook-to-sql-server`, sqlcmd, mssql) |
 | `effortless-bootstrap` | Bootstrapping from raw text — Shadle steps from vocabulary to rulebook |
+| `effortless-ssotme-protocol` | Exact `effortless.json` schema — load before emitting any `ProjectTranspilers` entry |
+| `effortless-meta-table` | The `__meta__` global name/value settings table (transpiler-ignored) |
+| `effortless-progress-report` | Delivery / status / priced-plan reports derived from the rulebook; adds the delivery spine tables |
+| `effortless-rulebook-devops` | Dev/staging/beta/production promotion model, migration ledger, Deployment Management console (heavy, once per project) |
+| `effortless-mcp` | The Effortless MCP server — wiring any MCP client to the transpiler catalog |
+| `effortless-publish-tool` | Publishing a new version of a transpiler tool from `Versioned-Stable-SSoTme-Tools` |
+| `effortless-video` | Explainer videos in the `effortless-vid-01-full-name` producer repo |
 | `effortless-loop` | The iterative dev cycle — "the loop", "do a turn", "rebuild the rulebook" |
 | `effortless-query` | Querying the rulebook JSON — listing tables, extracting schema, finding relationships |
 | `effortless-schema` | Understanding the JSON structure — field types, datatypes, formula syntax, `_meta` |

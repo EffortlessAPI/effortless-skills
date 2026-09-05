@@ -1,18 +1,11 @@
 ---
 name: effortless-video
 description: >
-  Use whenever the user asks to make, create, produce, storyboard, script, or
-  render a VIDEO — almost always an explainer about a rulebook in the
-  effortless-rulebooks repo (rulebook-examples/* or toy-rulebooks/*) or an
-  Effortless concept. Triggers: "make a video about X", "create a video for the
-  <domain> demo", "storyboard a video", "record the VO", "render the MP4", "add
-  a new video", "do another video like the closure one", "explainer video",
-  "add scene N", "change the narration". The producer repo is
-  effortless-vid-01-full-name; the reference-quality example is
-  videos/03-closure. ALWAYS load this before writing a storyboard, a scene, an
-  animation spec, or touching any render code.
-
-  **Scope (load gate):** Loads only on explicit user request to make/edit a video. Does not require a marked Effortless project — it operates against the separate `effortless-vid-01-full-name` producer repo and the sibling `effortless-rulebooks` repo.
+  Make, storyboard, script, or render an explainer VIDEO about a rulebook or Effortless
+  concept in the effortless-vid-01-full-name producer repo (reference:
+  videos/03-closure). Triggers: "make a video about X", "storyboard a video", "record
+  the VO", "render the MP4", "add scene N", "change the narration". Load before touching
+  any storyboard, scene, or render code.
 audience: general
 ---
 

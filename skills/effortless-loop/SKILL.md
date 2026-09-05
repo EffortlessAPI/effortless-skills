@@ -1,13 +1,9 @@
 ---
 name: effortless-loop
 description: >
-  Use whenever the user mentions "the loop", "a turn of the loop", "do a turn",
-  "rebuild the rulebook", "update the app to match the rules", or any
-  reference to the iterative ERB development cycle. This is the
-  CHANGE-RULE → REBUILD → CONSUME-VIEWS workflow that makes ERB feel effortless.
-  Load this skill on first mention so you understand what the user expects to happen.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  The iterative ERB cycle CHANGE-RULE → REBUILD → CONSUME-VIEWS. Load on first mention
+  of "the loop", "do a turn", "a turn of the loop", "rebuild the rulebook", "update the
+  app to match the rules". ERB projects only.
 audience: customer
 ---
 

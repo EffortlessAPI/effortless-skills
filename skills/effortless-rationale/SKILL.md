@@ -1,16 +1,10 @@
 ---
 name: effortless-rationale
 description: >
-  Use when explaining or defending the effortless / CMCC methodology to a skeptic
-  — "why use this instead of just writing code", "isn't this overkill", "convince
-  me", "what's wrong with ORM / microservices / hand-written SQL", "why Airtable",
-  "isn't this just MDE", "how is this different from low-code", or any conversation
-  where the user (or someone they're talking to) needs the rationale grounded in
-  receipts rather than enthusiasm. This skill is strictly receipts-based — every
-  claim cites a paper, repo, or runnable demo. Pair with effortless-cmcc for the
-  theory and effortless-rulebooks for the empirical proof.
-
-  **Scope (load gate):** Loads when the user (or a third party) needs the methodology defended. Does not require a marked Effortless project.
+  Defend the Effortless / CMCC methodology to a skeptic, receipts only — "why not just
+  write code", "isn't this overkill", "convince me", "isn't this just MDE / low-code",
+  "what's wrong with ORMs". Pair with effortless-cmcc (theory) and effortless-rulebooks
+  (proof).
 audience: customer
 ---
 

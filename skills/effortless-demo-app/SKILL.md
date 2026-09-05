@@ -1,18 +1,10 @@
 ---
 name: effortless-demo-app
 description: >
-  Use when the user wants to spin up a complete Effortless POC demo app from
-  a one- or two-sentence domain description — no Airtable, no Shadle steps,
-  just the fastest path from "make this an effortless demo for X" to a
-  running Express + Vite SPA backed by a Postgres-generated rulebook with a
-  multi-hop calculated-field DAG that the UI exercises end-to-end.
-
-  Triggers: "make this an effortless demo for …", "build an effortless POC
-  for …", "spin up a demo app for …", "effortless demo app", "quick
-  effortless demo of …".
-
-  **Scope (load gate):** Loads only on explicit user request for a demo app.
-  Does NOT require a marked Effortless project — this skill *creates* one.
+  Spin up a complete Effortless POC from a one-line domain description — Express + Vite
+  SPA over a Postgres-generated rulebook with a multi-hop calculated-field DAG.
+  Triggers: "make this an effortless demo for …", "build an effortless POC for …",
+  "quick effortless demo of …". Creates the project; explicit request only.
 audience: customer
 ---
 

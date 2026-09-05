@@ -1,21 +1,11 @@
 ---
 name: effortless-xlsx-to-rulebook
 description: >
-  Use when authoring or converting an Excel/Google Sheets spreadsheet into an
-  effortless-rulebook.json — either by hand (LLM-direct authoring from a sheet
-  the user describes or pastes) or via the `xlsx-to-rulebook` transpiler.
-  Triggers: "convert this spreadsheet to a rulebook", "turn this Excel sheet
-  into a rulebook", "this used to be a spreadsheet", "port this Google Sheet",
-  "xlsx-to-rulebook", "why doesn't this formula work in the rulebook", a
-  formula that worked in Excel/Sheets failing at `effortless build` time,
-  any INDEX/MATCH/VLOOKUP-shaped formula being carried over from a sheet, or
-  a column whose cells hold a comma/semicolon-delimited list, a JSON
-  blob/object, or any other collapsed sub-graph that should decompose into
-  first-class rows/tables.
-
-  **Scope (load gate):** Effortless projects only — project root must contain
-  `effortless.json` AND a CLAUDE.md identifying the project as ERB
-  methodology. Do NOT load otherwise.
+  Convert an Excel / Google Sheets spreadsheet into a rulebook — by hand or via
+  xlsx-to-rulebook. Triggers: "convert this spreadsheet to a rulebook", "this used to be
+  a spreadsheet", INDEX/MATCH/VLOOKUP formulas carried over, a sheet formula failing at
+  `effortless build`, delimited-list or JSON-blob columns that should become
+  rows/tables. ERB projects only.
 audience: customer
 ---
 

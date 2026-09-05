@@ -1,11 +1,9 @@
 ---
 name: effortless-diagnostics
 description: >
-  Use when diagnosing ERB project health — validating DAG integrity, checking for
-  broken FK targets, finding JOIN anti-patterns in application code, migrating
-  legacy code from base table reads to view reads, or running diagnostic queries.
-
-  **Scope (load gate):** Effortless projects only — project root must contain `effortless.json` AND a CLAUDE.md identifying the project as ERB methodology. Do NOT load otherwise.
+  ERB project health — DAG integrity, broken FK targets, JOIN anti-patterns in app code,
+  migrating legacy base-table reads to vw_* views, diagnostic queries. ERB projects
+  only.
 audience: customer
 ---
 
