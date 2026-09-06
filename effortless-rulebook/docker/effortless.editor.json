@@ -1,13 +1,14 @@
 {
   "Name": "effortless-rulebook-editor-runtime",
-  "Description": "Generic in-container pipeline: rulebook -> Postgres -> read-only Node API + Vite admin portal (with RuleSpeak®, RuleSpeak®-DE, and XLSX export tabs). Baked into the effortless-rulebook-editor image; not project-specific.",
+  "Description": "Generic in-container pipeline: rulebook -> Postgres -> read-only Node API + Vite admin portal (with RuleSpeak®, RuleSpeak-DE, and XLSX export tabs). Baked into the effortless-rulebook-editor image; not project-specific.",
   "SSoTmeProjectId": "",
   "ShowHidden": false,
   "ShowAllFiles": false,
   "CurrentPath": "",
   "SSoTmeProjectFiles": null,
   "ProjectSettings": [
-    { "Name": "project-name", "Value": "effortless-rulebook-editor-runtime" }
+    { "Name": "project-name", "Value": "effortless-rulebook-editor-runtime" },
+    { "Name": "editor-pipeline-defaults-version", "Value": "2" }
   ],
   "ProjectTranspilers": [
     {
@@ -52,19 +53,27 @@
     },
     {
       "IsSSoTTranspiler": false,
-      "Name": "rulebooktorulespeak",
-      "RelativePath": "/rulespeak",
-      "CommandLine": "rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json",
+      "Name": "rulebooktoexplainerdag",
+      "RelativePath": "/admin-portal/public",
+      "CommandLine": "rulebook-to-explainer-dag -i ../../effortless-rulebook/effortless-rulebook.json",
       "IsDisabled": false,
-      "Description": "Generate the plain-English RuleSpeak® document (rulespeak.html), served under the portal's RuleSpeak® tab"
+      "Description": "Generate the Explainer DAG -- the baked provenance graph the portal uses to make every derived cell clickable (hover for RuleSpeak®, double-click for the full field DAG). The tool namespaces its own output folder, so this lands in admin-portal/public/rulebook-explainer-dag and Vite serves it at /rulebook-explainer-dag/* alongside the portal. NOT optional chrome: the portal loads these five assets from its index.html and its Provenance tab renders nothing without them. Listed AFTER the portal step because it writes inside that step's output directory."
     },
     {
       "IsSSoTTranspiler": false,
-      "Name": "rulebooktorulespeakde",
-      "RelativePath": "/rulespeak-de",
-      "CommandLine": "rulebook-to-rulespeak-de -i ../effortless-rulebook/effortless-rulebook.json",
+      "Name": "rulebooktorulespeaken",
+      "RelativePath": "/rulespeak",
+      "CommandLine": "rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json -p languages=en",
+      "IsDisabled": true,
+      "Description": "Generate the RuleSpeak® document in English only. Disabled by default -- the all-10-languages step below is the default and always writes to the same /rulespeak output, so running this too would just be wasted work. Turn this on (and disable the other step) from the portal's language picker or the Admin tab if you want the faster English-only build back."
+    },
+    {
+      "IsSSoTTranspiler": false,
+      "Name": "rulebooktorulespeak",
+      "RelativePath": "/rulespeak",
+      "CommandLine": "rulebook-to-rulespeak -i ../effortless-rulebook/effortless-rulebook.json -p languages=all",
       "IsDisabled": false,
-      "Description": "Generate the German RuleSpeak® document (rulespeak.html), served under the portal's RuleSpeak® (DE) tab"
+      "Description": "Generate the RuleSpeak® document in all 10 supported languages (rulespeak.html, in-doc language selector), served under the portal's RuleSpeak® tab. Enabled by default. Turn this off (and enable the English-only step above instead) from the portal's language picker or the Admin tab; the portal's language list is derived from whichever of these two steps is enabled."
     },
     {
       "IsSSoTTranspiler": false,
@@ -72,7 +81,7 @@
       "RelativePath": "/xlsx",
       "CommandLine": "rulebook-to-xlsx -i ../effortless-rulebook/effortless-rulebook.json",
       "IsDisabled": false,
-      "Description": "Generate an Excel workbook snapshot of the rulebook's tables, offered as a download from the portal's Export tab"
+      "Description": "Generate an Excel workbook snapshot of the rulebook's tables, offered as a download from the portal's Export tab. Enabled by default."
     }
   ]
 }

@@ -214,6 +214,29 @@ effortless -clean             # clean current folder + downstream
 effortless -cleanAll
 ```
 
+## v2 command map (`effortless -help`)
+
+`-help` is tiered: the top level shows the primary verbs by category; `effortless -help <category|option>`
+explains one topic; `effortless -help all` dumps everything. Bareword forms work for every verb
+(`effortless build`, `effortless clean`, `effortless serve`, `effortless listSeeds`).
+
+| Category | Verbs |
+|---|---|
+| CLI meta | `-help`, `-info`, `-version`, `-upgradeCli` |
+| Project file | `-init`, `-describe` (`-describeLocal`, `-describeAll`, `-describeWithSubprojects`), `-listSettings`, `-addSetting k=v`, `-removeSetting k` |
+| Install / uninstall | `-install <tool> ...`, `-uninstall <tool>`, `-enable`/`-disable <tool>`, `-execute "<cmd>"` (LocalCommand step) |
+| Build | `build`, `buildAll`, `buildLocal`, `buildWithSubprojects`; modifiers `-includeDisabled`, `-transpilerGroup g`, `-continueOnError`, `-skipClean`, `-debug`, `-buildOnTrigger <baseId>` |
+| Clean | `clean`, `cleanAll`, `cleanLocal`, `cleanWithSubprojects`; `-purge`, `-preserveZFS` |
+| Tools / catalog | `listTools`, `searchTools <text>` (filters `-category`, `-account`, `-updatedSince`, `-headOnly`, `-json`), `-listVersions <tool>`, `pin <tool> <version>`, `-upgrade`, `-upgradeAll`, `-refreshTools` |
+| Tool URLs | `setToolUrl tool=url`, `viewToolUrl tool`, `listToolUrls`, `removeToolUrl tool` (a mapping beats the catalog and beats a local tool) |
+| Local tools | `serve [-port N]` — hosts `effortless-tools/<name>/` (script / node / dotnet shapes) over the real tool contract; a plain `build` that names a local tool starts an ephemeral host itself |
+| Seeds | `listSeeds [account]`, `cloneSeed <account/repo|repo|url> [dir]`, `listSeedSources`, `addSeedSource <acct>`, `removeSeedSource <acct>` — see `effortless-seeds` |
+| Account | `login`, `projectLogin`, `logout`, `plan`, `-setAccountAPIKey acct=key`, `-account acct` |
+
+Tool resolution order for `effortless <name>`: explicit URL → `tool_urls.json` mapping →
+`effortless-tools/<name>/` in the current project → remote catalog (auto-refreshed after 24 h
+or when a tool is unreachable).
+
 ## `effortless.json` structure
 
 ```json
@@ -253,4 +276,5 @@ If `-help` and `-version` drift, the clone predates commit `55634ab` (2026-04-25
 - `effortless-pipeline` — build pipeline / `ProjectTranspilers` schema in depth.
 - `effortless-setup-postgres` — canonical first-run sequence for Postgres projects.
 - `effortless-airtable` — Airtable API key conventions.
+- `effortless-seeds` — seed sources, `listSeeds`/`cloneSeed`, `effortless-seed.json` replacements, publishing a seed.
 - `effortless-claude-updates` — for the **skill set** (different artifact).

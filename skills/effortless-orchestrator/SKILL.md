@@ -46,7 +46,7 @@ A project is **Effortless** if and only if BOTH are true:
 |---|---|---|
 | **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project) |
 | **Airtable-connected only** | Both markers AND `effortless.json` registers `airtable-to-rulebook`. | `effortless-airtable`, `effortless-airtable-omni` |
-| **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-claude-updates` |
+| **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-seeds`, `effortless-claude-updates` |
 | **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem` |
 | **Explicit request only** | Only when the user asks by name/phrase. Never auto-load just because a project uses Postgres, Docker, etc. | `effortless-bases`, `effortless-magic-links`, `effortless-mcp`, `effortless-publish-tool`, `effortless-video` |
 
@@ -303,6 +303,7 @@ Sub-skills load automatically based on what you're doing:
 | Skill | When to Use |
 |---|---|
 | `effortless-cli` | CLI commands AND install/update of the `effortless` binary itself |
+| `effortless-seeds` | Starting a project from a public seed repository (`listSeeds`/`cloneSeed`), seed sources, `effortless-seed.json` `$key$` replacements, publishing a seed |
 | `effortless-init` | Initializing a new effortless project (project structure, CLAUDE.md, start.sh, Airtable connection) |
 | `effortless-setup-postgres` | First-run setup for Postgres-targeted projects (preflight + init-db + everything in -init) |
 | `effortless-setup-sql-server` | Same first-run setup with SQL Server as the substrate (`rulebook-to-sql-server`, sqlcmd, mssql) |

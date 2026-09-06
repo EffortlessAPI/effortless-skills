@@ -2,8 +2,10 @@
 #
 # This image is DELIBERATELY generic: no rulebook content is baked in. The
 # consuming project's effortless-rulebook/ folder is bind-mounted at `docker
-# run` time (read-only, v1 scope). Only this Dockerfile + the pipeline config
-# + the entrypoint script are per-tool-version; everything about a specific
+# run` time (read-write -- the whole containing directory, so the container
+# can write the merged rulebook file back AND drop uncommitted-change log
+# files as siblings of it). Only this Dockerfile + the pipeline config + the
+# entrypoint script are per-tool-version; everything about a specific
 # project's schema/data/formulas comes from the mounted rulebook at runtime.
 #
 # Base image rationale: start FROM the .NET 8 SDK (Debian bookworm-slim
@@ -54,6 +56,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # and node >= 18 (present above). First run of the CLI does its own
 # `dotnet build` (~30-60s) -- this happens once here at image-build time via
 # the `effortless -version` warm-up call, so containers START fast.
+#
+# CACHE-BUST, and why this ADD line is load-bearing: `RUN git clone` is an opaque
+# instruction to Docker. It has no idea the remote moved, so once that layer is
+# cached it is reused FOREVER -- every subsequent `docker build`, including
+# `edit-rulebook.sh --rebuild`, silently reinstalls whatever the CLI happened to
+# be on the day the layer was first built. You get a "rebuilt" image that is
+# still running a months-old CLI, with nothing anywhere saying so.
+#
+# ADD-ing the GitHub API's commit endpoint fixes it precisely: Docker re-fetches
+# that URL on every build and compares the response, so the clone below is
+# invalidated when -- and only when -- the CLI's HEAD commit actually changes. No
+# --no-cache needed (which would also throw away the expensive apt/Node layers
+# above for no reason).
+ADD https://api.github.com/repos/effortlessapi/cli/commits/main /tmp/effortless-cli-head.json
 RUN mkdir -p /root/.effortless && rm -rf /root/.effortless/cli \
     && git clone --depth 1 https://github.com/effortlessapi/cli /root/.effortless/cli \
     && cd /root/.effortless/cli && npm install -g . \
@@ -61,21 +77,35 @@ RUN mkdir -p /root/.effortless && rm -rf /root/.effortless/cli \
 
 WORKDIR /app
 
-# The generic pipeline config for this tool's version. Copied in at image
-# build time (NOT project-specific) -- see effortless.editor.json for the
-# ProjectTranspilers this registers: rulebook-to-postgres (/postgres),
-# init-db.sh exec (/postgres), rulebook-to-node-postgres-api (/api),
-# rulebook-to-vite-admin-portal (/admin-portal), rulebook-to-rulespeak
-# (/rulespeak), rulebook-to-rulespeak-de (/rulespeak-de), rulebook-to-xlsx
-# (/xlsx).
-COPY effortless.editor.json /app/effortless.json
+# The generic pipeline config for this tool's version -- SEED only, copied to
+# a fixed path OUTSIDE of /app/effortless-root (see container-entrypoint.sh's
+# boot sequence: copied into place as /app/effortless-root/effortless.json
+# ONLY IF that file is missing there, never unconditionally overwritten on
+# every boot/rebuild -- see that script for why). Registers: rulebook-to-postgres
+# (/postgres), init-db.sh exec (/postgres), rulebook-to-node-postgres-api
+# (/api), rulebook-to-vite-admin-portal (/admin-portal),
+# rulebook-to-explainer-dag (/admin-portal/public, served at
+# /rulebook-explainer-dag/*), rulebook-to-rulespeak (/rulespeak, all 10
+# languages), rulebook-to-xlsx (/xlsx).
+COPY effortless.editor.json /app/effortless.editor.json.seed
 COPY container-entrypoint.sh /app/container-entrypoint.sh
 COPY boot-server.js /app/boot-server.js
 RUN chmod +x /app/container-entrypoint.sh
 
 # NOTE: /app/effortless-rulebook is intentionally NOT created/populated here.
 # It is bind-mounted at `docker run` time from the host project's
-# effortless-rulebook/ folder (read-only, v1 scope) -- see edit-rulebook.sh.
+# effortless-rulebook/ folder (read-write -- see edit-rulebook.sh), so both
+# the merged rulebook file and its sibling uncommitted-change log files can
+# be written back to the host.
+#
+# /app/effortless-editor-tmp is OPTIONALLY bind-mounted at `docker run` time
+# (see edit-rulebook.sh's TEMPDIR_MOUNTED / EFFORTLESS_EDITOR_TEMPDIR_MOUNTED)
+# -- when present, container-entrypoint.sh points the /app/effortless-root
+# symlink at effortless-editor-src/ INSIDE it, so effortless.json and every
+# generated file (api/, admin-portal/, postgres/, etc.) live on the host and
+# survive container restarts/rebuilds. When absent, /app/effortless-root
+# points at a container-internal-only directory instead -- same boot
+# sequence either way, just a different symlink target.
 
 # Generated Node API (rulebook-to-node-postgres-api) listens on $PORT,
 # default 5177 (see that tool's generated index.js). The generated Vite UI
@@ -84,9 +114,10 @@ RUN chmod +x /app/container-entrypoint.sh
 # immediate boot/progress page + log stream + rebuild button and transparently
 # reverse-proxies to the internal Vite dev server once a build succeeds. This
 # means 5174 is reachable from t=0 (container start), not just once the first
-# `effortless build` finishes. Postgres listens internally on 5432 but is NOT
-# exposed outside the container in v1 (only the API + UI ports are meant to
-# be reached from the host).
-EXPOSE 5177 5174
+# `effortless build` finishes. Postgres listens internally on 5432 and IS
+# published (see edit-rulebook.sh's -p "$PG_PUBLISH") so a host psql client /
+# GUI tool can connect directly for debugging -- there is no other supported
+# way to reach it from outside the container.
+EXPOSE 5177 5174 5432
 
 ENTRYPOINT ["/app/container-entrypoint.sh"]
