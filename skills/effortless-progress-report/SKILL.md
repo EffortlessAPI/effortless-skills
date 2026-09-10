@@ -2,8 +2,9 @@
 name: effortless-progress-report
 description: >
   Delivery / status / priced-plan reports derived from the rulebook via
-  rulebook-to-progress-report; also adds the delivery spine (UserStories,
-  AcceptanceCriteria, BuildPhases, EffortClasses) to a rulebook that lacks one.
+  rulebook-to-progress-report; also adds the delivery spine (ERBUserStories,
+  ERBAcceptanceCriteria, ERBBuildPhases, ERBEffortClasses) to a rulebook that lacks
+  one — via the editor's Modules → Delivery, or by hand.
   Triggers: "progress report", "delivery report", "how far along is this", "what's
   accepted / what's left", "priced plan", "add user stories to the rulebook". ERB
   projects only.
@@ -43,16 +44,24 @@ into the single source of truth where it belongs.
 python3 - <<'PY'
 import json
 d = json.load(open("effortless-rulebook/effortless-rulebook.json"))
-need = ["UserStories","AcceptanceCriteria","BuildPhases","ERBFeatures",
-        "ERBFeatureCategories","ERBPackages","EffortClasses","DeliveryDisciplines"]
+aliases = d.get("_meta", {}).get("erb", {}).get("aliases", {})
+need = ["ERBUserStories","ERBAcceptanceCriteria","ERBBuildPhases","ERBFeatures",
+        "ERBEpics","ERBPackages","ERBEffortClasses","ERBDeliveryDisciplines"]
 for t in need:
-    n = len(d.get(t, {}).get("data", []))
-    print(f"{'OK ' if n else 'MISSING'}  {t:22} {n} rows")
+    physical = aliases.get(t, {}).get("table", t)
+    n = len(d.get(physical, {}).get("data", []))
+    tag = f" (mapped to {physical})" if physical != t else ""
+    print(f"{'OK ' if n else 'MISSING'}  {t:24} {n} rows{tag}")
+print("delivery module:", "on" if d.get("_meta", {}).get("erb", {}).get("modules", {}).get("delivery", {}).get("enabled") else "off")
 PY
 ```
 
 - **All eight present** → go to step 2.
 - **Some missing** → go to §"Adding a delivery spine" below, then step 2.
+- **The rulebook already has these tables under other names** (`UserStories`,
+  `EffortClasses`, a `Category` field on features…) → do **not** rename them. Map
+  them once in `_meta.erb.aliases` (see §"Keeping your own names") and the tool reads
+  them as the canonical tables.
 
 ---
 
@@ -103,22 +112,31 @@ adding `ProposalSections` rows will put the argument in their own words.
 This is the substance of the skill. The eight tables are a **delivery model**,
 not report decoration: they are how a project keeps its own status.
 
-Add them to the rulebook the same way you add anything else — edit the JSON, or
-use the rulebook editor. **Never generate the rulebook from a script**; it is the
-source of truth, not a build artifact.
+The easiest way: open the rulebook editor (`effortless-rulebook-editor` skill),
+go to **Modules**, and switch on **Delivery**. The editor creates all nine tables
+with their descriptions, seeds `ERBEffortClasses` (G1–G3) and
+`ERBDeliveryDisciplines` (Build 70 / Assurance 30), adds the Progress Report tab,
+and enables the `rulebooktoprogressreport` build step. Then add stories.
+
+By hand works too — edit the JSON like anything else. **Never generate the
+rulebook from a script**; it is the source of truth, not a build artifact.
+
+Every table and field below is an **ERB canonical name** (the contract is
+`docs/ERB-MODEL.md` in Versioned-Stable-SSoTme-Tools).
 
 ### The shape
 
 ```
-ERBPackages          a body of work someone would buy or schedule as a unit
- └ ERBFeatureCategories   an epic
-    └ ERBFeatures         a capability
-       └ UserStories      THE ATOM — the thing a reader selects
-          └ AcceptanceCriteria   what "done" means, one row per criterion
+ERBPackages             a body of work someone would buy or schedule as a unit
+ └ ERBEpics             an epic
+    └ ERBFeatures       a capability
+       └ ERBUserStories THE ATOM — the thing a reader selects
+          └ ERBAcceptanceCriteria   what "done" means, one row per criterion
 
-BuildPhases          a price and a date. Stories are assigned to one.
-EffortClasses        complexity bands. A story's band × its criteria = its price share.
-DeliveryDisciplines  how every price divides (Build 70% / Assurance 30%, …)
+ERBBuildPhases          a price and a date. Stories are assigned to one.
+ERBEffortClasses        complexity bands. A story's band × its criteria = its price share.
+ERBDeliveryDisciplines  how every price divides (Build 70% / Assurance 30%, …)
+ERBProposalSections     your own prose for the document (optional)
 ```
 
 ### Minimum viable spine
@@ -131,37 +149,37 @@ One row per table generates a report. Copy this, then grow it:
     { "ERBPackageId": "core", "Title": "Core platform",
       "PrimaryPhase": "phase-1", "SortOrder": 1 } ] },
 
-  "ERBFeatureCategories": { "data": [
-    { "ERBFeatureCategoryId": "accounts", "Title": "Accounts",
+  "ERBEpics": { "data": [
+    { "ERBEpicId": "accounts", "Title": "Accounts",
       "ERBPackage": "core", "SortOrder": 1 } ] },
 
   "ERBFeatures": { "data": [
-    { "ERBFeatureId": "signin", "Category": "accounts", "ERBPackage": "core" } ] },
+    { "ERBFeatureId": "signin", "Title": "Sign in", "ERBEpic": "accounts", "ERBPackage": "core" } ] },
 
-  "EffortClasses": { "data": [
-    { "EffortClassId": "G1", "Title": "Routine",   "ComplexityWeight": 1,   "SortOrder": 1 },
-    { "EffortClassId": "G2", "Title": "Involved",  "ComplexityWeight": 1.6, "SortOrder": 2 },
-    { "EffortClassId": "G3", "Title": "Demanding", "ComplexityWeight": 2.5, "SortOrder": 3 } ] },
+  "ERBEffortClasses": { "data": [
+    { "ERBEffortClassId": "G1", "Title": "Routine",   "ComplexityWeight": 1,   "SortOrder": 1 },
+    { "ERBEffortClassId": "G2", "Title": "Involved",  "ComplexityWeight": 1.6, "SortOrder": 2 },
+    { "ERBEffortClassId": "G3", "Title": "Demanding", "ComplexityWeight": 2.5, "SortOrder": 3 } ] },
 
-  "DeliveryDisciplines": { "data": [
-    { "DeliveryDisciplineId": "build",  "Title": "Build",     "SharePercent": 70,
+  "ERBDeliveryDisciplines": { "data": [
+    { "ERBDeliveryDisciplineId": "build",  "Title": "Build",     "SharePercent": 70,
       "Description": "Modelling and generation", "ClientVisible": true, "SortOrder": 1 },
-    { "DeliveryDisciplineId": "assure", "Title": "Assurance", "SharePercent": 30,
+    { "ERBDeliveryDisciplineId": "assure", "Title": "Assurance", "SharePercent": 30,
       "Description": "Testing and acceptance",   "ClientVisible": true, "SortOrder": 2 } ] },
 
-  "BuildPhases": { "data": [
-    { "BuildPhaseId": "phase-1", "PhaseNumber": 1,
+  "ERBBuildPhases": { "data": [
+    { "ERBBuildPhaseId": "phase-1", "PhaseNumber": 1,
       "Title": "Phase 1 — Core platform", "QuotedPrice": 120000,
       "DurationMonths": 3, "PhaseKind": "fixed-price", "IsCurrentBid": true } ] },
 
-  "UserStories": { "data": [
-    { "UserStoryId": "acc-01", "ReqId": "ACC-01",
+  "ERBUserStories": { "data": [
+    { "ERBUserStoryId": "acc-01", "ReqId": "ACC-01",
       "StoryText": "As a user I can sign in so that my work is mine.",
-      "BuildPhase": "phase-1", "Epic": "accounts", "Feature": "signin",
-      "EffortClass": "G1" } ] },
+      "ERBBuildPhase": "phase-1", "ERBEpic": "accounts", "ERBFeature": "signin",
+      "ERBEffortClass": "G1" } ] },
 
-  "AcceptanceCriteria": { "data": [
-    { "AcceptanceCriterionId": "acc-01-a", "UserStory": "acc-01",
+  "ERBAcceptanceCriteria": { "data": [
+    { "ERBAcceptanceCriterionId": "acc-01-a", "ERBUserStory": "acc-01",
       "Criterion": "A valid email and password signs the user in.",
       "SortOrder": 1 } ] }
 }
@@ -169,8 +187,8 @@ One row per table generates a report. Copy this, then grow it:
 
 ### Five things to get right
 
-1. **`UserStories.Epic` is read directly**, not inferred through `Feature`. Set
-   both `Epic` and `Feature` on every story.
+1. **`ERBUserStories.ERBEpic` is read directly**, not inferred through `ERBFeature`.
+   Set both `ERBEpic` and `ERBFeature` on every story.
 2. **Name the most demanding effort class `G3`.** `{hardStories}` and the
    client-side code both look for that exact literal. Name it something else and
    the figure is `0` everywhere — quietly, with no error.
@@ -183,7 +201,7 @@ One row per table generates a report. Copy this, then grow it:
 
 ### Then make the dependency graph real
 
-`UserStories.DependsOnStory` names the one story that must be accepted first.
+`ERBUserStories.DependsOnStory` names the one story that must be accepted first.
 It drives the whole scope cascade: removing a story removes everything
 transitively downstream, adding one pulls in its whole ancestor chain. Must be
 acyclic.
@@ -191,12 +209,35 @@ acyclic.
 Without it the report still generates — the scope selector just has nothing to
 cascade, so removing a story removes only that story.
 
-### Register nothing in `ERBTables`
+### Keeping your own names
 
-`ProposalSections`, `DeliveryDisciplines` and `EffortClasses` are **meta
-tables**: they drive this document only. Leaving them out of `ERBTables` is how
-a rulebook marks a table as never generated into the database or the security
-model. Do not add them there.
+A rulebook that already carries this spine under other names keeps them. Map
+once in `_meta.erb.aliases` — canonical table → your table, and any field whose
+name differs:
+
+```json
+"_meta": { "erb": { "modules": { "delivery": { "enabled": true } },
+  "aliases": {
+    "ERBEpics":              { "table": "ERBFeatureCategories", "fields": { "ERBEpicId": "ERBFeatureCategoryId" } },
+    "ERBFeatures":           { "table": "ERBFeatures",          "fields": { "ERBEpic": "Category" } },
+    "ERBEffortClasses":      { "table": "EffortClasses" },
+    "ERBDeliveryDisciplines":{ "table": "DeliveryDisciplines" },
+    "ERBBuildPhases":        { "table": "BuildPhases" },
+    "ERBUserStories":        { "table": "UserStories", "fields": { "ERBBuildPhase": "BuildPhase", "ERBEpic": "Epic", "ERBFeature": "Feature", "ERBEffortClass": "EffortClass" } },
+    "ERBAcceptanceCriteria": { "table": "AcceptanceCriteria", "fields": { "ERBUserStory": "UserStory" } } } } }
+```
+
+Keys not listed map to themselves. A table's key is found under the canonical
+name, `<Singular>Id` of your table name, or `Id` — anything else must be named in
+`fields`, or the tool refuses and says which three names it tried.
+
+### Meta tables
+
+`ERBProposalSections`, `ERBDeliveryDisciplines` and `ERBEffortClasses` are **meta
+tables**: they drive this document, not the domain. With the Schema module on,
+`ERBTables` mirrors every table and marks these `IsMetaTable`; that flag (or the
+table's absence from a hand-kept `ERBTables`) is what keeps them out of the
+security model.
 
 ---
 
@@ -207,11 +248,11 @@ the report follows on the next build:
 
 | To record | Set |
 |---|---|
-| A criterion is signed off | `AcceptanceCriteria.IsAccepted` (+ `AcceptedBy`, `AcceptedAt`) |
+| A criterion is signed off | `ERBAcceptanceCriteria.IsAccepted` (+ `AcceptedBy`, `AcceptedAt`) |
 | A task's progress | `ImplementationTasks.DevProgressPercent` |
-| Work is waiting on the client | `UserStories.Roadblock` → a `Roadblocks` row |
+| Work is waiting on the client | `ERBUserStories.Roadblock` → a `Roadblocks` row |
 | A blocker cleared | `Roadblocks.IsResolved` — it drops out of the report entirely |
-| Scope moved between phases | `UserStories.BuildPhase` |
+| Scope moved between phases | `ERBUserStories.ERBBuildPhase` |
 | The bid moved on | `BuildPhases.IsCurrentBid` |
 
 `{accepted}`, `{acceptedPct}`, `{roadblocks}` and the per-phase figures all
