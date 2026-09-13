@@ -17,17 +17,23 @@ audience: customer
 >
 > This is the conjecture the entire effortless toolchain empirically operationalizes. It is what justifies "the rulebook is the code."
 
-## The Falsifiable Core: FO(Aggr) and the Transitive-Closure Boundary
+## The Falsifiable Core: First-Order Logic with Aggregates and the Transitive-Closure Boundary
 
 Most of what SDLAF does — joins, rollups, calculated fields — is expressivity plain SQL has had
 for 25+ years; nobody disputes it, and nobody should be impressed by it alone. The claim worth
 defending is sharper and has a name: **SDLAF over a finite relational structure, without
-recursion, is exactly FO(Aggr)** — first-order logic extended with aggregation, the same class as
-SQL without `WITH RECURSIVE`. That equivalence inherits a real theorem, not an analogy:
-**Immerman, "Languages that Capture Complexity Classes" (SIAM J. Comput., 1987)**, and the
-descriptive-complexity results built on it, prove that **transitive closure (TC) is not
-expressible in FO(Aggr)** — no formula of any size computes reachability over a DAG of unbounded
-depth from inside that class.
+recursion, is exactly first-order logic with aggregates** — the logic *L*<sub>aggr</sub> of Hella,
+Libkin, Nurmonen & Wong, roughly FO + aggregation, the same class as SQL without `WITH RECURSIVE`.
+("FO(Aggr)" is not a standard name for this class — spell it out in anything outward-facing.)
+That equivalence inherits a real theorem, not an analogy: **Hella, Libkin, Nurmonen & Wong,
+"Logics with Aggregate Operators" (J. ACM, 2001)**, and **Libkin, "Expressive Power of SQL"**
+(Theor. Comput. Sci., 2003) — extending the classical result for plain first-order logic (Aho &
+Ullman, 1979) — prove that **transitive closure (TC) is not expressible in first-order logic with
+aggregates**: no aggregate query, however large, computes reachability over a DAG of unbounded
+depth. (Do not cite Immerman 1987 for this — it shows FO *plus* a TC operator captures NL, which
+is the opposite direction of this claim. Scope note: the proof is by locality over *unordered*
+relational structures; with a built-in order plus arithmetic, proving the same separation would
+resolve the open question of uniform TC⁰ vs. NL.)
 
 This is why closure is never modeled as a `formula` field in ERB, and why it must not be. It is
 the one place SDLAF's own theorem says "you cannot get there from here" — so every substrate is
@@ -146,7 +152,7 @@ substrate constraint it violates, and the CMCC-shaped fix.
 | Triggers / stored procedures hiding business rules in Postgres | **SSoT + substrate equivalence** — rules in one substrate can't be projected to others | Move the logic into the rulebook as a formula or aggregation; let every substrate render it. |
 | Comment in code: "TODO: keep this in sync with X" | **SSoT** — synchronization-by-convention is drift waiting to happen | The fact that you wrote that comment IS the diagnostic. Find the rulebook entry that should generate both. |
 | A formula that chains a lookup through 2+ hops (`A -> B -> C`), or filters one table by a condition on a table 2 hops away (e.g. `INDEX/MATCH` with a non-FK, condition-based `MATCH`) | **L/A** (Lookup, Aggregation) — both are defined as exactly 1 hop; the spreadsheet this rulebook may trace back to could do N-hop chains, the rulebook cannot | Flatten: add the intermediate fact as its own field on `B` (1 hop from `C`), then reference *that* field from `A` (1 hop from `B`). Two 1-hop fields, never one 2-hop formula. See `effortless-schema`'s "Hard limit: 1 hop only." |
-| A "chain" of lookups/formulas trying to walk N hops to compute reachability or transitive closure (e.g. "is A an ancestor of B") | **FO(Aggr) boundary** — transitive closure is provably not expressible in first-order logic with aggregation (Immerman 1987), no matter how many hops are chained or how deep the DAG happens to be today | Use the substrate's native closure primitive instead: a `closure`-typed field / `WITH RECURSIVE` view in Postgres, `owl:TransitiveProperty` in OWL, explicit traversal in Python. See "The Falsifiable Core" above. |
+| A "chain" of lookups/formulas trying to walk N hops to compute reachability or transitive closure (e.g. "is A an ancestor of B") | **The FO+aggregates boundary** — transitive closure is provably not expressible in first-order logic with aggregates (Hella/Libkin/Nurmonen/Wong 2001; Libkin 2003), no matter how many hops are chained or how deep the DAG happens to be today | Use the substrate's native closure primitive instead: a `closure`-typed field / `WITH RECURSIVE` view in Postgres, `owl:TransitiveProperty` in OWL, explicit traversal in Python. See "The Falsifiable Core" above. |
 
 **The escalation rule.** When you catch yourself reaching for any of these, the
 right move is almost never "do it anyway, just this once." Three steps in order:
