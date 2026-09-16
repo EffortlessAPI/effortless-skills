@@ -368,39 +368,20 @@ Every required table, one row each. This generates.
 
 ```json
 {
-  "ERBPackages":          { "data": [
-    { "ERBPackageId": "core", "Title": "Core platform",
-      "PrimaryPhase": "phase-1", "SortOrder": 1 } ] },
-  "ERBEpics": { "data": [
-    { "ERBEpicId": "accounts", "Title": "Accounts",
-      "ERBPackage": "core", "SortOrder": 1 } ] },
-  "ERBFeatures":          { "data": [
-    { "ERBFeatureId": "signin", "ERBEpic": "accounts", "ERBPackage": "core" } ] },
-  "ERBEffortClasses":        { "data": [
-    { "ERBEffortClassId": "G1", "Title": "Routine",
-      "ComplexityWeight": 1,   "SortOrder": 1 },
-    { "ERBEffortClassId": "G3", "Title": "Demanding",
-      "ComplexityWeight": 2.5, "SortOrder": 3 } ] },
-  "ERBDeliveryDisciplines":  { "data": [
-    { "ERBDeliveryDisciplineId": "build", "Title": "Build", "SharePercent": 70,
-      "Description": "Modelling and generation", "ClientVisible": true,
-      "SortOrder": 1 },
-    { "ERBDeliveryDisciplineId": "assure", "Title": "Assurance", "SharePercent": 30,
-      "Description": "Testing and acceptance",  "ClientVisible": true,
-      "SortOrder": 2 } ] },
-  "ERBBuildPhases":          { "data": [
-    { "ERBBuildPhaseId": "phase-1", "PhaseNumber": 1,
-      "Title": "Phase 1 — Core platform", "QuotedPrice": 120000,
-      "DurationMonths": 3, "PhaseKind": "fixed-price", "IsCurrentBid": true } ] },
-  "ERBUserStories":          { "data": [
-    { "ERBUserStoryId": "acc-01", "ReqId": "ACC-01",
-      "StoryText": "As a user I can sign in so that my work is mine.",
-      "ERBBuildPhase": "phase-1", "ERBEpic": "accounts", "ERBFeature": "signin",
-      "ERBEffortClass": "G1" } ] },
-  "ERBAcceptanceCriteria":   { "data": [
-    { "ERBAcceptanceCriterionId": "acc-01-a", "ERBUserStory": "acc-01",
-      "Criterion": "A valid email and password signs the user in.",
-      "SortOrder": 1 } ] }
+  "ERBPackages": { "data": [ { "ERBPackageId": "core", "Title": "Core platform", "PrimaryPhase": "phase-1", "SortOrder": 1 } ] },
+  "ERBEpics": { "data": [ { "ERBEpicId": "accounts", "Title": "Accounts", "ERBPackage": "core", "SortOrder": 1 } ] },
+  "ERBFeatures": { "data": [ { "ERBFeatureId": "signin", "ERBEpic": "accounts", "ERBPackage": "core" } ] },
+  "ERBEffortClasses": { "data": [
+    { "ERBEffortClassId": "G1", "Title": "Routine", "ComplexityWeight": 1, "SortOrder": 1 },
+    { "ERBEffortClassId": "G3", "Title": "Demanding", "ComplexityWeight": 2.5, "SortOrder": 3 }
+  ] },
+  "ERBDeliveryDisciplines": { "data": [
+    { "ERBDeliveryDisciplineId": "build", "Title": "Build", "SharePercent": 70, "Description": "Modelling and generation", "ClientVisible": true, "SortOrder": 1 },
+    { "ERBDeliveryDisciplineId": "assure", "Title": "Assurance", "SharePercent": 30, "Description": "Testing and acceptance", "ClientVisible": true, "SortOrder": 2 }
+  ] },
+  "ERBBuildPhases": { "data": [ { "ERBBuildPhaseId": "phase-1", "PhaseNumber": 1, "Title": "Phase 1 — Core platform", "QuotedPrice": 120000, "DurationMonths": 3, "PhaseKind": "fixed-price", "IsCurrentBid": true } ] },
+  "ERBUserStories": { "data": [ { "ERBUserStoryId": "acc-01", "ReqId": "ACC-01", "StoryText": "As a user I can sign in so that my work is mine.", "ERBBuildPhase": "phase-1", "ERBEpic": "accounts", "ERBFeature": "signin", "ERBEffortClass": "G1" } ] },
+  "ERBAcceptanceCriteria": { "data": [ { "ERBAcceptanceCriterionId": "acc-01-a", "ERBUserStory": "acc-01", "Criterion": "A valid email and password signs the user in.", "SortOrder": 1 } ] }
 }
 ```
 

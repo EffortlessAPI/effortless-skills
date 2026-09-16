@@ -56,15 +56,7 @@ full escalation ladder.
 ## Field schema object
 
 ```json
-{
-  "name": "FieldName",
-  "datatype": "string",
-  "type": "raw",
-  "nullable": true,
-  "Description": "What this field represents.",
-  "formula": "=CONCAT({{FirstName}}, \" \", {{LastName}})",
-  "RelatedTo": "OtherTable"
-}
+{ "name": "FieldName", "datatype": "string", "type": "raw", "nullable": true, "Description": "What this field represents.", "formula": "=CONCAT({{FirstName}}, \" \", {{LastName}})", "RelatedTo": "OtherTable" }
 ```
 
 | Property | Required | Values |

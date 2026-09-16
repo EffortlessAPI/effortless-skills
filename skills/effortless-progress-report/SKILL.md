@@ -145,43 +145,28 @@ One row per table generates a report. Copy this, then grow it:
 
 ```json
 {
-  "ERBPackages": { "data": [
-    { "ERBPackageId": "core", "Title": "Core platform",
-      "PrimaryPhase": "phase-1", "SortOrder": 1 } ] },
+  "ERBPackages": { "data": [ { "ERBPackageId": "core", "Title": "Core platform", "PrimaryPhase": "phase-1", "SortOrder": 1 } ] },
 
-  "ERBEpics": { "data": [
-    { "ERBEpicId": "accounts", "Title": "Accounts",
-      "ERBPackage": "core", "SortOrder": 1 } ] },
+  "ERBEpics": { "data": [ { "ERBEpicId": "accounts", "Title": "Accounts", "ERBPackage": "core", "SortOrder": 1 } ] },
 
-  "ERBFeatures": { "data": [
-    { "ERBFeatureId": "signin", "Title": "Sign in", "ERBEpic": "accounts", "ERBPackage": "core" } ] },
+  "ERBFeatures": { "data": [ { "ERBFeatureId": "signin", "Title": "Sign in", "ERBEpic": "accounts", "ERBPackage": "core" } ] },
 
   "ERBEffortClasses": { "data": [
-    { "ERBEffortClassId": "G1", "Title": "Routine",   "ComplexityWeight": 1,   "SortOrder": 1 },
-    { "ERBEffortClassId": "G2", "Title": "Involved",  "ComplexityWeight": 1.6, "SortOrder": 2 },
-    { "ERBEffortClassId": "G3", "Title": "Demanding", "ComplexityWeight": 2.5, "SortOrder": 3 } ] },
+    { "ERBEffortClassId": "G1", "Title": "Routine", "ComplexityWeight": 1, "SortOrder": 1 },
+    { "ERBEffortClassId": "G2", "Title": "Involved", "ComplexityWeight": 1.6, "SortOrder": 2 },
+    { "ERBEffortClassId": "G3", "Title": "Demanding", "ComplexityWeight": 2.5, "SortOrder": 3 }
+  ] },
 
   "ERBDeliveryDisciplines": { "data": [
-    { "ERBDeliveryDisciplineId": "build",  "Title": "Build",     "SharePercent": 70,
-      "Description": "Modelling and generation", "ClientVisible": true, "SortOrder": 1 },
-    { "ERBDeliveryDisciplineId": "assure", "Title": "Assurance", "SharePercent": 30,
-      "Description": "Testing and acceptance",   "ClientVisible": true, "SortOrder": 2 } ] },
+    { "ERBDeliveryDisciplineId": "build", "Title": "Build", "SharePercent": 70, "Description": "Modelling and generation", "ClientVisible": true, "SortOrder": 1 },
+    { "ERBDeliveryDisciplineId": "assure", "Title": "Assurance", "SharePercent": 30, "Description": "Testing and acceptance", "ClientVisible": true, "SortOrder": 2 }
+  ] },
 
-  "ERBBuildPhases": { "data": [
-    { "ERBBuildPhaseId": "phase-1", "PhaseNumber": 1,
-      "Title": "Phase 1 — Core platform", "QuotedPrice": 120000,
-      "DurationMonths": 3, "PhaseKind": "fixed-price", "IsCurrentBid": true } ] },
+  "ERBBuildPhases": { "data": [ { "ERBBuildPhaseId": "phase-1", "PhaseNumber": 1, "Title": "Phase 1 — Core platform", "QuotedPrice": 120000, "DurationMonths": 3, "PhaseKind": "fixed-price", "IsCurrentBid": true } ] },
 
-  "ERBUserStories": { "data": [
-    { "ERBUserStoryId": "acc-01", "ReqId": "ACC-01",
-      "StoryText": "As a user I can sign in so that my work is mine.",
-      "ERBBuildPhase": "phase-1", "ERBEpic": "accounts", "ERBFeature": "signin",
-      "ERBEffortClass": "G1" } ] },
+  "ERBUserStories": { "data": [ { "ERBUserStoryId": "acc-01", "ReqId": "ACC-01", "StoryText": "As a user I can sign in so that my work is mine.", "ERBBuildPhase": "phase-1", "ERBEpic": "accounts", "ERBFeature": "signin", "ERBEffortClass": "G1" } ] },
 
-  "ERBAcceptanceCriteria": { "data": [
-    { "ERBAcceptanceCriterionId": "acc-01-a", "ERBUserStory": "acc-01",
-      "Criterion": "A valid email and password signs the user in.",
-      "SortOrder": 1 } ] }
+  "ERBAcceptanceCriteria": { "data": [ { "ERBAcceptanceCriterionId": "acc-01-a", "ERBUserStory": "acc-01", "Criterion": "A valid email and password signs the user in.", "SortOrder": 1 } ] }
 }
 ```
 
@@ -269,12 +254,7 @@ names the sections still running on it.
 Add `ProposalSections` rows to speak in the project's own voice:
 
 ```json
-{ "ProposalSectionId": "ps-01",
-  "SectionKey": "security",
-  "Mode": "append",
-  "Body": "For a platform handling {rules} regulated business rules across {roles} roles, that matters more than usual.",
-  "SortOrder": 1,
-  "ClientVisible": true }
+{ "ProposalSectionId": "ps-01", "SectionKey": "security", "Mode": "append", "Body": "For a platform handling {rules} regulated business rules across {roles} roles, that matters more than usual.", "SortOrder": 1, "ClientVisible": true }
 ```
 
 - **`SectionKey`** — one of `what-this-is`, `cost-curve`, `mechanism`, `cadence`,
