@@ -34,6 +34,14 @@ release section is an ISO date.
   points at `EffortlessAPI/effortless-skills` (the actual remote) rather than
   `effortless-claude`.
 
+### Fixed
+- `effortless-demo-app`: the postgres transpiler install step used
+  `effortless -install rulebook-to-postgres -o /postgres`, which fails with
+  "Unknown option postgres". It now uses the `cd postgres && -install -i ../…`
+  form the other skills use. Also dropped the stale "don't chmod init-db.sh"
+  advice (the transpiler emits it non-executable) and noted that the DB must
+  exist and that Linux/Windows Postgres usually needs `PGPASSWORD`.
+
 ### Added (earlier, unreleased)
 - **`effortless-progress-report`** (new skill) — a project's delivery status,
   kept in its own rulebook and projected into a report rather than written as a

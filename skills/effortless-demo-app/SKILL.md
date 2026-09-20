@@ -70,7 +70,9 @@ directly — stop. Use `effortless -install` to add transpilers instead.
 1. `mkdir <project> && cd <project> && git init`
 2. `mkdir effortless-rulebook`
 3. `effortless -init` — generates `effortless.json`. Never write this file by hand.
-4. `effortless -install rulebook-to-postgres -o /postgres` — installs the transpiler
+4. `mkdir -p postgres && cd postgres && effortless -install rulebook-to-postgres -i ../effortless-rulebook/effortless-rulebook.json && cd ..`
+  — installs the transpiler. Output lands in whatever directory you run `-install` from,
+  so the `cd` is required. (`-o /postgres` does NOT work: the CLI parses `/postgres` as an option.)
 5. Install the init-db exec tool so `effortless build` runs `init-db.sh` automatically.
   The tool entry needs `RelativePath: "/postgres"` and `CommandLine: "-exec init-db.sh"`.
    Use the CLI — consult `effortless-cli` skill for the exact install command if needed.
@@ -98,8 +100,6 @@ pick-for-me options and proceed
 the design in your head, then emit it once
 - Running `effortless -install <transpiler>` more than once. If it
 fails, read the error before re-running with tweaks
-- `chmod +x init-db.sh` defensively — the transpiler emits it
-executable. Only chmod if the actual error says permission denied
 - Loading the `effortless-demo-app` skill twice
 - Running ToolSearch for transpiler names during bootstrap — irrelevant to first-build
 
@@ -303,8 +303,8 @@ before moving on.
 1. In `<project-dir>/`, initialize the effortless project using the CLI:
   - `effortless -init` — generates `effortless.json`. **Do NOT create or edit
    `effortless.json` manually** — it is owned by the CLI.
-  - `effortless -install rulebook-to-postgres -o /postgres` — adds the
-  rulebook-to-postgres transpiler outputting to `/postgres`.
+  - `mkdir -p postgres && cd postgres && effortless -install rulebook-to-postgres -i ../effortless-rulebook/effortless-rulebook.json && cd ..`
+  — adds the rulebook-to-postgres transpiler outputting to `/postgres`.
   - Install the init-db exec tool so every `effortless build` automatically runs
   `init-db.sh`. The tool entry needs `RelativePath: "/postgres"` and
   `CommandLine: "-exec init-db.sh"`. Use the CLI to install it.
@@ -361,7 +361,9 @@ before moving on.
    Same `<db>` should be the `DATABASE_URL` default in `start.sh`.
 3. Drop+create the DB:
   `psql -U postgres -h localhost -c "DROP DATABASE IF EXISTS <db>"`
-   then `CREATE DATABASE`.
+   then `CREATE DATABASE`. `init-db.sh` does not create the DB itself.
+   On Linux/Windows installs the `postgres` user usually needs a password
+   (`fe_sendauth: no password supplied`): export `PGPASSWORD` or put it in `DATABASE_URL`.
 4. `chmod +x postgres/init-db.sh && DATABASE_URL=... ./postgres/init-db.sh`.
 5. Quick verification: one `psql -c "SELECT … FROM vw_<table>"` that
   shows a calculated field rendering with the seed data — cheap
