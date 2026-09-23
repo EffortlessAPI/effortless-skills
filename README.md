@@ -157,23 +157,31 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 ## Installation
 
-### Option A: Install as a Claude Code plugin (recommended)
+### Option A: Ask Claude to install it (recommended)
 
-This repo is a Claude Code plugin **and** its own marketplace. In any Claude Code session:
+Works the same everywhere Claude Code runs — terminal, VS Code extension, desktop app. Paste this into any Claude Code session:
 
 ```
-/plugin marketplace add EffortlessAPI/effortless-skills
-/plugin install effortless@effortless-skills
+Install the Effortless skills for Claude Code from https://github.com/EffortlessAPI/effortless-skills.
+Clone the repo and run the install script for my operating system.
 ```
 
-Or from a terminal:
+Claude clones the repo and runs the right installer for your platform (`install.sh` on macOS/Linux, `install.ps1` on Windows). The skills land in `~/.claude/skills/` and activate in your next session.
+
+This copies files, so they do not update themselves. To update, see [Updating](#updating) — or use Option B, which updates through the plugin manager.
+
+### Option B: Install as a Claude Code plugin (auto-updating)
+
+This repo is a Claude Code plugin **and** its own marketplace. All 37 skills arrive namespaced as `effortless:<skill-name>` (e.g. `/effortless:effortless-init`), and updates come through the plugin manager, so there is nothing to `git pull` or re-run.
+
+**This route needs a terminal.** The `/plugin` slash command is not available in every Claude Code surface — in the VS Code extension it answers "/plugin isn't available in this environment", and so does `/plugins`. If you are not working in a terminal, use Option A above.
+
+With the `claude` binary on your PATH:
 
 ```bash
 claude plugin marketplace add EffortlessAPI/effortless-skills
 claude plugin install effortless@effortless-skills
 ```
-
-That's it — all 36 skills are available as `effortless:<skill-name>` (e.g. `/effortless:effortless-init`), and Claude auto-loads them by the same scope gates described above. Updates arrive through the plugin manager (`/plugin` → Marketplaces → Update, or `claude plugin update effortless@effortless-skills`); there is nothing to `git pull` or re-run.
 
 To enable it only in specific projects rather than globally, put this in that project's `.claude/settings.json`:
 
@@ -181,45 +189,29 @@ To enable it only in specific projects rather than globally, put this in that pr
 { "enabledPlugins": { "effortless@effortless-skills": true } }
 ```
 
-> **If you previously installed with `install.sh`**, run `bash install.sh --uninstall` first (or delete `~/.claude/skills/effortless-*`). Otherwise Claude sees two copies of every skill — the plugin's and the loose ones — and the loose copies never update.
+> **Don't install both ways.** If you previously installed with `install.sh` or `install.ps1`, uninstall those copies first (`bash install.sh --uninstall`, or `powershell -File install.ps1 -Uninstall`, or delete `~/.claude/skills/effortless-*`). Otherwise Claude sees two copies of every skill — the plugin's and the loose ones — and the loose copies never update.
 
-### Legacy: copy skills into `~/.claude/skills/` with `install.sh`
-
-The pre-plugin path. Still supported, but it copies files that never update themselves.
-
-#### Ask Claude Code to install it
-
-In any Claude Code session:
-
-**macOS / Linux:**
-```
-Clone https://github.com/EffortlessAPI/effortless-claude and run install.sh
-```
-
-**Windows (Git Bash):**
-```
-Clone https://github.com/EffortlessAPI/effortless-claude and run install-windows.sh
-```
-
-#### One-liner
-
-**macOS / Linux:**
-```bash
-git clone https://github.com/EffortlessAPI/effortless-claude.git /tmp/effortless-claude && bash /tmp/effortless-claude/install.sh && rm -rf /tmp/effortless-claude
-```
-
-**Windows (Git Bash):**
-```bash
-git clone https://github.com/EffortlessAPI/effortless-claude.git /tmp/effortless-claude && bash /tmp/effortless-claude/install-windows.sh && rm -r /tmp/effortless-claude
-```
-
-#### Clone and install
+### Option C: Run the installer yourself
 
 ```bash
-git clone https://github.com/EffortlessAPI/effortless-claude.git
-cd effortless-claude
+git clone https://github.com/EffortlessAPI/effortless-skills.git
+cd effortless-skills
 bash install.sh              # macOS / Linux
-bash install-windows.sh      # Windows (Git Bash)
+```
+
+**Windows (PowerShell, no Git Bash needed):**
+```powershell
+git clone https://github.com/EffortlessAPI/effortless-skills.git
+cd effortless-skills
+powershell -ExecutionPolicy Bypass -File install.ps1
+```
+
+**Windows (Git Bash):** `bash install-windows.sh` does the same thing.
+
+One-liner for macOS / Linux:
+
+```bash
+git clone https://github.com/EffortlessAPI/effortless-skills.git /tmp/effortless-skills && bash /tmp/effortless-skills/install.sh && rm -rf /tmp/effortless-skills
 ```
 
 #### Installer flags
@@ -232,11 +224,13 @@ bash install.sh --uninstall    # remove all installed effortless-* skills
 bash install.sh --help         # show flags
 ```
 
+`install.ps1` takes the same flags in PowerShell form — `-Yes` and `-Uninstall`, with `Get-Help .\install.ps1 -Detailed` for the full usage. It has no `--symlink` equivalent; contributors on Windows should use Git Bash and `install-windows.sh` for that.
+
 ## Updating
 
-**Plugin install:** `/plugin` → Marketplaces → Update `effortless-skills`, or `claude plugin update effortless@effortless-skills`.
+**Plugin install (Option B):** `claude plugin update effortless@effortless-skills` from a terminal, or `/plugin` → Marketplaces → Update `effortless-skills` in a terminal Claude Code session.
 
-**Legacy install:** you can ask Claude — `effortless-claude-updates` is the skill that drives this:
+**Script install (Options A and C):** you can ask Claude — `effortless-claude-updates` is the skill that drives this:
 
 ```
 "Are my effortless skills up to date?"
@@ -246,10 +240,12 @@ bash install.sh --help         # show flags
 Or do it yourself:
 
 ```bash
-cd /path/to/effortless-claude
+cd /path/to/effortless-skills
 git pull
 bash install.sh                # safe to re-run; prompts only on conflict
 ```
+
+On Windows, `git pull` then `powershell -ExecutionPolicy Bypass -File install.ps1`. Re-running is safe: skills whose contents already match are reported as `OK` and left alone.
 
 If you used `--symlink`, source updates are reflected automatically — no reinstall needed.
 
