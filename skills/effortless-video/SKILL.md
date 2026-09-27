@@ -87,6 +87,14 @@ skipped this averaged 22 seconds of watch time.
 | period, comma, "and" | any dash | a dash is read as a Japanese syllable |
 | a distinctive word for a rename | "Everyone" -> "Everybody" | too close to hear as a change; "All" reads instantly and still works |
 | Dash eye | `-i` | "the i in dash i" is misread otherwise |
+| Effortless A P I dot com | effortlessapi.com | says "Effortless-appy dot com" |
+| veet | vite | says "Viet" |
+| read me file | README | says "the red me" |
+| meg, gig | mebibytes, gibibytes | says "miba bytes", "giba bytes" |
+| creates a brand new price | mints a new price | says "mince" |
+| with Owl at 93.9 | OWL is at 93.9 | the SECOND occurrence in a take can slur where the first read fine |
+| "Brent, who runs construction" | "Brent in construction" | a name ending in a consonant before "in" fuses ("Brenton Construction") |
+| two amounts in separate clauses | "zero dollars and twenty nine dollars" | two adjacent amounts merge into one ("$0.29") |
 
 "Ivan" must sound like EYE-vən. Read the whisper transcript of every take that introduces a
 proper noun or acronym before calling it final.
@@ -101,6 +109,12 @@ proper noun or acronym before calling it final.
   and its boot checklist, Excel with tabs and a formula bar, a document window, and a phone
   holding real screenshots of the real built app. Model replicas on the owner's own captures.
 - All JSON and SQL is syntax highlighted and always a complete, valid snapshot.
+- **Pin the version when you film a live app.** The subject moves between takes: the admin portal
+  grew three sidebar sections mid-shoot, so a late scene showed twelve where scene three says
+  "nine". Serve the one file that differs from `git show <SHA>:<path>` (the app's own committed
+  code, the other repo untouched), pin to a **SHA and never to HEAD**, print the resolved ref every
+  run, and say which commit the film documents and what it therefore omits. `--audit` and
+  `--check` both pass while this is wrong; only diffing a new still against an old one catches it.
 - Modern pointer, blinking caret, typing in place. No unexplained empty boxes.
 - The stage is per-scene, not mandatory. PIL `draw(t)`, real screen capture and generated
   stills remain right for other beats. The contract is only a correct `.mp4` at the Asset path.

@@ -30,6 +30,7 @@ python3 server/cli_tour/init5/capture_states.py <scratch-dir>   # drive the REAL
 python3 server/cli_tour/init5/prep_data.py                      # pack states into stage/data.json
 
 CLI_TOUR_VIDEO=<video> node server/cli_tour/ep03_record_vo.mjs [scene ...]   # ElevenLabs takes
+VIDEO_SLUG=<series>/<video> node server/fixedbid/drop/record_vo.mjs [scene ...]   # same recorder for ANY series (ep03 hardcodes 15-cli-tour/)
 python3 server/exp05/make_word_maps.py <series>/<video>                      # whisper word maps
 node server/cli_tour/init5/shoot.mjs --dry                                   # cue audit: zero ✗
 
@@ -110,6 +111,19 @@ and flashes the worked-out values that changed green.
 - `server/render.js` outputs 1280x720 regardless of `__meta__ render.width`.
 - `effortless build` can take minutes on a cold transpiler. Wait. Leave other sessions'
   `buildOnSave` watchers alone.
+- **An arrow landing on a floating card was silently clipped** (`.fxsvg` z-index 4, cards 7-11).
+  It shipped in four scenes before it was named. `arrow()` now lifts the layer itself
+  (`stackOf`/`liftSvg`/`dropSvg`, refcounted, cleared by `reset()`) — never hand-set
+  `CORE.svgLayer().style.zIndex` per scene again, which only ever fixed one of the four.
+- **`retype`'s `selHold` is a DURATION, not a timestamp.** Passing `cue('a later phrase') - t`
+  holds the selection for that whole span, so the typing fires after a build has already
+  repainted the element: the value changes by itself and the edit is never seen. Keep it under
+  ~1.5 s and pull a still INSIDE the edit window — the dry run and the render log cannot see this.
+- **`effortless install` bricks the project** on CLI v2026-09-22-0609: it records the step as
+  `".Cli install <tool> …"` when a CommandLine must start with the bare TOOL NAME, so every
+  later `effortless` command dies with "Project tool '.Cli' is missing". It also prints that
+  `ERROR:` and **exits 0**. Strip the whole `<anything> install ` prefix (rewriting it to
+  `effortless` fails the same way). `capture_states.py` self-heals after each command.
 
 ## Review loop (do this, do not skip it)
 
@@ -146,3 +160,69 @@ mark, and never pass `--caption` on a composed hero.
 Lead with the outcome and what was not verified. Give the true runtime. List judgement calls
 (a sentence added to explain a visible parameter, a claim softened, a resolution limit). Say
 what was not done (thumbnail, publish). End with whether anything is still running.
+
+## ⏩ Rendering at a SPEED (and why a CLI render can come out too long)
+
+Two render paths, and only one knows about tempo:
+
+| Path | Speed? |
+|---|---|
+| `render-cli.mjs` → `render.js` (scene path) | **no** — always 1× |
+| Build MP4 button / `render-speed-cli.mjs` → `renderFinal()` in `acts.mjs` | yes (`atempo` + `setpts`, 0.5–1.5) |
+
+```bash
+node server/render-speed-cli.mjs <series>/<video> 1.15
+```
+
+Worked example, verified against the YouTube API and each cut's own rulebook (2026-09-25):
+
+| Init video | scenes | clips | speed | published |
+|---|---|---|---|---|
+| release 5 (`EaAUbf6lN70`) | 31 | 25:51 | 1× | 26:21 |
+| release 6 (`iXro60oobpU`) | 30 | 25:14 | 1.15× | 22:28 |
+
+Runtime fell 3:53; **only 37s of that was editing**, the other 3:17 was tempo. A cut
+mid-series also rendered **24:32** through `render-cli` after trimming ~110s, because the
+speed was never applied — a regression that was a missing flag.
+
+⚠️ This paragraph previously read *"take 5 shipped at ~1.29× (25:51 of clips → 21:40
+published)"* — the 25:51 belonged to the 31-scene cut, the 21:40 to a different 30-scene
+cut, and 1.29× was the ratio invented to reconcile them. **Never derive a speed by
+dividing two numbers you did not measure off the same cut.**
+
+Measure it properly instead:
+- **Published duration** from YouTube (`videos.list?part=contentDetails` on
+  `Publications.ExternalId`, or `node server/youtube-sync.mjs <slug>`) — not from a commit
+  message, which drifts from what was actually uploaded.
+- **Clip total** by summing `NativeDurationSeconds` over that rulebook's `stage-*` Assets.
+  Never by walking `acts/*/final.mp4`: a renumber orphans old act folders instead of
+  replacing them, so that sum is silently inflated.
+- **Bookends are ~17s**, not 95s (0.5 thumb + 1.5 intro + ~14.9 outro, outro not sped up),
+  so `published ≈ clips ÷ speed + 17`.
+
+Compare CLIP TOTALS, not final runtimes.
+
+## Filming a REAL web app (`server/threshold/`, built for `18-client-pitches/02-threshold-project-process`)
+
+`server/threshold/film.mjs` + `stage.html` film a live browser app (the Threshold portal on
+`localhost:5310`) inside a browser-window replica, one clip per scene, with whisper-cued beats.
+Reuse it for any client prototype that is a web page:
+
+- **Highlights track the real element, even while the page scrolls.** A tracker is injected
+  INTO the app frame (`TRACKER`): it resolves each box's spec every animation frame and
+  `postMessage`s the rects to the stage, which draws them. A spec is `css|text|nth|sub-css`
+  (innermost css match whose text contains `text`), so `'.badge|Not Started|2'` or
+  `'.workflow-card|Daily site huddle|0|.badge'` needs no ids in the app. Never hand-place a box.
+- **Cues come from the word map on a letter stream** (`norm()` strips spaces and punctuation),
+  so a script's "S D" matches whisper's "SD" and "twenty five" matches "twenty-five". Whisper
+  still writes NUMERALS ("14 steps", "3 buildings"): cue on the noun, never the number.
+- **`--dry` audits every cue against the maps without a browser** and prints the last beat as a
+  percentage of the shot. Run it after every re-record and before every shoot.
+- **Writes are real.** `setState()` puts the app's database in the state a scene expects
+  (clean → logged → passed → owned) through the generated API, and the `finally` block resets
+  it, so a re-shoot of one scene never films a stale row. Check the API's auto-save setting
+  first: with auto-save ON, filmed writes would sync back into the client's rulebook file.
+- **SPA navigation without a link:** `history.pushState` + a synthetic `popstate` moves
+  react-router; a `location.reload()` drops the injected tracker, so `reload()` re-injects it.
+- Real ids bite: a gate route 404s silently and the shoot dies on a `waitFor` timeout 30 s
+  later. Read the id off the API (`/api/tables/<T>`) before writing a `goto`.
