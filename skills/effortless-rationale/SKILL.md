@@ -41,31 +41,33 @@ The goal of *this* skill is not to convert — it is to make the case *honestly*
 ### "Isn't most of this just SQL that's been around for 25+ years?"
 
 Fair, and worth conceding directly rather than deflecting: joins, rollups, and calculated fields
-are not novel. They're **first-order logic with aggregates** — roughly FO + aggregation, the same
-expressivity SQL without `WITH RECURSIVE` has had since the 90s. SDLAF is not claiming to invent
-new expressivity for that part, and anyone who finds it impressive on its own hasn't found the
-actual claim yet.
+are not novel. The formula/lookup/aggregation fragment, considered without recursive Schema
+declarations, has the expressivity of **first-order logic with aggregates** — roughly FO +
+aggregation, the same class SQL without `WITH RECURSIVE` provides. That describes a restricted
+fragment, not SDLAF as a whole: SDLAF includes recursive semantics in Schema.
 
-The actual claim is narrower and checkable: **transitive closure (TC) is provably not expressible
+The theorem is precise and checkable: **transitive closure (TC) is provably not expressible
 in first-order logic with aggregates** — Hella, Libkin, Nurmonen & Wong, "Logics with Aggregate
 Operators" (J. ACM, 2001), and Libkin, "Expressive Power of SQL" (Theor. Comput. Sci., 2003),
 extending the classical result for plain first-order logic (Aho & Ullman, 1979). (Not Immerman
 1987 — that shows FO plus a TC operator captures NL, the opposite direction. The proof here is by
 locality over unordered structures; with a built-in order plus arithmetic it would resolve the
-open TC⁰-vs-NL question.) So ERB never fakes closure as a formula or a chained lookup. It hands it
-to a distinct, substrate-native mechanism per target — `WITH RECURSIVE` in Postgres,
-`owl:TransitiveProperty` in OWL, an explicit graph traversal in Python — and the conformance suite
-proves those independently-built mechanisms agree on every reachable pair, including ones never
-directly asserted.
+open TC⁰-vs-NL question.) This is a result about that restricted fragment, not a limit of CMCC or
+SDLAF. ERB never fakes closure as a formula or a bounded lookup chain. The rulebook declares it as
+a first-class `closure` field in Schema, and every substrate emits that one declared field —
+`WITH RECURSIVE` in Postgres, `owl:TransitiveProperty` in OWL, an explicit graph traversal in
+Python — and the conformance suite proves those independently-built emissions agree on every
+reachable pair, including ones never directly asserted.
 
 Receipt: `rulebook-examples/talismans-special-solutions` — `precedesStep`/`delegatesTo` closure
 (`vw_step_precedence_closure`, `vw_roles_closure`) is the runnable demo. See `effortless-cmcc`'s
-"The Falsifiable Core: First-Order Logic with Aggregates and the Transitive-Closure Boundary" for
+"Recursive Schema and the First-Order Logic with Aggregates Result" for
 the full argument.
 
-Concede: this does not make SDLAF "complete" in the naive sense. CMCC's completeness claim already
-assumes an explicit closure/recursion primitive standing beside the five — the contribution is
-naming that boundary and proving the crossings agree, not claiming SDLAF alone reaches past it.
+Do not frame closure as outside or "beside" SDLAF. SDLAF includes recursive Schema semantics; a
+`"type": "closure"` field is that declaration. The theorem concerns only the restricted
+first-order-plus-aggregates fragment. Conformance checks that each substrate's native recursive
+implementation agrees, cell by cell.
 
 ### "Isn't this just Model-Driven Engineering with extra steps?"
 

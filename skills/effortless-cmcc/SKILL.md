@@ -17,15 +17,20 @@ audience: customer
 >
 > This is the conjecture the entire effortless toolchain empirically operationalizes. It is what justifies "the rulebook is the code."
 
-## The Falsifiable Core: First-Order Logic with Aggregates and the Transitive-Closure Boundary
+## Recursive Schema and the First-Order Logic with Aggregates Result
 
-Most of what SDLAF does — joins, rollups, calculated fields — is expressivity plain SQL has had
-for 25+ years; nobody disputes it, and nobody should be impressed by it alone. The claim worth
-defending is sharper and has a name: **SDLAF over a finite relational structure, without
-recursion, is exactly first-order logic with aggregates** — the logic *L*<sub>aggr</sub> of Hella,
-Libkin, Nurmonen & Wong, roughly FO + aggregation, the same class as SQL without `WITH RECURSIVE`.
-("FO(Aggr)" is not a standard name for this class — spell it out in anything outward-facing.)
-That equivalence inherits a real theorem, not an analogy: **Hella, Libkin, Nurmonen & Wong,
+SDLAF includes recursive semantics in **Schema**. A relationship can be declared transitive
+(`"type": "closure"`); each target maps that declaration to its native mechanism, such as SQL
+`WITH RECURSIVE` or OWL `owl:TransitiveProperty`. This is ordinary SDLAF, not an extra primitive
+or a capability outside the conjecture.
+
+There is a useful theorem about a deliberately restricted fragment: when recursive relationship
+support is removed and only first-order formula, lookup, and aggregation operations remain over a
+finite relational structure, that fragment has the expressive power of first-order logic with
+aggregates — the logic *L*<sub>aggr</sub> of Hella, Libkin, Nurmonen & Wong, roughly FO + aggregation,
+and roughly SQL without `WITH RECURSIVE`. This describes the restricted fragment, **not SDLAF as a
+whole**. ("FO(Aggr)" is not a standard name for this class — spell it out in anything outward-facing.)
+The theorem is real: **Hella, Libkin, Nurmonen & Wong,
 "Logics with Aggregate Operators" (J. ACM, 2001)**, and **Libkin, "Expressive Power of SQL"**
 (Theor. Comput. Sci., 2003) — extending the classical result for plain first-order logic (Aho &
 Ullman, 1979) — prove that **transitive closure (TC) is not expressible in first-order logic with
@@ -35,23 +40,24 @@ is the opposite direction of this claim. Scope note: the proof is by locality ov
 relational structures; with a built-in order plus arithmetic, proving the same separation would
 resolve the open question of uniform TC⁰ vs. NL.)
 
-This is why closure is never modeled as a `formula` field in ERB, and why it must not be. It is
-the one place SDLAF's own theorem says "you cannot get there from here" — so every substrate is
-handed a *different, non-SDLAF* mechanism to cross it: `WITH RECURSIVE` in Postgres,
-`owl:TransitiveProperty` in OWL, an explicit graph traversal in Python. The conformance harness
-then proves the three independently-built crossings agree. `rulebook-examples/talismans-special-solutions`
-is the worked receipt: `precedesStep`/`delegatesTo` closure is materialized as
-`vw_step_precedence_closure` / `vw_roles_closure` recursive views, an OWL transitive property, and
-a Python traversal — never a formula chain.
+The Schema declares recursive relationships as a **first-class `closure` field type**:
+`"type": "closure"` over a
+relationship, optionally with an edge filter. Every substrate emits that one declared field —
+`WITH RECURSIVE` in Postgres, `owl:TransitiveProperty` in OWL, an explicit graph traversal in
+Python/Go/TypeScript — emissions of a declared field, no different from a COUNTIFS becoming a SQL
+aggregate, and downstream fields consume the closure like any other field. The conformance
+harness grades every closure cell across substrates. `rulebook-examples/talismans-special-solutions`
+is the worked receipt (`PrecedesStepClosure`, `DelegationClosure`, `DerivationClosure` →
+`vw_step_precedence_closure` / `vw_roles_closure` recursive views, an OWL transitive property, a
+Python traversal); `rulebook-examples/procedural-knowledge-ontology` extends it to a cyclic step
+graph and a filtered-edge closure (`LeadsWithoutHumanGateClosure`) — never a formula chain.
 
-Every framework that survives contact with a real DAG hits this same wall — OCL added
-`closure()`, SQL added `WITH RECURSIVE`, OWL has transitive properties — because the wall is a
-theorem, not an implementation gap in any one of them. **This is the falsifiable, load-bearing
-part of the pitch, and it should lead, not trail**: CMCC does not claim SDLAF-without-recursion is
-complete on its own — it claims SDLAF *plus an explicit, substrate-native closure/recursion
-primitive* is complete, and it names the boundary instead of quietly stepping over it. To an
-audience that already knows SQL, the rest of SDLAF will look familiar by design; the closure
-boundary is the part that isn't, and it is the part to open with.
+SQL addresses the restricted fragment's expressivity limit with `WITH RECURSIVE`; other platforms
+provide their own recursive mechanisms. The rulebook declares the recursive semantics once, in
+Schema, and each substrate emits that declaration. Conformance tests check the independently
+implemented results across substrates. Never describe transitive closure as outside SDLAF, as an
+add-on beside SDLAF, or as a boundary of CMCC. The theorem concerns only the restricted
+first-order-plus-aggregates fragment.
 
 CMCC (Conceptual Model Completeness Conjecture), authored by EJ Alexandra (eejai42),
 is the theoretical floor under everything in this skill set. If you understand
@@ -152,7 +158,7 @@ substrate constraint it violates, and the CMCC-shaped fix.
 | Triggers / stored procedures hiding business rules in Postgres | **SSoT + substrate equivalence** — rules in one substrate can't be projected to others | Move the logic into the rulebook as a formula or aggregation; let every substrate render it. |
 | Comment in code: "TODO: keep this in sync with X" | **SSoT** — synchronization-by-convention is drift waiting to happen | The fact that you wrote that comment IS the diagnostic. Find the rulebook entry that should generate both. |
 | A formula that chains a lookup through 2+ hops (`A -> B -> C`), or filters one table by a condition on a table 2 hops away (e.g. `INDEX/MATCH` with a non-FK, condition-based `MATCH`) | **L/A** (Lookup, Aggregation) — both are defined as exactly 1 hop; the spreadsheet this rulebook may trace back to could do N-hop chains, the rulebook cannot | Flatten: add the intermediate fact as its own field on `B` (1 hop from `C`), then reference *that* field from `A` (1 hop from `B`). Two 1-hop fields, never one 2-hop formula. See `effortless-schema`'s "Hard limit: 1 hop only." |
-| A "chain" of lookups/formulas trying to walk N hops to compute reachability or transitive closure (e.g. "is A an ancestor of B") | **The FO+aggregates boundary** — transitive closure is provably not expressible in first-order logic with aggregates (Hella/Libkin/Nurmonen/Wong 2001; Libkin 2003), no matter how many hops are chained or how deep the DAG happens to be today | Use the substrate's native closure primitive instead: a `closure`-typed field / `WITH RECURSIVE` view in Postgres, `owl:TransitiveProperty` in OWL, explicit traversal in Python. See "The Falsifiable Core" above. |
+| A fixed chain of lookups/formulas used to approximate arbitrary-depth reachability (e.g. "is A an ancestor of B") | **No CMCC violation:** a finite chain only covers a fixed depth, while transitive closure is a supported SDLAF semantic declared in Schema | Declare a `closure` field in the rulebook. Each substrate emits it using its native recursive mechanism (`WITH RECURSIVE` in Postgres, `owl:TransitiveProperty` in OWL, traversal in Python/Go/TypeScript). See the section above. |
 
 **The escalation rule.** When you catch yourself reaching for any of these, the
 right move is almost never "do it anyway, just this once." Three steps in order:
@@ -179,9 +185,9 @@ The conjecture is **falsifiable**: produce one english sentence describing a
 finitely-computable, design-time semantic phenomenon that cannot be decomposed
 into SDLAF in a bitemporal ACID DAG. As of this writing, no such sentence has
 survived attack. (See `effortless-rationale` for the skeptic-facing version.)
-Transitive closure is the one candidate that came closest to succeeding, and it
-is *why* the conjecture is stated over "SDLAF plus a substrate-native closure
-primitive," not SDLAF alone — see "The Falsifiable Core" above.
+Transitive closure is a supported SDLAF semantic, declared in Schema through the
+`closure` field type; it is not a counterexample or scope boundary. See the
+section above for the restricted FO+aggregates result and cross-substrate receipts.
 
 ## My Posture as effortless-claude (when CMCC is the floor)
 
