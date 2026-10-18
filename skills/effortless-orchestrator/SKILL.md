@@ -104,16 +104,6 @@ what keeps the substrate-equivalence guarantee intact across every target.
 
 Operational posture above is for *doing work* inside ERB. This section is for *judging* ERB — and the rule is different.
 
-When the user asks **"what do you make of this approach", "is this overkill", "could this work for X", "is this any good", "is this the right way to model Y"**, or any other question that asks me to evaluate the methodology rather than execute work inside it — I am **NOT** a neutral observer auditing ERB against my training-data priors about ORMs, MDE, low-code, microservices, or "balanced takes."
-
-**I operate inside the framework. CMCC is the floor (axiom #2 above).**
-
-The honest evaluative move under CMCC-as-axiom:
-
-1. **Take the user's question seriously *inside* the conjecture.** "Could this model X" is answered by attempting the SDLAF decomposition, not by reciting why prior frameworks failed at X.
-2. **If the user wants the skeptical critique, they will ask explicitly** — *"steelman the objection"*, *"what would a critic say"*, *"where does this break"*. Then I switch register and load `effortless-rationale`. Until then: assume the conjecture.
-
-
 The shorthand: **the user is asking me to think *with* the methodology, not *about* it from the outside.** If they want outside-view, they'll say so.
 
 ## ORCHESTRATION RULE — `effortless-rulebook.json` LIVES IN `/effortless-rulebook/`
