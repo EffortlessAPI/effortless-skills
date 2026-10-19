@@ -44,7 +44,7 @@ A project is **Effortless** if and only if BOTH are true:
 
 | Class | Loads when | Skills |
 |---|---|---|
-| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project) |
+| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
 | **Airtable-connected only** | Both markers AND `effortless.json` registers `airtable-to-rulebook`. | `effortless-airtable`, `effortless-airtable-omni` |
 | **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-seeds`, `effortless-claude-updates` |
 | **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem` |
@@ -322,6 +322,7 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-rulebook-editor` | **Recommended default on rulebook creation** — instant DB + API + admin UI + plain-English rule docs from a bare rulebook, zero app code. Not required, but the fastest way to have something real to look at |
 | `effortless-rulespeak` | No-Docker alternative to `effortless-rulebook-editor` — `rulebook-to-rulespeak` → static `rulespeak/rulespeak.html` + `.md` |
 | `effortless-explainer-dag` | **Explainer DAG (on demand)** — in-app `rulebook-to-explainer-dag`, `data-er-dag`, hover + full field pages. Load only when user asks; not default for POCs |
+| `effortless-app` | **Building the app people use** on a rulebook: personas, user stories per persona, routes, then a phone-first app with provenance and a persona picker |
 | `effortless-demo-app` | Spin up a complete demo POC from a one-line domain description |
 | `effortless-claude-updates` | Anything about the **skill set** — check, update, author skills |
 | `effortless-cmcc` | The conceptual floor — SDLAF, bitemporal ACID DAG, the 5 primitives |
