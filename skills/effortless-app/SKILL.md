@@ -105,8 +105,10 @@ forms or fetch code. `app/README.md` has the details.
   for the menu (none for detail routes), `personas`, `render(params)`.
 - A list route → `<TablePage table="Horses" columns={[...]} formFields={[...]} detail="horses" />`.
 - A detail route → `<RecordPage table="Horses" id={id} back="horses" fields={[...]}>` with
-  its child records under it as `RecordList`s.
-- `RecordList` puts provenance on derived columns by itself; anywhere else,
+  its child records under it as `<ChildList table="VetVisits" parent={{ field: 'Horse', id }} ... />`
+  (Add links the new record to the parent by itself).
+- Filter and order with `where` and `sortBy` on view columns (`IsToday`, `ScheduledDate`).
+- `RecordList` (and so `TablePage` and `ChildList`) puts provenance on derived columns by itself; anywhere else,
   wrap the value in `<span data-er-dag="Table.Field">`.
 - The explainer is already loaded; do not install it again.
 
