@@ -313,6 +313,13 @@ done
 
 A complete deploy.sh that wraps this end-to-end (with `cpln image build` + `cpln apply`) lives in the project repo — keep it idempotent and re-runnable so subsequent rulebook edits redeploy with one command.
 
+**Deploy the API in the database's region.** The bases Postgres runs in AWS **us-east-1**: put the
+API workload in a GVC located there (`aws-us-east-1`). Every query crosses the network, so from
+another region each one costs ~60 ms, and an API built by an older `rulebook-to-node-postgres-api`
+(one label query per row per relationship) turned a 17-row read into 4+ seconds. To have it scale
+to zero when idle, deploy it as a `serverless` workload with `minScale: 0`; the first request after
+an idle period then waits a few seconds while it starts, so retry reads during that window.
+
 ---
 
 ## RLS pattern (email DAG) — unchanged

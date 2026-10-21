@@ -194,6 +194,13 @@ outside the rulebook — precisely the failure mode this stack exists to prevent
 **Also:** numeric/decimal values arrive as JSON **strings** (`"250"`) — coerce
 for display/sort, send real numbers on write.
 
+**Relationship labels come with the row.** A table read carries
+`<field>__fk_label` for every relationship field (a single-row read:
+`<field>_label`): the related row's Name, resolved in the same query from the
+`fk_labels_<table>` view. Use it to show "Client: Helen Whitaker"; for any other
+value of the related row, add a lookup field to the rulebook. Never fetch the
+related table to resolve names in the app.
+
 ### 5. CORS is already open
 
 `Access-Control-Allow-Origin: *`. A Vite dev server on :5173 calls :42441

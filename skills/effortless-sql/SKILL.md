@@ -121,7 +121,10 @@ If a JOIN is fetching N fields from a related table, add N lookup fields (or one
 - `00-bootstrap.sql` - Database initialization
 - `01-drop-and-create-tables.sql` - DDL for all tables (raw fields only)
 - `02-create-functions.sql` - `calc_*()` and `get_*()` PL/pgSQL functions (1:1 with calculated/lookup/aggregation fields)
-- `03-create-views.sql` - `vw_*` views combining raw tables + calculated fields via function calls
+- `03-create-views.sql` - `vw_*` views combining raw tables + calculated fields via function calls,
+  plus `fk_labels_<table>` views: one display label (`<field>__fk_label`, the related row's Name)
+  per relationship field, which the generated API joins into its reads. They are not part of the
+  `vw_*` contract (each `vw_*` mirrors the rulebook exactly); in app SQL, use a lookup field instead.
 - `04-create-policies.sql` - Row-level security (RLS) policies
 - `05-insert-data.sql` - INSERT statements from rulebook data
 
