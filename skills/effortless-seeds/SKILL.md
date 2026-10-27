@@ -1,11 +1,10 @@
 ---
 name: effortless-seeds
 description: >
-  Effortless seeds — starting a project from a public GitHub repository and publishing
-  one: "list seeds", "clone a seed", "start from a seed", "make this repo a seed",
-  "seed sources", "effortless seed", `listSeeds`, `cloneSeed`, `addSeedSource`,
-  `effortless-seed.json`, `$key$` replacements. Any project or no project (cloning a seed
-  creates one).
+  Effortless seeds: start a project from one, or drop an add-in into one. "list seeds", "clone a seed",
+  "add magic links / Shopify / auth to this project", "start from a seed", `listSeeds`, `cloneSeed`,
+  `effortless-seed.json`, `$key$` replacements, seed sources. Building or publishing a seed:
+  effortless-seed-authoring.
 audience: customer
 ---
 
@@ -19,6 +18,44 @@ account's public repositories and keeping the ones whose default branch has
 
 **Scope gate:** load on any of the triggers above, in any directory. Cloning a seed is
 how a directory *becomes* an Effortless project, so no `effortless.json` is required first.
+
+## Two kinds: roots start projects, add-ins drop into them
+
+| Kind | `effortless-seed.json` `seed.kind` | What it is | How you use it |
+|---|---|---|---|
+| **Root** | `root` | A whole project that owns the rulebook (a starter, "from Airtable", ...) | `cloneSeed` into an empty directory: the directory *becomes* the project |
+| **Add-in** | `child` | A folder of code that builds against, or plugs into, an existing project's rulebook. No rulebook of its own | `cloneSeed` into the project at the seed's `mountPath`, delete its `.git`, follow its `INTEGRATE.md` |
+| **Package** | either, with `subSeeds` | Several seeds installed together, in order | the installer expands it |
+
+An add-in names the add-in it needs in `requires` (for example `rulebook-backend`); do not install it
+before that one is there. **Reach for an add-in when the need is a known, repeated one** (sign-in,
+a Shopify connection, docs, deploy) instead of writing it fresh: the seed carries the tested version
+and its gotchas, and every project that uses it behaves the same way.
+
+| Need | Seed | Mount |
+|---|---|---|
+| A backend: Postgres, Node API, TypeScript SDK | `rulebook-backend` | `backend/` |
+| Approved-user sign-in: magic links in beta/production, **pick-your-user in dev**, row-level security the database enforces in both | `effortless-magic-links` | `magic-links/` |
+| Shopify products, customers and orders as rulebook tables, kept current by sync and webhooks | `effortless-node-shopify` | `node-shopify/` |
+| Roles and RLS compiled from the rulebook's Security module | `rulebook-auth` | `auth/` |
+| Deploy to Control Plane; a native mobile app; reference docs | `cpln-deploy`, `mobile-app`, `rulebook-docs` | per README |
+
+`effortless listSeeds` is the live list; the table above is only what existed when this was written.
+
+### Installing an add-in into a project
+
+```bash
+cd <project root>                                   # has effortless.json and the Backend API add-in
+effortless cloneSeed effortlessapi/effortless-magic-links magic-links     # a RELATIVE destination
+rm -rf magic-links/.git
+```
+
+Then **read the add-in's `INTEGRATE.md`** (the wiring, written to be followed step by step, each step
+saying how to know it worked) and its README. Typical shape: merge the seed's rulebook tables with
+`node <mount>/scripts/merge-rulebook.mjs --rulebook ... ` (dry run first; `--write` edits the project's
+source of truth, so say what it adds and get a yes), `effortless build`, one registration line in the
+generated API's `custom.js` (the file rebuilds never overwrite), load the seed's web component in the app.
+Ask the person only what the seed's questions need (an email, a store address); do the rest.
 
 ## What a seed is / is not
 
@@ -100,7 +137,27 @@ Defaults are applied without being recorded. Keep `seed-secret-values.json` out 
 Because replacement is idempotent and the template file itself is never rewritten, a
 seed author can commit `$project-name$.md` and `"Name": "$project-name$"` freely.
 
+**Replacement behaviour to know** (each of these has bitten someone):
+
+- Only keys the seed *declares* are replaced; `$1`, `$$` and SQL `$body$` quoting are left alone.
+- The replaced file is edited **in the clone**, so the committed template is the clone's first
+  state only: run the CLI inside a template repo that already has its manifest and it substitutes the
+  tokens away. Seed authors tokenise last.
+- Every key needs a `default` (or an answer), secrets included (`""` is fine), or a non-interactive
+  build fails with "has no configured value or default".
+- A **secret** is read from `seed-secret-values.json`, and a *persisted* secret (`persist: true`) reaches a
+  published run as `SEED_SECRET_<key>` in the environment. Code reads the environment; no token for a
+  secret belongs in any committed file.
+- Code that reads a replaced file must still work when the file was never replaced (a seed copied by
+  hand): treat a value that still contains `$key$` as unanswered and use the default.
+- A seed that registers nothing to transpile (`"ProjectTranspilers": []`) is valid; `effortless build`
+  says "Nothing to build" and still applies replacements. Its files are the seed.
+
 ## Authoring and publishing a seed
+
+Building add-ins (the assembly line: layout, manifest, rulebook fragments, tests, what to check, the
+gotchas already found) is its own skill: **`effortless-seed-authoring`**. The short version for a plain
+root seed:
 
 1. Make the project build cleanly from a fresh clone: `effortless.json` at the root, the
    rulebook under `effortless-rulebook/`, the pipeline registered with `-install`.
@@ -125,6 +182,8 @@ and runs its build. Use it when a root seed stitches several child seeds togethe
 
 ## See also
 
+- `effortless-seed-authoring` — building, testing and publishing seeds, add-ins especially.
+- `effortless-magic-links` — the generic magic-links flow for a project that is not using the seed.
 - `effortless-cli` — the full command reference, install/update of the binary.
 - `effortless-init` — creating a project from nothing instead of from a seed.
 - `effortless-pipeline` — `effortless.json` / `ProjectTranspilers` in depth.

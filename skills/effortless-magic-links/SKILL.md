@@ -20,6 +20,12 @@ If a feature wants magic-links to know what an end-user does in your app,
 the feature belongs in your app — not in magic-links. See
 `magiclink.effortlessapi.com/UNIFICATION-PLAN.md` for the full contract.
 
+> **In an ERB project that has the Backend API add-in, use the `effortless-magic-links` SEED instead of
+> hand-wiring this** (`effortless cloneSeed effortlessapi/effortless-magic-links magic-links`, then its
+> `INTEGRATE.md`; see `effortless-seeds`). It does steps 2-5 below, adds approved-users-only sign-in with
+> no registration, a pick-your-user dev mode, and database-enforced row-level security in dev and live alike.
+> This skill stays the reference for any other stack and for the tenant API.
+
 This skill is the **generic** flow: any project, any Postgres database. For
 the bases-specific flow (auto-RLS templates, `auth.trusted_tenants`,
 `/auth/generate-policy`), use the `effortless-bases` skill instead.

@@ -172,7 +172,7 @@ This copies files, so they do not update themselves. To update, see [Updating](#
 
 ### Option B: Install as a Claude Code plugin (auto-updating)
 
-This repo is a Claude Code plugin **and** its own marketplace. All 37 skills arrive namespaced as `effortless:<skill-name>` (e.g. `/effortless:effortless-init`), and updates come through the plugin manager, so there is nothing to `git pull` or re-run.
+This repo is a Claude Code plugin **and** its own marketplace. All 39 skills arrive namespaced as `effortless:<skill-name>` (e.g. `/effortless:effortless-init`), and updates come through the plugin manager, so there is nothing to `git pull` or re-run.
 
 **This route needs a terminal.** The `/plugin` slash command is not available in every Claude Code surface — in the VS Code extension it answers "/plugin isn't available in this environment", and so does `/plugins`. If you are not working in a terminal, use Option A above.
 

@@ -8,6 +8,13 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **`effortless-seed-authoring`** — the authoring side of seeds, split from the public `effortless-seeds`:
+  the add-in shape, authoring order, the four ways to verify, and the gotchas found building
+  `effortless-magic-links` and `effortless-node-shopify` (view RLS bypass, restrictive approval policy,
+  roles never from claims, bignum `div()`, raw-body webhook routing, `pool.query` re-entering `connect`, stale dev cookies).
+- **`effortless-seeds`** now says what add-in seeds are, when to reach for one, how to drop one into a project
+  (`cloneSeed` to a relative destination, `INTEGRATE.md`), and the `$key$` replacement behaviours that bite.
+  `effortless-magic-links` points to the seed for ERB projects.
 - **Claude Code plugin packaging** — `.claude-plugin/plugin.json` (plugin
   `effortless`; `skills/` is auto-discovered) and `.claude-plugin/marketplace.json`
   (self-hosted marketplace `effortless-skills`, source `./`). Install with
