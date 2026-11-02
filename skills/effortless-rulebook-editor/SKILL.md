@@ -160,13 +160,34 @@ work around it.
 ### 3. Read the contract
 
 ```bash
-curl -s localhost:42441/api/tables/Customers
+curl -s 'localhost:42441/api/tables/Customers?fields=Name,EmailAddress'
 ```
 
-Returns `{fields, fkFields, pkField, rows}`. `fields[].name` is the write-side
-name; `pkField` is what `:rowId` means. That response *is* the contract.
+Returns `{fields, fkFields, pkField, selectedFields, rows}`. `fields[].name` is
+the write-side name (always the full schema); `pkField` is what `:rowId` means;
+`rows` hold the fields you named, the pk and the `__fk_label` of any relationship
+among them. That response *is* the contract.
 
-### 4. Two conventions that will bite you
+### 4. Three conventions that will bite you
+
+**Name the fields a screen uses — never read the whole row by habit.**
+
+```
+GET /api/tables/Customers?fields=Name,IsVIP     // ✅ Postgres evaluates two columns
+GET /api/tables/Customers                       // ❌ evaluates every calc_* on the view
+```
+
+The other half is the database: a role whose persona never needs a table's roll-up columns should not have
+them in its schema at all (`ERBFields.<Role>CRUD`, `effortless-security`), and `role-types/<role>.d.ts` then
+types exactly what that role can read.
+
+Every `vw_*` column is a function call, and Postgres evaluates only the columns
+a read names. A projected read of a wide view costs milliseconds where the whole
+row costs seconds (`ERBRoles`, 27 rows × 60 columns: 280 ms → 0.5 ms). `?fields=`
+works on `/rows/:id` too; `?fields=` alone (empty) returns the pk only — the
+cheapest way to learn a table's shape and row count. Read the whole row only on
+a record page that shows the whole row. An unknown field name is a 400. (APIs
+generated before 2026-11-01 ignore the parameter and return everything.)
 
 **Reads are snake_case; writes are PascalCase.**
 
@@ -219,7 +240,8 @@ itself changes when the rulebook changes.
 const API = 'http://localhost:42441'
 
 const { fields, rows, pkField } =
-  await (await fetch(`${API}/api/tables/Customers`)).json()
+  await (await fetch(`${API}/api/tables/Customers?fields=Name,TotalSales,IsVIP`)).json()
+// name the fields the screen shows: the API evaluates only those columns
 
 await fetch(`${API}/api/tables/Customers/rows/${rowId}`, {
   method: 'PATCH',

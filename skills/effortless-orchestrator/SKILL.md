@@ -44,7 +44,7 @@ A project is **Effortless** if and only if BOTH are true:
 
 | Class | Loads when | Skills |
 |---|---|---|
-| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
+| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-security`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
 | **Airtable-connected only** | Both markers AND `effortless.json` registers `airtable-to-rulebook`. | `effortless-airtable`, `effortless-airtable-omni` |
 | **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-seeds`, `effortless-seed-authoring`, `effortless-claude-updates` |
 | **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem` |
@@ -136,7 +136,12 @@ without explicit override:
    fit.
 3. **Always read from `vw_*` views; always write to base tables directly.**
    Views include calculated/lookup/aggregation fields; base tables only have
-   raw columns, and the views aren't updatable anyway.
+   raw columns, and the views aren't updatable anyway. **And name the
+   columns you read** — in SQL and over the API (`?fields=A,B,C`): every
+   view column is a function call that Postgres evaluates only when named,
+   so `SELECT *` (or a bare `GET /api/tables/<T>`) runs every rule on the
+   table for every row. Whole rows belong only on a record page that shows
+   the whole row. (`effortless-sql`, `effortless-rulebook-editor`.)
 4. **Always ask permission** before modifying the rulebook JSON directly.
    It's the SSoT — the developer should be choosing when it changes.
 5. **`effortless build` is usually the final step**, except when
@@ -314,6 +319,7 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-workflow` | Editing the hub — directly, via Airtable, or via reverse-sync; permission checkpoints |
 | `effortless-pipeline` | `effortless.json`, transpilers, build mechanics |
 | `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `*b-customize-*` |
+| `effortless-security` | Roles and who sees what — the `<Role>CRUD` matrix, `role_<id>` schemas, per-role `.d.ts` types, hiding columns to make a persona fast |
 | `effortless-airtable` | *(only if Airtable-connected)* Airtable REST API — scalar fields, CRUD |
 | `effortless-airtable-omni` | *(only if Airtable-connected)* OMNI via Playwright — formulas, lookups, rollups, new tables |
 | `effortless-diagnostics` | Diagnostic queries, DAG validation, legacy code migration |

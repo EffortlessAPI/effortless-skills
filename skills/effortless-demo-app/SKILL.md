@@ -422,7 +422,12 @@ user explicitly asks for in-app field provenance. For that, load
     - Public route: `GET /api/dev-users` (the login picker).
     - For each table: `GET /api/<table>s`, `GET /api/<table>s/:id`,
     `PATCH /api/<table>s/:id` for the editable raw fields.
-    - Reads hit `vw_`* views (with calculated/aggregated columns).
+    - Reads hit `vw_`* views (with calculated/aggregated columns) and
+    **name their columns**: `SELECT customer_id, name, is_vip FROM
+    vw_customers`, never `SELECT *`. Postgres evaluates only the columns
+    named, and a wide view's `calc_*` columns are what make `SELECT *`
+    slow. The list route selects what the list shows; only `/:id` reads
+    the whole row.
     Writes hit base tables, only touching raw columns, keyed on
     `<table>_id`.
     - Role-filter in the route handlers from `req.me.role`.

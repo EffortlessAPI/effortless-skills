@@ -129,6 +129,8 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 **`effortless-sql`** — Patterns for the generated SQL: read from `vw_*` views (never base tables), never edit `00`–`05` files (regenerated every build), customize via `*b-customize-*.sql` and the `ERBCustomizations` table only when the rulebook genuinely can't express the rule. **Why?** This is where most "fixes" go wrong: someone edits `02-create-functions.sql` to "patch" a behavior, the next build erases it, the bug comes back, and now there's a phantom commit history with no surviving code. This skill is the rule that prevents that whole class of incident.
 
+**`effortless-security`** — The Security module: roles, the per-role CRUD matrix (`<Role>CRUD` columns on `ERBTables`/`ERBFields`, blank inherits, empty means none), the `role_<id>` Postgres schema each role gets, and the per-role TypeScript types (`role-types/<role>.d.ts`) generated from the same cascade. **Why?** A role's schema hides tables, columns and rows by *not having them*, and a column that is not in the view is never computed — so hiding roll-up columns from the personas that don't need them is both the access rule and the fix for a slow persona. Without this skill Claude reaches for caching or edits `06-rbac-policies.sql`, which the next build erases.
+
 **`effortless-explainer-dag`** — Add the Explainer DAG to any Effortless project — a generated, embedded visualization of the rulebook's calculated-field DAG that lets a user click any cell/field and see exactly how it was derived (raw inputs → lookups → calcs → aggregations), with RuleSpeak® prose baked in at transpile time. Portable (vanilla JS + CSS) across React, Vue, plain HTML, Flask/Jinja, HTMX. **Why?** A calculated field's provenance is otherwise invisible to the end user — they see the number, not the formula chain that produced it. This skill makes that chain inspectable in-app, on demand, without hand-building a DAG viewer per project.
 
 ### Data & Export
@@ -294,6 +296,7 @@ effortless-skills/
 │   ├── effortless-bases/               ← bases.effortlessapi.com flow
 │   ├── effortless-magic-links/         ← portable magic-link auth (any Postgres app)
 │   ├── effortless-diagnostics/         ← DAG validation, migration helpers
+│   ├── effortless-security/            ← roles, CRUD matrix, role schemas, role types
 │   ├── effortless-cmcc/                ← theory: the conjecture
 │   ├── effortless-rulebooks/           ← receipts: runnable substrates
 │   ├── effortless-rationale/           ← skeptic-facing defense (receipts only)

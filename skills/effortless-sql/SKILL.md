@@ -59,9 +59,24 @@ This isn't a stylistic rule — it's how the substrate is shaped: views (`vw_*`)
 -- WRONG: Reading from base table
 SELECT * FROM customers WHERE hair_color = 'red';
 
--- RIGHT: Reading from view
-SELECT * FROM vw_customers WHERE is_red_headed = true;
+-- RIGHT: Reading from view, naming the columns the caller uses
+SELECT customer_id, name FROM vw_customers WHERE is_red_headed = true;
 ```
+
+### Name the columns: `SELECT *` on a view runs every rule
+
+Each `vw_*` column is a `calc_*` function call, and Postgres evaluates only the
+columns a query names. `SELECT customer_id, name, is_vip FROM vw_customers` costs
+three functions; `SELECT * FROM vw_customers` costs all of them — every lookup and
+every aggregation over child tables — for every row (a 27-row, 60-column view:
+280 ms whole, 0.5 ms for three columns). Name the columns in app SQL and over
+the generated API (`GET /api/tables/<T>?fields=A,B,C`, see
+`effortless-rulebook-editor`). `SELECT *` belongs only where the whole row is shown.
+
+A role's own schema narrows this for you: `role_<id>.<table>` lists only the columns that
+role may read, so `SELECT *` there evaluates only those (259 ms through `public.vw_*`, 2-3 ms
+through a 22-column role view). Hide a persona's roll-up columns in `ERBFields.<Role>CRUD`;
+see `effortless-security`.
 
 ### Before Writing ANY Query or Filter Logic:
 

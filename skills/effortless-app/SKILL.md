@@ -80,6 +80,12 @@ editor's API: read the `vw_*` views, write base fields).
   standing in a barn, a shop or a car.
 - **Never compute a rule in the app.** No sums, counts, dates or statuses
   worked out in a page; read them from view columns. Missing → rulebook.
+- **Name the fields every read uses.** `GET /api/tables/<T>?fields=A,B,C`:
+  the API evaluates only those columns (every view column is a function
+  call; see `effortless-rulebook-editor`, convention 1). A list names its
+  columns, a card names what it shows, a picker asks for `Name`; only a
+  record page reads the whole row. A screen that fetches a whole table to
+  use two columns is a defect, and the one that makes a wide view slow.
 - **Provenance on the derived values.** Every calculated, lookup or
   aggregation value on the landing pages and the main pages is marked with
   the explainer (`data-er-dag="Table.Field"`, the rulebook's PascalCase

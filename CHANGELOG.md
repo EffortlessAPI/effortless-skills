@@ -7,7 +7,17 @@ release section is an ISO date.
 
 ## [Unreleased]
 
+### Changed
+- **Name the fields you read** — `effortless-rulebook-editor` (convention 1, contract and
+  integration example), `effortless-app` (a build rule), `effortless-demo-app` (the list
+  route), `effortless-sql` (new section) and `effortless-orchestrator` (guardrail 3) now all
+  say the same thing: every view column is a function call Postgres evaluates only when
+  named, so a read names the columns the screen uses — `GET /api/tables/<T>?fields=A,B,C`
+  over the generated API, named columns in SQL — and reads the whole row only on a record
+  page. Pairs with `rulebook-to-node-postgres-api`'s new `?fields=` parameter (2026-11-01).
+
 ### Added
+- **`effortless-security`** — the Security module in one skill: the `<Role>CRUD` matrix on `ERBTables`/`ERBFields` (blank inherits, empty means none, the matrix wins over permission rows), the `role_<id>` schemas, `rbac/role-types/<role>.d.ts` (per-role TypeScript types from the same cascade as the views) and the rule that a persona is made fast by hiding roll-up columns, not by caching. Pairs with `rulebook-to-rbac` (matrix + role types) and `effortless-rbac-to-postgres-policies` (2026-11-01).
 - **`effortless-seed-authoring`** — the authoring side of seeds, split from the public `effortless-seeds`:
   the add-in shape, authoring order, the four ways to verify, and the gotchas found building
   `effortless-magic-links` and `effortless-node-shopify` (view RLS bypass, restrictive approval policy,
