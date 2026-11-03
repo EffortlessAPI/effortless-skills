@@ -547,7 +547,7 @@ references a column that no longer exists.
 - [REFERENCE.md](REFERENCE.md) — long-tail material kept out of the core: Python/FastAPI middleware, the role-resolver recursion gotcha, refresh flow, multi-database tenant sharing, full cheat sheet.
 - `effortless-bases` — switch to this skill if the project's database lives on `bases.effortlessapi.com`. Bases-specific endpoints (`/auth/generate-policy`, `/auth/apply-privileges-template`) and pre-installed `app.jwt_*()` helpers replace much of Steps 4–5 here.
 - `effortless-orchestrator` — if this is an ERB project, `AppUsers` belongs in the rulebook, not in `app.app_users` by hand.
-- `effortless-sql` — for placing `auth.trusted_tenants` and `app.jwt_*()` helpers in a customization (`ERBCustomizations` row preferred, `*b-customize-*` file also works).
+- `effortless-sql` — app-side SQL around the magic-link helpers (a function calling `app.jwt_email()`, say) goes in an `ERBCustomizations` row (Name `02b-customize-functions.sql`), never a hand-edited `*b-customize-*` file (legacy; Dev only). On bases the `app.jwt_*()` helpers themselves come from bases' trusted-tenant setup, not from a row.
 
 ---
 

@@ -35,7 +35,10 @@ visible on one admin page, and impossible to fake.**
 > of promotion failures. A migration full of `DROP VIEW` / `CREATE VIEW` DDL is
 > doing by hand, fallibly, once per release, what one generated script does
 > correctly every time. **If your migration contains view or function DDL, delete
-> it and re-run the derived-layer script instead.**
+> it and re-run the derived-layer script instead.** A function or view that must be
+> hand-written is a `FunctionOverride` row in the rulebook's `ERBCustomizations`;
+> the derived script applies it on every tier (rulebook-to-postgres
+> v2026.11.02.1548 on; see `effortless-sql`).
 
 Everything below is a consequence of that sentence.
 

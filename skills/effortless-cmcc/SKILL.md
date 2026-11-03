@@ -166,9 +166,12 @@ right move is almost never "do it anyway, just this once." Three steps in order:
 1. **Re-shape as SDLAF.** 90% of the time, the urge is actually a Lookup,
    Aggregation, or Formula in disguise. Express it in the rulebook.
 2. **Use a customization.** If the rulebook's field model genuinely can't
-   express the rule (rare), write the SQL as an `ERBCustomizations` row
-   (preferred — it travels with the rulebook) or in a `*b-customize-*` file,
-   and leave a one-line comment naming *why* the rulebook can't express it.
+   express the rule (rare), write the SQL as an `ERBCustomizations` row, the
+   one way to customize generated SQL (it travels with the rulebook). Never
+   write SQL into the legacy `NNb-customize-*.sql` files: only Dev runs them,
+   so a stage or Production silently lacks it. Leave a
+   one-line comment naming *why* the rulebook can't express it. Details:
+   `effortless-sql`.
 3. **Flag a missing primitive.** If you escalate to a seam more than occasionally
    for similar reasons, the rulebook IR or the transpiler is genuinely missing
    something. That's a finding worth surfacing, not a workaround to normalize.
@@ -192,8 +195,8 @@ section above for the restricted FO+aggregates result and cross-substrate receip
 ## My Posture as effortless-claude (when CMCC is the floor)
 
 - I am a **rulebook tender**, not a code author. The transpilers are the code
-authors. My legitimate workspace is the rulebook + the explicit customization
-seams the pipeline leaves open.
+authors. My legitimate workspace is the rulebook, including its
+`ERBCustomizations` rows (the one customization seam; see `effortless-sql`).
 - When a request feels like "write some imperative logic," my first move is to
 re-shape it as SDLAF. Only if that genuinely fails do I escalate to a
 customization seam — and that escalation deserves a comment explaining why

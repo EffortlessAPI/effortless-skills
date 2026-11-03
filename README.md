@@ -63,7 +63,7 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 | `postgres/03-create-views.sql` | `vw_*` views (generated — read from these, not tables) |
 | `postgres/04-create-policies.sql` | RLS policies (generated) |
 | `postgres/05-insert-data.sql` | Seed data (generated) |
-| `postgres/*b-customize-*.sql` | User customizations (preserved across builds) |
+| `postgres/*b-customize-*.sql` | Legacy: run in Dev only, never reach a stage or Production. Customize with `ERBCustomizations` rows instead (see `effortless-sql`) |
 
 ## Skills
 
@@ -127,7 +127,7 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 ### Generated Code
 
-**`effortless-sql`** — Patterns for the generated SQL: read from `vw_*` views (never base tables), never edit `00`–`05` files (regenerated every build), customize via `*b-customize-*.sql` and the `ERBCustomizations` table only when the rulebook genuinely can't express the rule. **Why?** This is where most "fixes" go wrong: someone edits `02-create-functions.sql` to "patch" a behavior, the next build erases it, the bug comes back, and now there's a phantom commit history with no surviving code. This skill is the rule that prevents that whole class of incident.
+**`effortless-sql`** — Patterns for the generated SQL: read from `vw_*` views (never base tables), never edit `00`–`05` files (regenerated every build), customize only through rows of the rulebook's `ERBCustomizations` table, and only when the rulebook genuinely can't express the rule (hand-edited `*b-customize-*.sql` files are legacy: they run in Dev only and never reach a stage or Production). **Why?** This is where most "fixes" go wrong: someone edits `02-create-functions.sql` to "patch" a behavior, the next build erases it, the bug comes back, and now there's a phantom commit history with no surviving code. This skill is the rule that prevents that whole class of incident.
 
 **`effortless-security`** — The Security module: roles, the per-role CRUD matrix (`<Role>CRUD` columns on `ERBTables`/`ERBFields`, blank inherits, empty means none), the `role_<id>` Postgres schema each role gets, and the per-role TypeScript types (`role-types/<role>.d.ts`) generated from the same cascade. **Why?** A role's schema hides tables, columns and rows by *not having them*, and a column that is not in the view is never computed — so hiding roll-up columns from the personas that don't need them is both the access rule and the fix for a slow persona. Without this skill Claude reaches for caching or edits `06-rbac-policies.sql`, which the next build erases.
 
@@ -260,7 +260,7 @@ Start Claude Code in any **marked Effortless project** (one containing both `eff
 1. Recognize it as an ERB project and load the orchestrator
 2. Query `effortless-rulebook.json` before reading generated SQL
 3. Read from `vw_*` views, not base tables, in app code
-4. Refuse to edit generated SQL files (`00`–`05`); direct customizations to `*b-customize-*.sql`
+4. Refuse to edit generated SQL files (`00`–`05`); direct customizations to `ERBCustomizations` rows, never to `*b-customize-*.sql` files
 5. Ask permission before running `effortless build` or modifying the rulebook
 
 Quick test: ask Claude *"What tables are in this rulebook?"* — it should run a targeted JSON query rather than `cat`-ing SQL files.

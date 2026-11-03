@@ -289,8 +289,8 @@ For the catalog of public transpilers and their source repos, see `effortless-ec
 > See [../../MAGIC_LINKS_REFACTOR.md](../../MAGIC_LINKS_REFACTOR.md) §5 for the canonical v0.2 magic-links contract.
 
 New build modes from plan 04 (rulebook-to-postgres):
-- Default `check-don't-drop` (transpiler param `mode=check-add`): re-runs are safe; preserves data; runs all `NN[b]?-*.sql` files in lex order; re-runs `install-magic-links.sql` first. (NOTE: full SQL emission for check-add is Phase 2.5; the init-db.sh-side changes are live.)
+- Default `check-don't-drop` (transpiler param `mode=check-add`): re-runs are safe; preserves data; runs the `NN-*.sql` files in lex order (in local Dev also any legacy lettered `NNb-*.sql` files on disk; see below); re-runs `install-magic-links.sql` first. (NOTE: full SQL emission for check-add is Phase 2.5; the init-db.sh-side changes are live.)
 - Nuclear (`drop-all=true`): localhost only; the transpiler refuses for stage in {staging, prod}.
-- `.sql.disabled` skip: rename `04b-customize-policies.sql` → `.sql.disabled` to opt out for one build; init-db.sh logs `[SKIP]`.
+- `.sql.disabled` skip: rename `04b-customize-policies.sql` → `.sql.disabled` to opt out for one build; init-db.sh logs `[SKIP]`. Local Dev only: hand-edited `NNb-customize-*.sql` files are legacy and never reach a stage or a bases base; customizations are `ERBCustomizations` rows (see `effortless-sql`).
 
 Always run with `check-don't-drop` against any base you didn't create in the same conversation. Nuclear is opt-in via the user typing it explicitly.

@@ -127,7 +127,7 @@ cd ..
 effortless -install rulebook-to-postgres -i ./effortless-rulebook/effortless-rulebook.json
 ```
 
-If you ever see SQL artifacts (`0*.sql`, `init-db.sh`, `function-overrides/`, etc.) at the project root, the cause is almost always that `-install` was run from the wrong cwd. The fix is to redo the install from inside `/postgres/`, not to keep moving files by hand.
+If you ever see SQL artifacts (`0*.sql`, `init-db.sh`, etc.) at the project root, the cause is almost always that `-install` was run from the wrong cwd. The fix is to redo the install from inside `/postgres/`, not to keep moving files by hand.
 
 ## Known install-time annoyance — silent registration failure
 
@@ -143,7 +143,7 @@ When this happens, the transpiler **does not get added to `effortless.json`** ev
 
 `effortless build` regenerates files under `effortless-rulebook/` and `postgres/` and **drops + re-inits** the local Postgres DB. Anything hand-edited inside those folders WILL be overwritten.
 
-The discipline below is what makes `git diff` a trustworthy view of what the build changed — letting the user keep ontology changes (rulebook → generated SQL) cleanly separable from hand-written code (app, scripts, customizations) in their own commits.
+The discipline below is what makes `git diff` a trustworthy view of what the build changed — letting the user keep ontology changes (rulebook → generated SQL) cleanly separable from hand-written code (app, scripts) in their own commits. SQL customizations are `ERBCustomizations` rows in the rulebook, so they go with the rulebook change (see `effortless-sql`).
 
 For every `effortless build` **after** the one-time setup commits documented below in Steps 0-6:
 
@@ -367,7 +367,7 @@ effortless -install rulebook-to-postgres -i ../effortless-rulebook/effortless-ru
 cd ..
 ```
 
-Verify: `postgres/00-bootstrap.sql` (and the rest of the `0*.sql` set, plus `init-db.sh` and `function-overrides/`) exists, and `effortless.json` has a `RelativePath: /postgres` entry for `rulebooktopostgres`.
+Verify: `postgres/00-bootstrap.sql` (and the rest of the `0*.sql` set, plus `init-db.sh`) exists, and `effortless.json` has a `RelativePath: /postgres` entry for `rulebooktopostgres`. A `function-overrides/` folder appears only when the rulebook has override rows (`FunctionOverride` or `SchemaOverride`) in `ERBCustomizations`; it is generated from them, never edited (see `effortless-sql`).
 
 If the install printed a `startIndex cannot be larger than length of string` error and `effortless.json` is missing the `rulebooktopostgres` entry, append it by hand (this is the "silent registration failure" called out earlier):
 

@@ -134,8 +134,11 @@ The Stage-gating block:
 
 - **Default `check-don't-drop`** (a.k.a. `mode=check-add` in the
   transpiler params): safe to run repeatedly; preserves data; adds
-  missing tables/columns; runs all `NN[b]?-*.sql` scripts in lex
-  order; re-runs `install-magic-links.sql`. **NOTE:** the
+  missing tables/columns; runs the `NN[b]?-*.sql` files on disk in lex
+  order; re-runs `install-magic-links.sql`. The lettered
+  `NNb-customize-*.sql` files are legacy and reach local Dev only (a
+  stage or base never gets them); customizations are `ERBCustomizations`
+  rows (see `effortless-sql`). **NOTE:** the
   full check-add SQL emission is tracked as Phase 2.5 in
   `magic-links-refactor/MASTER-PLAN.md`. The init-db.sh changes
   (glob discovery, `.disabled` skip, bases-URL refusal,
@@ -148,6 +151,10 @@ The Stage-gating block:
 
 - **`.sql.disabled` skip** — rename `04b-customize-policies.sql`
   → `04b-customize-policies.sql.disabled` to opt out for one build.
+  Affects local Dev only: the on-disk `04b-customize-policies.sql` is a
+  legacy file that never reaches a stage or a bases base. A row named
+  `04b-customize-policies.sql` still rides `update-effortless-schema.sql`;
+  renaming the file does not opt it out.
 
 Rule: Claude must always run with the safe default
 (`check-don't-drop`) against any base it didn't create in the same
@@ -248,12 +255,14 @@ This is enforced as a settings.json hook in the project template (see
 
 ## §11 RLS policy lifecycle against bases
 
-Direct corollary of §4 + §9: any RLS policy change destined for a
-bases base must be authored as a migration file, applied to localhost
-via `apply-migration.sh`, smoke-tested, then promoted to bases via
-the same wrapper. Skills must NOT bypass this by editing
-`04b-customize-policies.sql` and rebuilding — that path drops
-policies on bases. Migration only.
+Policies are the exception to §4 + §9's migration rule: an RLS policy change destined for a
+bases base starts in the rulebook. Policies are rebuilt by the
+derived/RBAC layer; never hand-migrate a policy. The first apply is
+the generated tables and data plus `update-effortless-schema.sql`
+(which carries the function and view override rows and the `02b`-`05b`
+rows; see `effortless-sql` for what it does not carry). Skills must NOT edit
+`04b-customize-policies.sql` (legacy, local Dev only): its SQL never
+reaches bases. See `effortless-sql` and `effortless-bases`.
 
 ## §12 Capture the magic-links tenant API key on bootstrap
 

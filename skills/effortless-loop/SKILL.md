@@ -94,7 +94,7 @@ Each of these "works" in the moment and then quietly costs you later. Knowing
 
 - **Writing a migration to make a schema change persist.** On local-dev ERB projects, `init-db.sh` drops and recreates the DB on every build — so a migration file / `migrations` tracking table / incremental `ALTER TABLE` would run once and then get wiped on the next build. The change *appears* to stick until the next rebuild. The loop-friendly version: edit the hub → `effortless build`. (Bases-hosted DBs are the one exception, and even there schema still originates in the hub — see `effortless-workflow` and `effortless-bases`.)
 - **Reimplementing a rule in the client** — e.g. computing `isStopped = customer.color === 'Red'` in JS instead of reading `customer.is_stopped` from the view. The rule now lives in two places; the next time it changes in the hub, the client silently goes wrong. The loop's whole value is one-place-only.
-- **Hand-editing generated files** — `postgres/01-05*.sql`, `dotnet/.../BaseClasses/*.cs`, etc. Edits are fine for testing a hypothesis, but `effortless build` overwrites them. For persistence: edit the hub. For substrate-specific SQL the hub's field model can't express, use a customization — an `ERBCustomizations` row (preferred) or a `*b-customize-*` file, which is never overwritten once created (see `effortless-sql`).
+- **Hand-editing generated files** — `postgres/01-05*.sql`, `dotnet/.../BaseClasses/*.cs`, etc. Edits are fine for testing a hypothesis, but `effortless build` overwrites them. For persistence: edit the hub. For substrate-specific SQL the hub's field model can't express, add an `ERBCustomizations` row to the rulebook, the one way to customize generated Postgres SQL. Never write SQL into a `postgres/NNb-customize-*.sql` file: those are legacy, only Dev runs them, and they never reach a stage or Production (see `effortless-sql`).
 - **Adding columns/fields directly in SQL or C#** — same mechanic. Changes that originate in the hub survive every build; changes in generated files don't.
 - **Reasoning from a stale build** — if you've changed the hub since the last `effortless build`, the generated code on disk is out of date. Rebuild before drawing conclusions from it.
 - **Skipping the build and editing generated SQL "just this once."** There is no "just this once." The next `effortless build` erases it and the bug returns. The "just this once" framing is itself the tell — if it sounds reasonable, you've already taken the wrong turn. Always go around the loop.
@@ -106,7 +106,7 @@ Each of these "works" in the moment and then quietly costs you later. Knowing
 - `effortless-workflow` — editing the hub directly (default) vs. an optional connected input spoke.
 - `effortless-pipeline` — the mechanics of `effortless build` itself.
 - `effortless-airtable` / `effortless-airtable-omni` — *how* to make the rule change via the Airtable spoke, only if the project opted in. For rulebook-direct (the default), just edit the JSON.
-- `effortless-sql` — verifying step 3's generated output and using `*b-customize-*` overrides correctly.
+- `effortless-sql` — verifying step 3's generated output and customizing it with `ERBCustomizations` rows.
 
 ## TL;DR for future-you
 

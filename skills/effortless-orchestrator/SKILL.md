@@ -82,7 +82,7 @@ Inside an ERB project, the transpilers are the code authors. I'm a **rulebook
 tender** — the places where my work persists are:
 
 1. The **hub** (`effortless-rulebook.json` directly, or via any connected input spoke — Airtable, reverse-sync, hand-edits with permission).
-2. The **customization seams** — `ERBCustomizations` rows in the rulebook (preferred) and the hand-edited `*b-customize-*` files — and the **application layer** that consumes the generated views.
+2. The **customization seam**: `ERBCustomizations` rows in the rulebook, the one way to customize generated SQL (the hand-edited `*b-customize-*` files are legacy: their SQL runs in Dev only and never reaches a stage or Production; see `effortless-sql`), and the **application layer** that consumes the generated views.
 
 Everything else — generated `00`-`05` SQL, generated Python/Go/docs — is
 mechanical output. It's fine to read or even edit those files to test a
@@ -94,7 +94,7 @@ patching the artifact directly is at best temporary.
 When a request feels like "write some imperative business logic," the first
 move is to ask whether it's actually a Lookup, Aggregation, or Formula in
 disguise (usually: yes — see `effortless-cmcc`). If that genuinely doesn't fit,
-a customization seam is the right escape hatch — with a short comment
+an `ERBCustomizations` row is the right escape hatch — with a short comment
 explaining why the rulebook can't express the rule.
 
 Staying on the declarative side of the line isn't stylistic preference; it's
@@ -130,10 +130,13 @@ without explicit override:
    generated SQL (00-05) into context. If you need to know view columns, run
    `psql -c "\d vw_tablename"`.
 2. **NEVER edit generated files.** Files `00`-`05` in `postgres/` are
-   overwritten on every build. `00b`-`05b` are the customization seams —
-   appropriate for infrastructure the hub doesn't model (auth tenants, JWT
-   helpers, role GRANTs). For business entities, the hub is usually a better
-   fit.
+   overwritten on every build. Custom SQL goes in `ERBCustomizations` rows,
+   never in the legacy `*b-customize-*` files (Dev alone runs them, so their
+   SQL silently never reaches a stage or Production; see `effortless-sql`).
+   Rows suit SQL the field model can't express (JWT helper functions, role
+   GRANTs, a hand-tuned function). Tables and columns are always rulebook
+   fields, and an index row (`01b`) reaches Dev only. For business entities,
+   the hub is usually a better fit.
 3. **Always read from `vw_*` views; always write to base tables directly.**
    Views include calculated/lookup/aggregation fields; base tables only have
    raw columns, and the views aren't updatable anyway. **And name the
@@ -318,7 +321,7 @@ Sub-skills load automatically based on what you're doing:
 | `effortless-xlsx-to-rulebook` | Porting an Excel/Sheets spreadsheet into a rulebook — the syntax gaps (1-hop-only being the big one) |
 | `effortless-workflow` | Editing the hub — directly, via Airtable, or via reverse-sync; permission checkpoints |
 | `effortless-pipeline` | `effortless.json`, transpilers, build mechanics |
-| `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `*b-customize-*` |
+| `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `ERBCustomizations` rows (the `*b-customize-*` files are legacy) |
 | `effortless-security` | Roles and who sees what — the `<Role>CRUD` matrix, `role_<id>` schemas, per-role `.d.ts` types, hiding columns to make a persona fast |
 | `effortless-airtable` | *(only if Airtable-connected)* Airtable REST API — scalar fields, CRUD |
 | `effortless-airtable-omni` | *(only if Airtable-connected)* OMNI via Playwright — formulas, lookups, rollups, new tables |

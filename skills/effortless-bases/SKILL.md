@@ -24,7 +24,7 @@ The Effortless rulebook, the schema generation, the migration discipline, and th
 
 ## CRITICAL DISTINCTION — bases vs. local-dev
 
-This skill applies **only** to `bases.effortlessapi.com`-hosted databases. Bases is the **one and only ERB deployment shape that uses migrations** — because the DB is shared/persistent and cannot be dropped + recreated. Ongoing schema changes go through `postgres/apply-migration.sh`.
+This skill applies **only** to `bases.effortlessapi.com`-hosted databases. Bases is the **one and only ERB deployment shape that uses migrations** — because the DB is shared/persistent and cannot be dropped + recreated. Ongoing schema changes go forward by re-running `update-effortless-schema.sql`, plus a hand-written migration through `postgres/apply-migration.sh` for tables and columns only.
 
 **Local-dev ERB projects work the opposite way.** Local Postgres is regenerated from scratch on every `effortless build` via `init-db.sh`. They have **no `migrations/` folder, no migrations tracking table, no incremental deltas**. Schema changes there go through the rulebook → `effortless build` — see `effortless-workflow` "NO MIGRATIONS" section.
 
@@ -174,15 +174,14 @@ For a **brand-new** base (clone or empty), apply your generated SQL directly onc
 ```bash
 # Option A — drive psql by hand.
 ADMIN_URL="postgresql://<admin>:<pw>@bases.effortlessapi.com:5432/$DB_NAME"
+# Generated tables and data, then update-effortless-schema.sql (functions,
+# views, the override rows and the 02b-05b rows; not the 01b row: see
+# effortless-sql, "The 01b gap"). Never the hand-edited
+# postgres/NNb-customize-*.sql files: they are legacy, see effortless-sql.
 for f in postgres/01-drop-and-create-tables.sql \
-         postgres/01b-customize-schema.sql \
-         postgres/02-create-functions.sql \
-         postgres/02b-customize-functions.sql \
-         postgres/03-create-views.sql \
-         postgres/03b-customize-views.sql \
          postgres/05-insert-data.sql \
-         postgres/05b-customize-data.sql ; do
-    [ -f "$f" ] && psql "$ADMIN_URL" -v ON_ERROR_STOP=1 -f "$f"
+         postgres/update-effortless-schema.sql ; do
+    psql "$ADMIN_URL" -v ON_ERROR_STOP=1 -f "$f"
 done
 
 # Option B — `apply-migration.sh` wraps the same in a confirm prompt.
@@ -194,7 +193,8 @@ For a base cloned from a template, the generated `01-drop-and-create-tables.sql`
 
 **After the first apply, switch to the migration discipline** for any further schema changes:
 
-- Hand-write idempotent forward migrations under `postgres/migrations/NNNN-*.sql`.
+- First re-run the current `update-effortless-schema.sql`: it applies the rulebook and its function, view, override and `02b`-`05b` rows (a hand-written function is a `FunctionOverride` row; see `effortless-sql`). Not the `01b-customize-schema.sql` row: an index or constraint there has no route to the base yet, so tell the owner before relying on one. Only what fits none of these goes in a migration.
+- Hand-write idempotent forward migrations under `postgres/migrations/NNNN-*.sql` (tables and columns only, never view or function DDL).
 - Apply via `postgres/apply-migration.sh`. The wrapper applies to `$LOCAL_DATABASE_URL` first, prompts you to verify the app still works, then applies to `$BASES_DATABASE_URL` after you type the literal phrase `apply to bases`.
 - Never run `effortless build` / `init-db.sh` against a bases base — both have safety refusals, but the discipline is yours to keep.
 
@@ -295,16 +295,13 @@ DB_NAME=$(curl -sS "$BASES/bases/$BASE_ID/details" -H "Authorization: Bearer $JW
 
 DATABASE_URL="postgresql://$ADMIN_USER:$ADMIN_PW@bases.effortlessapi.com:5432/$DB_NAME"
 
-# 4. Apply schema (idempotent generated SQL — CREATE IF NOT EXISTS + INSERT ON CONFLICT).
+# 4. Apply schema: generated tables and data, then update-effortless-schema.sql
+#    (functions, views, override and 02b-05b rows; not the 01b row).
+#    Never the legacy NNb-customize files.
 for f in postgres/01-drop-and-create-tables.sql \
-         postgres/01b-customize-schema.sql \
-         postgres/02-create-functions.sql \
-         postgres/02b-customize-functions.sql \
-         postgres/03-create-views.sql \
-         postgres/03b-customize-views.sql \
          postgres/05-insert-data.sql \
-         postgres/05b-customize-data.sql ; do
-  [ -f "$f" ] && psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+         postgres/update-effortless-schema.sql ; do
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
 done
 
 # 5. Wire DATABASE_URL into your deploy target (e.g. a Control Plane secret)
@@ -399,7 +396,7 @@ JWTs minted at `/api/tenants/<shared>/verify-code` verify cleanly on both DBs. N
 - **Reusing one tenant across *unrelated* apps.** One tenant per product surface.
 - **Letting the anon role read `auth.trusted_tenants`.** Verify with `GET .../auth/privileges` — `securityCheck.anonCanReadTrustedTenants` must be `false`.
 - **Running `effortless build` / `init-db.sh` against a bases URL.** The transpiler's generated `init-db.sh` greps for `bases.effortlessapi.com` in `$DATABASE_URL` and refuses with exit 2. No escape hatch.
-- **Editing `04b-customize-policies.sql` and rebuilding to change RLS on bases.** That drops policies on the next rebuild. RLS for bases lives in migration files.
+- **Hand-migrating an RLS policy on bases, or editing `04b-customize-policies.sql`.** Policies are rebuilt by the derived/RBAC layer, so a hand-written policy is dropped, and the legacy file never reaches the base. Change the rulebook's roles and permissions (`effortless-security`) instead.
 
 ---
 
@@ -422,9 +419,9 @@ Before any change to a bases base: fetch `Stage` via `GET {BASES_API}/api/bases/
 - `Stage = staging`: state changes, one confirmation, then proceed.
 - `Stage = dev`: proceed normally; summarize at end of turn.
 
-Never run `effortless build` / `init-db.sh` against a bases base. Never `DROP` without explicit `--i-mean-it`. Migrations only, via `postgres/apply-migration.sh` (per the bases repo's BASES_MIGRATION_GUIDE.md).
+Never run `effortless build` / `init-db.sh` against a bases base. Never `DROP` without explicit `--i-mean-it`. Schema changes go forward by re-running the current `update-effortless-schema.sql`; a hand-written migration (tables and columns only) goes through `postgres/apply-migration.sh` (per the bases repo's BASES_MIGRATION_GUIDE.md).
 
-RLS policy lifecycle (§11): RLS changes for bases are MIGRATION FILES only. Never edit `04b-customize-policies.sql` and rebuild — that drops policies on bases.
+RLS policy lifecycle (§11): policies on a base are rebuilt by the derived/RBAC layer. Never hand-migrate a policy, and never edit the legacy `04b-customize-policies.sql`.
 
 ---
 
@@ -449,5 +446,5 @@ If down, run `bash magic-links-refactor/test-env/scripts/dev-stack-up.sh`.
 
 - `effortless-magic-links` — the generic magic-links flow for any Postgres app (when the DB is NOT on bases.effortlessapi.com).
 - `effortless-orchestrator` — for "AppUsers belongs in the rulebook, not in `app.app_users` by hand".
-- `effortless-sql` — for placing `auth.trusted_tenants` and `app.jwt_*()` helpers in a customization (`ERBCustomizations` row preferred, `*b-customize-*` file also works).
+- `effortless-sql` — app-side SQL that builds on the helpers (a function calling `app.jwt_email()`) goes in an `ERBCustomizations` row, never a hand-edited `*b-customize-*` file (legacy). The `app.jwt_*()` helpers themselves come from the trusted-tenant setup endpoint above.
 - `effortless-setup-postgres` — if you're standing up a brand-new local Postgres ERB project first.

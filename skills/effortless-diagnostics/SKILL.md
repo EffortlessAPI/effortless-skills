@@ -80,6 +80,6 @@ rows, _ := db.Query(`
 ## See also
 
 - `effortless-query` — for the rulebook one-liners these diagnostics rely on.
-- `effortless-sql` — for the "always read from `vw_*`" rule and the two customization mechanisms.
+- `effortless-sql` — for the "always read from `vw_*`" rule and the one way to customize generated SQL (`ERBCustomizations` rows).
 - `effortless-conventions` — for the DAG / FK rules that define what "broken" means.
 - `effortless-workflow` — for the input-spoke options when a diagnostic finds a missing field (hub-direct, Airtable, reverse-sync) and why those persist while generated-file edits don't.

@@ -241,10 +241,10 @@ Aggregations go the **other** way: on `Things` you might write
 Calculated fields on Widgets that need a related field reference the
 lookup (`{{ThingPrice}}`), not the related entity directly.
 
-**Cross-table SQL is forbidden in customize files.** If a relationship
+**Cross-table SQL is forbidden in SQL customizations.** If a relationship
 you need isn't expressible as a rulebook lookup, the answer is to add
-the lookup to the rulebook — never to write a `LEFT JOIN` in
-`03b-customize-views.sql` or a cross-table subquery in app code. The
+the lookup to the rulebook — never to write a `LEFT JOIN` in an
+`ERBCustomizations` row or a cross-table subquery in app code. The
 whole point of `vw_`* is that it's join-free.
 
 ## Pitfalls baked into the rulebook generator
@@ -269,13 +269,16 @@ These are non-obvious things that will bite if you don't plan for them:
    `"2026-05-01 00:00:00-05"`, not `"2026-05-01"`). Workaround: add
    a raw `<Thing>Key` field, set it server-side to the desired slug,
    and make `Name = ={{<Thing>Key}}`.
-4. **Don't put `LEFT JOIN` in a `Views` ERBCustomizations row.** If a lookup
+4. **Don't put `LEFT JOIN` in an ERBCustomizations row.** If a lookup
   isn't resolving, the bug is in the rulebook FK pattern (almost
    always: FK column holds a `Name` value instead of a `<Entity>Id`
-   value), not something to paper over with a JOIN view. The
-   `customize-`* files are for additive views/columns/functions that
-   honor the join-free `vw_`* discipline — not an escape hatch for
-   broken lookups. Same goes for cross-table subqueries in app code:
+   value), not something to paper over with a JOIN view.
+   `ERBCustomizations` rows (the only way to customize the generated
+   SQL; hand-edited `NNb-customize-*.sql` files are legacy and never
+   reach a stage or Production, see effortless-sql) are for additive
+   views/functions that honor the join-free `vw_`* discipline, not an
+   escape hatch for broken lookups. New columns belong in the rulebook.
+   Same goes for cross-table subqueries in app code:
    if you're writing `WHERE x IN (SELECT y FROM other_view)` to scope
    results, add a (possibly chained) lookup column instead and filter
    on that.

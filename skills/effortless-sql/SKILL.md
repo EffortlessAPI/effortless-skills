@@ -2,8 +2,8 @@
 name: effortless-sql
 description: >
   ERB-generated SQL — read vw_* views vs write base tables, generated files 00–05,
-  *b-customize-* seams, calc_*/get_* functions, view structure, ERBCustomizations. ERB
-  projects only.
+  ERBCustomizations rows (the one way to customize; legacy *b-customize-* files never
+  reach a stage), calc_*/get_* functions, view structure. ERB projects only.
 audience: customer
 ---
 
@@ -14,9 +14,11 @@ audience: customer
 > them. Edits there are not "forbidden"; they just don't survive the next
 > build. To make a change stick, edit the hub (`effortless-rulebook.json`,
 > via whichever input spoke you prefer). If the hub genuinely can't express
-> what you need, use a customization: an `ERBCustomizations` row (preferred —
-> the SQL travels with the rulebook) or a hand-edited `*b-customize-*.sql` file.
-> Neither is for defining tables or columns. You also rarely need to read the
+> what you need, add an `ERBCustomizations` row: the SQL travels with the
+> rulebook and `update-effortless-schema.sql` applies it on every stage (except
+> the `01b` row). Never a hand-edited `*b-customize-*.sql` file: that is legacy,
+> it runs in Dev only, and a Publish never carries it. A row is
+> not for defining tables or columns either. You also rarely need to read the
 > generated SQL into context — `psql -c "\d vw_<table>"` gives you the same
 > view structure for ~zero tokens.
 
@@ -170,55 +172,83 @@ ERB projects. Migrations that carry hundreds of lines of view DDL are doing, by
 hand and fallibly, work that one generated script does correctly every time.
 A migration should contain **only** additive table/column changes.
 
-### Two customization mechanisms
+### Customizing the generated SQL: `ERBCustomizations` rows, one way
 
-There are two, and they are not the same thing. Both work; one is the direction
-the format is going.
+When the hub cannot express something, the SQL goes in a **row of the rulebook's
+`ERBCustomizations` table** (details below). That is the one mechanism. The SQL
+travels **with** the rulebook, so it is carried by `ERBVersions`, survives
+relocation and keeps the rulebook a complete description of the system. Where a
+row reaches:
 
-#### `*b-customize-*.sql` files — hand-edited, on-disk
+- **A stage, production, a restored copy:** `update-effortless-schema.sql` runs
+  the rows (except the `01b` row: see the gap below).
+- **Dev:** `reset-rulebook-db.sh` does not run `update-effortless-schema.sql`. It
+  runs the files on disk: override rows through `postgres/function-overrides/`
+  (rewritten every build), every other row through the lettered file seeded from
+  it, which is written **once** and never overwritten. So after you change such
+  a row, delete its seeded file; the next build writes it again from the row.
 
-Emitted **once**, as an empty header stub, and only when asked. After that the
-build never touches them: they carry `overwrite: "Never"`, so a rebuild skips a
-file that already exists. **You edit them by hand and your edits persist.**
+#### Legacy: `*b-customize-*.sql` files. Do not write SQL into them.
 
-`reset-rulebook-db.sh` runs the numbered scripts in order, picking up each `NNb-`
-file after its `NN-` counterpart:
+Older projects carry hand-edited `postgres/NNb-customize-*.sql` files
+(`01b-customize-schema` … `05b-customize-data`). They are the **legacy** way
+(owner, 2026-11-02): imprecise, outside the rulebook, and hard to represent. The
+same file names are also where the build seeds a row's copy for Dev, which is
+why a hand edit there looks like it works. Know what they do and do not do:
 
-```
-00-bootstrap → 01-drop-and-create → 01b-customize-schema
-             → 02-create-functions → 02b-customize-functions
-             → 03-create-views     → 03b-customize-views
-             → 04-create-policies  → 04b-customize-policies
-             → 05-insert-data      → 05b-customize-data
-```
+- **Dev runs them**, each after its `NN-` counterpart (`reset-rulebook-db.sh`, or
+  the editor's Dev build, which also lays a project's own lettered `NNx-*.sql`
+  and `function-overrides/*.sql` over the generated SQL).
+- **A Publish never carries them.** It is a fresh rulebook-to-postgres build from
+  the rulebook alone, and a stage moves forward by `update-effortless-schema.sql`,
+  which reads the rows, not the files. (A stage made by copying Dev's database
+  starts with whatever the files built except RLS policies, which the copy leaves
+  out, and keeps what a release does not drop: helpers not named `calc_*`/`get_*`,
+  views not named `vw_*` that depend on none of those, indexes, data. Do not rely
+  on that.) Freuman's Standards Based Grading, 2026-11-02: a
+  hand-written function in `02b-customize-functions.sql` ran in Dev and
+  Production ran the generated one.
+- **The Loops release refuses them** (branch `release-refuses-legacy-customize`
+  of loops.effortlessapi.com until merged): any lettered `NNx-*.sql` whose SQL,
+  comments removed, differs from what the rows seed into it, and any
+  `function-overrides/*.sql` the rulebook does not generate. It names the file
+  and its first SQL line. A comments-only file, or an exact seeded copy of its
+  row, passes.
 
-| File | Runs after | Holds |
-|---|---|---|
-| `01b-customize-schema.sql` | `01` | indexes, FK constraints |
-| `02b-customize-functions.sql` | `02` | hand-written functions |
-| `03b-customize-views.sql` | `03` | hand-written views |
-| `04b-customize-policies.sql` | `04` | RLS beyond the generated set |
-| `05b-customize-data.sql` | `05` | idempotent seed data |
+**When you find SQL in one, move it out**, one statement at a time:
 
-#### `ERBCustomizations` rows — in the rulebook (the new way)
+| Found in | Becomes |
+|---|---|
+| `02b` / `03b`: a replacement for a generated `calc_*`/`get_*` function or `vw_*` view | a `FunctionOverride` row (below) |
+| `02b`: a new helper function | the row named `02b-customize-functions.sql` |
+| `03b`: a new view | the row named `03b-customize-views.sql` |
+| `04b`: an RLS policy or GRANT | the row named `04b-customize-policies.sql` (or the RBAC policy layer) |
+| `05b`: idempotent seed data | the row named `05b-customize-data.sql` (or a static rulebook table) |
+| `01b`: an index or constraint | ask the owner (see the `01b` gap); a table or column is a rulebook field; an FK comes from a relationship field |
 
-The same SQL, stored as rows in the rulebook's `ERBCustomizations` table and
-emitted into their own folder, each running as a separate script ordered by its
-sort position. Prefer this: the SQL travels **with** the rulebook, so it is
-carried by `ERBVersions`, survives relocation, and keeps the rulebook a complete
-description of the system.
+**First check whether the rulebook already says it.** A legacy override often
+patched a formula the rulebook has since learned to express; then the right move
+is to delete it, not to freeze its old logic in a row. Compare the two on real
+data before deciding (Freuman's `most_recent_score` override matched the
+rulebook's own rule on every row, so it was deleted). Then:
 
-#### What belongs in either — and what never does
+- SQL that became a **named row** (`02b`-`05b`): **delete the file**. The next
+  build seeds it from the row, and the release accepts that exact copy. A
+  header-only file left behind is what Dev would run, without the SQL.
+- SQL that became an **override row**, or was deleted: leave a comments-only file
+  (or delete it); nothing seeds it unless a row has that name.
 
-Both mechanisms are for SQL the rulebook's **field model** cannot express:
-indexes, FK constraints, hand-tuned functions, materialized views, RLS policies,
-role GRANTs, idempotent seed data.
+#### What belongs in a row, and what never does
 
-> **Neither is a place to define tables or add columns.** A table created in
-> `01b`, or in a Schema customization, gets **no view, no calculated fields, no
-> RuleSpeak and no Explainer DAG** — it opts out of everything ERB does, on
-> exactly the data that most needs it. Tables and columns are rulebook tables
-> and fields, always. `01b` in particular should hold little more than indexes.
+Rows are for SQL the rulebook's **field model** cannot express: hand-tuned
+functions, extra views, materialized views, RLS policies, role GRANTs, idempotent
+seed data, and (with the `01b` gap in mind) indexes.
+
+> **A row is not a place to define tables or add columns.** A table created in
+> the `01b-customize-schema.sql` row (or a legacy `01b` file) gets **no view, no
+> calculated fields, no RuleSpeak and no Explainer DAG**: it opts out of
+> everything ERB does, on exactly the data that most needs it. Tables and columns
+> are rulebook tables and fields, always.
 
 ### ERBCustomizations — the rulebook holds the whole model
 
@@ -240,14 +270,73 @@ declarative part (tables, formulas) **and** the Postgres-specific part
 }
 ```
 
-`CustomizationType`: `Schema` · `Functions` · `Views` · `RLS` · `Data`, plus the
-per-object overrides `FunctionOverride` and `SchemaOverride` — which replace a
-**single** generated function or table definition rather than appending a whole
-file. Prefer an override to a wholesale custom file: it keeps the rest of the
-object following the rulebook automatically.
+**How rulebook-to-postgres reads a row** (its `Program.cs`; get this exactly
+right, a wrong row is ignored by the build without a warning):
+
+- **An override row** (`CustomizationType` `FunctionOverride` or `SchemaOverride`,
+  handled the same) replaces **one** generated object. Its `SQLCode` does the
+  replacing: a `CREATE OR REPLACE` with the generated object's **exact name and
+  signature**, run after the generated one (a different signature makes an
+  overload, and the generated function stays in use). Name the row after that
+  object (`calc_x`, `vw_x`): `Name` is its key (two rows with one `Name`, the last
+  wins), its label in the script and its `function-overrides/` file name, and for
+  a table override it is the table that gets dropped. Anything up to a first `:`
+  in `Name` is stripped. `SQLTarget` is not read. The kind comes from keywords in
+  the first non-comment line of `SQLCode`, tested in this order: `POLICY` or `ROW
+  LEVEL SECURITY`, then `FUNCTION`/`PROCEDURE`, then `VIEW`, then `TABLE`; no
+  keyword counts as a function. (So a `calc_x_policy_y` function counts as a
+  policy.)
+- **Any other row is routed by its `Name`, which must be a file name**:
+  `02b-customize-functions.sql`, `03b-customize-views.sql`,
+  `04b-customize-policies.sql`, `05b-customize-data.sql` or
+  `01b-customize-schema.sql`. Use exactly these: some old aliases build the Dev
+  file but miss the update script (`04b-customize-rls.sql`,
+  `03d-customize-policies.sql`), and when two aliases exist only the first is
+  used. `CustomizationType` is not read for these. `SQLTarget` must be empty or
+  `Postgres`. **A row with any other `Name` is ignored by the build** (the build
+  report lists it, with no warning).
+
+Prefer an override to adding to a whole file: it keeps the rest of the object
+following the rulebook automatically.
+
+**The `01b` gap.** `update-effortless-schema.sql` runs the `02b`, `03b`, `04b`
+and `05b` rows (steps 6, 8, 9 and 10 below) but has **no section for
+`01b-customize-schema.sql`**. That row reaches only Dev, through its seeded file.
+So nothing designated carries a hand-written index to a stage. Ask the owner how
+to carry one (an additive migration, or an idempotent `CREATE INDEX IF NOT
+EXISTS` in the `05b` row) before relying on it in production. FK constraints
+come from rulebook relationships (`99-fk-constraints.sql`), not from a row.
+
+**Hard-coding a function = one `FunctionOverride` row.** When a generated
+`calc_*`/`get_*` function (or a `vw_*` view) is too slow or needs a hand-written
+form, add a row: `CustomizationType` `FunctionOverride`, `Name` the object it
+replaces (`calc_x` or `vw_x`), `SQLCode` the full `CREATE OR REPLACE ...` with
+the same signature. Then `effortless build`. Since rulebook-to-postgres
+**v2026.11.02.1548** the row rides in `update-effortless-schema.sql` (section 8b,
+after the generated functions and views, functions before views, inside the
+transaction), so it follows the project **everywhere its database is
+installed**: a stage's Publish, production, a restored copy; Dev gets it from
+`function-overrides/`. Before that version only `function-overrides/` had it,
+which `reset-rulebook-db.sh` alone runs, and a Publish quietly put the slow
+generated function back (a 100x slower class page in Production, 2026-11-02).
+Rules that follow from it:
+
+- Never edit `postgres/function-overrides/*.sql`: they are regenerated from the
+  rows. Edit the row.
+- **A broken override fails differently in Dev and on a stage.** Dev's reset only
+  warns (`[WARN] … failed (non-fatal)`) and keeps the generated version; on a
+  stage it rolls the whole script back, with the error's line just below
+  `-- Override (<kind>): <Name>`. So a broken override shows first at Publish.
+  Fix the row.
+- An override is a COPY of a rule: when the formula it replaces changes, change
+  the row too (say so in its `SQLCode` header).
+- Only function and view overrides ride the derived script. A **table** override
+  (it drops the table) is a migration's job, and a **policy** override is listed,
+  not applied, because policies are rebuilt after the derived script. Both run
+  only from `function-overrides/` in Dev's reset.
 
 **A row whose `SQLCode` is only a boilerplate header comment is dead weight** —
-it causes an empty `*b-` file to be emitted and implies a customization that
+it causes a comments-only `*b-` file to be seeded and implies a customization that
 doesn't exist. Delete those rows.
 
 #### Hand-maintained objects (the exception, not the default)
@@ -286,11 +375,14 @@ One generated file that brings any database in line with the current rulebook
    function may call another; alphabetical order hits dependency errors)
 4. Upsert data from tables marked static (reference data that is part of the model)
 5. Recreate all `calc_*` functions
-6. Re-run `Functions` customizations from ERBCustomizations
+6. Re-run the `02b-customize-functions.sql` row from ERBCustomizations
 7. Recreate all `vw_*` views
-8. Re-run `Views` customizations
-9. Re-run `RLS` customizations — **and the RBAC policy layer** (see below)
-10. Re-run `Data` customizations
+8. Re-run the `03b-customize-views.sql` row
+   8b. Apply the `FunctionOverride` / `SchemaOverride` rows for functions, then
+   views (rulebook-to-postgres v2026.11.02.1548 on)
+9. Re-run the `04b-customize-policies.sql` row. The RBAC policy layer is not in
+   this file: it runs after the whole file (see below)
+10. Re-run the `05b-customize-data.sql` row (there is no step for the `01b` row)
 
 Steps 5–10 alternate generated/custom on purpose: each custom layer builds on the
 generated layer beneath it.
@@ -301,6 +393,19 @@ Always right, never wrong, by construction. A hand-authored migration is needed
 only for genuine table/column changes that step 1 cannot infer — and it should
 contain *nothing else*.
 
+**The order of preference, every time the database must change:**
+
+1. **The rulebook** — tables, fields, formulas. `update-effortless-schema.sql`
+   does whatever the rulebook says.
+2. **An `ERBCustomizations` row** — where the generated SQL needs correcting,
+   tuning or extending (a hand-written function, a view, RLS, grants, seed data).
+   Re-running the derived script re-applies it on every stage. An index has no
+   designated row yet (the `01b` gap): ask the owner.
+3. **A custom migration** — only what fits neither: a table/column change the
+   additive step cannot infer, a data fix. Tables and columns only, never view or
+   function DDL. (Whether an additive `CREATE INDEX IF NOT EXISTS` belongs here
+   is the owner's call until the `01b` gap is closed.)
+
 ### Pairing with the RBAC policy layer
 
 `effortless-rbac-to-postgres-policies` emits
@@ -309,7 +414,7 @@ model: RLS policies and role schemas are derived objects, so they are dropped
 and recreated from the rulebook rather than migrated.
 
 **Ordering matters:** policies reference columns and views, so the RBAC script
-runs *after* the derived layer is rebuilt — step 9 above. Role-schema copies of
+runs *after* the whole derived script, as its own file. Role-schema copies of
 `vw_*` views are rebuilt in the same pass, which removes an entire class of
 failure (a migration that recreates a public view and forgets its role-schema
 mirrors). Never hand-migrate a policy or a role schema.
@@ -323,18 +428,19 @@ Older projects keep domain tables in `01b-customize-schema.sql` and loose
 worth doing: promoted tables gain views, calculated fields, RuleSpeak and the
 Explainer DAG they were silently missing.
 
-**1. Inventory the customize file.** Sort every statement into three piles:
+**1. Inventory the customize file.** Sort every statement into four piles:
 
 | Pile | Examples | Destination |
 |---|---|---|
 | Domain entities | anything with a lifecycle, a money amount, or an FK into a rulebook table | **the rulebook** |
 | Columns `ALTER`ed onto rulebook tables | `created_at`, `notes`, a bolted-on FK | **the rulebook**, on that table |
-| Deployment plumbing + indexes | sessions, API tokens, sync logs, `CREATE INDEX` | **ERBCustomizations** |
+| Deployment plumbing | sessions, API tokens, sync logs | **the rulebook**, as tables (a stage needs them; a row would not carry them) |
+| Indexes | `CREATE INDEX` | ask the owner first (the `01b` gap); if it is the `01b-customize-schema.sql` row, it reaches Dev only |
 
 The giveaway for pile 1 is the table's own comment. If it describes what the
 business does ("what we owe each consignor, per sale"), it is domain data.
 
-**2. Promote pile 1 into the rulebook.** Define each table with its raw fields,
+**2. Promote piles 1 to 3 into the rulebook.** Define each table with its raw fields,
 `relationship` fields for FKs (plus the matching inverse on the target table),
 and `lookup` fields for anything the app currently JOINs to get. This is the
 moment to reclaim hand-maintained columns as calculated fields — a `status` the
@@ -345,19 +451,22 @@ app keeps in step by hand is usually derivable:
   "formula": "=IF({{PaidAt}}=\"\", FALSE, TRUE)" }
 ```
 
-**3. Move pile 3 into `ERBCustomizations`.** One row, `CustomizationType:
-"Schema"`, with the SQL in `SQLCode`. The rulebook now holds the whole model.
+**3. Pile 4 (indexes): ask the owner first** (the `01b` gap). If the answer is
+the `01b-customize-schema.sql` row: one row with that `Name` (the `Name` routes
+it; `CustomizationType` `Schema` is only a label), the SQL in `SQLCode`, then
+**delete the file** so the next build seeds it from the row. It reaches Dev
+only.
 
 **4. Delete empty stub rows.** A row whose `SQLCode` is only a boilerplate
-header emits an empty file and implies a customization that doesn't exist.
+header seeds a comments-only file and implies a customization that doesn't exist.
 Delete duplicates too — two rows naming the same file under different names
-(`01b-…` and `03a-…`) is the mismatch that hides real content from the build
-report.
+(`01b-…` and `03a-…`) is the mismatch that hides real content: the build uses
+only the first alias it finds.
 
 **5. Rebuild and verify.** Check that each promoted table now has a `vw_*` view
 and that its calculated fields compute. Then run `update-effortless-schema.sql`
-against a scratch copy and confirm view/function counts return to the same
-numbers and row counts are unchanged.
+against a scratch copy and confirm the view/function counts match a fresh
+`reset-rulebook-db.sh` build of the same rulebook, and row counts are unchanged.
 
 > **Watch the column names.** Rulebook FK fields generate as the field name
 > (`product`, `sales_order`), not the old hand-written `product_id`. Any index
@@ -460,5 +569,5 @@ For any foreign key `foo`, the view includes:
 - `effortless-orchestrator` — canonical Token Discipline section; this skill restates the same rule from the SQL angle.
 - `effortless-query` — for the rulebook one-liners that replace `cat`-ing the generated SQL.
 - `effortless-conventions` — for the naming patterns that explain why view columns look the way they do.
-- `effortless-workflow` — for the rule about `*b-customize-*.sql` being for infra only, never business entities.
+- `effortless-workflow` — for the rule that a customization is an `ERBCustomizations` row for infra only, never a business entity (and never a legacy `*b-customize-*.sql` file).
 - `effortless-diagnostics` — for finding JOIN anti-patterns and broken FK targets.

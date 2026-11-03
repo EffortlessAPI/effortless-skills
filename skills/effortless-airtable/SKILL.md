@@ -214,7 +214,7 @@ Options to present, in order of preference:
 1. **Rulebook-direct** — edit `effortless-rulebook.json` to add the formula/lookup field, then `effortless build`. The default for any non-Airtable project, and usually the most ergonomic path even for Airtable projects: the rulebook is JSON, LLMs edit it well, no Playwright/OMNI involved. (If the project is Airtable-connected, follow with a reverse-sync via `push-to-airtable/` so Airtable stays mirrored.)
 2. **OMNI via Playwright** — for changes that genuinely need to flow through Airtable first, see `effortless-airtable-omni`.
 3. **Airtable UI** — user makes the change manually in Airtable, then runs `effortless build`.
-4. **Customization file** — appropriate for SQL that the hub can't model (auth, RLS helpers); not the right fit for a calculated business field.
+4. **An `ERBCustomizations` row** — appropriate for SQL that the hub can't model (auth, RLS helpers); not the right fit for a calculated business field. Never a hand-edited `postgres/NNb-customize-*.sql` file: those are legacy, run only in Dev, and never reach a stage or Production. See `effortless-sql`.
 
 Wait for direction before proceeding.
 

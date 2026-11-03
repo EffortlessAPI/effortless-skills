@@ -37,7 +37,7 @@ Remote transpiler: `effortless rulebook-to-sql-server` (catalog:
 | `04-create-policies.sql` | Row-level security (security policies + predicate functions) |
 | `05-insert-data.sql` | `MERGE` seed data from rulebook |
 | `99-fk-constraints.sql` | FK enforcement (skipped unless `EFFORTLESS_ENFORCE_FKS=true`) |
-| `*b-customize-*.sql` | Hand-edited customization slots; seeded once, never overwritten |
+| `*b-customize-*.sql` | Legacy: seeded once from `ERBCustomizations` rows, then stale. Never hand-edit; customize with rows, see `effortless-sql` (a row named for a file needs `SQLTarget` empty or `SQLServer`; override rows do not read `SQLTarget`) |
 | `init-db.sh` | Runs all `NN[b]?-*.sql` in lex order via **sqlcmd** |
 
 Default generation mode: **check-add** (stage **dev**) — safe re-runs; does
@@ -185,6 +185,6 @@ Do **not** `cat sql-server/02-create-functions.sql` into context.
 
 - `effortless-setup-postgres` — Postgres counterpart
 - `effortless-pipeline` — `ProjectTranspilers` / `-install` / `build`
-- `effortless-sql` — read `vw_*`, never base tables; `*b-customize-*` files
+- `effortless-sql` — read `vw_*`, never base tables; customize through `ERBCustomizations` rows, not `*b-customize-*` files
 - `effortless-loop` — edit rulebook → build → consume views
 - [REFERENCE.md](REFERENCE.md) — RLS idempotency, app wiring, troubleshooting
