@@ -188,7 +188,8 @@ MAGICLINK = https://magiclink.effortlessapi.com
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| `POST` | `/auth/send-code` | open | Self-auth: send code to **developer's** email. |
+| `GET`  | `/auth/challenge` | open | Proof-of-work puzzle; the solved answer is `captcha_token` for `/auth/send-code` (Step 0). |
+| `POST` | `/auth/send-code` | open + `captcha_token` | Self-auth: send code to **developer's** email. Without a solved puzzle: `400 captcha_failed`. |
 | `POST` | `/auth/verify-code` | open | Self-auth: verify → JWT used to create tenants. |
 | `POST` | `/api/tenants` | self-auth Bearer | Mint a tenant. Server generates keypair. Returns `{tenant_id, public_key_pem}`. |
 | `GET`  | `/api/tenants/{id}` | open | Public info: `{tenant_id, public_key_pem, from_email, jwt_expires_in_seconds, display_name?, brand_color?, gradient_to?, smtp_config?}`. Password stripped from smtp_config in response. |
@@ -228,7 +229,15 @@ The flow:
 
 1. Claude POSTs `/auth/send-code` with the user's email (from
    `git config user.email`, the user's known email in context, or by
-   asking once if neither is available).
+   asking once if neither is available) **and a solved `captcha_token`**.
+   Self-auth send-code is guarded by a proof-of-work puzzle (ALTCHA
+   scheme): `GET /auth/challenge` → `{challenge, maxnumber, salt,
+   signature}`; find `n` in `0..maxnumber` with
+   `sha256(salt + n) == challenge`; send base64 of the JSON
+   `{salt, number: n, challenge, signature}`. Under a second; each
+   answer works once and expires in 10 minutes. Without it the server
+   answers `400 {"error":"captcha_failed"}`. Only self-auth has this;
+   a tenant's own `/api/tenants/{id}/send-code` (the app's users) does not.
 2. Claude tells the user "I sent a code to <email> — paste it back."
 3. User pastes the 6-digit code.
 4. Claude POSTs `/auth/verify-code` and stores the returned token
@@ -244,10 +253,18 @@ The flow:
 MAGICLINK="https://magiclink.effortlessapi.com"
 DEV_EMAIL="<the user's email>"
 
-# Claude runs:
+# Claude runs (solve the proof-of-work puzzle, then send the code):
+CAPTCHA=$(node -e '
+const c = JSON.parse(require("fs").readFileSync(0, "utf8"));
+const h = (s) => require("crypto").createHash("sha256").update(s).digest("hex");
+for (let n = 0; n <= c.maxnumber; n++) if (h(c.salt + n) === c.challenge) {
+  console.log(Buffer.from(JSON.stringify({ salt: c.salt, number: n, challenge: c.challenge, signature: c.signature })).toString("base64"));
+  process.exit(0);
+}
+process.exit(1);' < <(curl -sS "$MAGICLINK/auth/challenge"))
 curl -sS "$MAGICLINK/auth/send-code" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$DEV_EMAIL\"}"
+  -d "{\"email\":\"$DEV_EMAIL\",\"captcha_token\":\"$CAPTCHA\"}"
 # → tell the user: "I sent a code to $DEV_EMAIL — paste it back."
 
 # After user pastes CODE:

@@ -224,7 +224,7 @@ honored on the next request (auth.set_jwt rejects them).
 
 | You want to… | Endpoint |
 |---|---|
-| Get a self-auth JWT (developer login) | `POST {MAGICLINK}/auth/send-code` then `/auth/verify-code` |
+| Get a self-auth JWT (developer login) | `GET {MAGICLINK}/auth/challenge` (solve it, SKILL.md Step 0), `POST {MAGICLINK}/auth/send-code` with `captcha_token`, then `/auth/verify-code` |
 | Create a tenant | `POST {MAGICLINK}/api/tenants` (self-auth Bearer) |
 | Look up a tenant's public key | `GET {MAGICLINK}/api/tenants/{id}` |
 | Update tenant settings | `PATCH {MAGICLINK}/api/tenants/{id}` |
