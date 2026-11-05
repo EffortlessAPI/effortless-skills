@@ -44,7 +44,7 @@ A project is **Effortless** if and only if BOTH are true:
 
 | Class | Loads when | Skills |
 |---|---|---|
-| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-security`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
+| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-proposal` (the priced proposal: rows only, never a build), `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-security`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
 | **Airtable-connected only** | Both markers AND `effortless.json` registers `airtable-to-rulebook`. | `effortless-airtable`, `effortless-airtable-omni` |
 | **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-seeds`, `effortless-seed-authoring`, `effortless-claude-updates` |
 | **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem` |
@@ -318,6 +318,7 @@ skill" for a row in this table.
 | `effortless-ssotme-protocol` | Exact `effortless.json` schema — load before emitting any `ProjectTranspilers` entry |
 | `effortless-meta-table` | The `__meta__` global name/value settings table (transpiler-ignored) |
 | `effortless-progress-report` | Delivery / status / priced-plan reports derived from the rulebook; adds the delivery spine tables |
+| `effortless-proposal` | **The priced proposal** (effortlessapi.com's Proposal page): phases, epics, personas, stories, criteria, prices, summaries. Rows in the ERB delivery tables only; describing work is not building it |
 | `effortless-rulebook-devops` | Dev/staging/beta/production promotion model, migration ledger, Deployment Management console (heavy, once per project) |
 | `effortless-mcp` | The Effortless MCP server — wiring any MCP client to the transpiler catalog |
 | `effortless-publish-tool` | Publishing a new version of a transpiler tool from `Versioned-Stable-SSoTme-Tools` |
