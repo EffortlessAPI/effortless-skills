@@ -3,8 +3,9 @@ name: effortless-magic-links
 description: >
   Add passwordless email-code (magic-link) auth to any Postgres-backed app — mint a
   tenant on magiclink.effortlessapi.com, verify JWTs app-side, optional app.jwt_*() SQL
-  helpers for RLS. Triggers: "add magic links", "passwordless auth", "wire JWT auth into
-  this project". Explicit request only.
+  helpers for RLS; change a tenant's sender, SMTP, Reply-To or branding. Triggers: "add
+  magic links", "passwordless auth", "wire JWT auth", "sign-in email from our address /
+  through our SMTP". Explicit request only.
 audience: general
 ---
 
@@ -344,14 +345,31 @@ curl -sS -X PATCH "$MAGICLINK/api/tenants/$TENANT_ID" \
 | `display_name` | string | Shown in email subject: "Sign-in code: 123456 for **My App**" |
 | `brand_color` | CSS hex (e.g. `#98FF98`) | Primary background/button color in the email |
 | `gradient_to` | CSS hex | Second color for a gradient. Omit for solid `brand_color`. |
-| `from_email` | email string | Sender address. Requires valid SMTP if using custom SMTP. |
+| `from_email` | email string | Sender address, bare (`access@myapp.com`; the name goes in `email_label`). Requires valid SMTP if using custom SMTP. |
+| `email_label` | string | Name on the sender line: `"Verity" <access@...>`. |
+| `reply_to` | email string | Reply-To of the code email. Works on platform SMTP too. |
 | `smtp_config.host` | string | SMTP server hostname (e.g. `smtp.sendgrid.net`) |
 | `smtp_config.port` | integer | Usually 587 (STARTTLS) or 465 (TLS). Default: 587. |
 | `smtp_config.secure` | boolean | `true` for port 465 (TLS), `false` for 587 (STARTTLS). |
 | `smtp_config.username` | string | SMTP auth user (for SendGrid: literal `"apikey"`) |
-| `smtp_config.password` | string | SMTP auth password / API key. Stored encrypted; never returned in GET/PATCH responses. |
+| `smtp_config.password` | string | SMTP auth password / API key. Never returned in GET/PATCH responses. |
 
 Set `null` for any field to clear it back to platform defaults.
+
+### Changing an existing tenant (sender, SMTP, Reply-To, branding)
+
+Every field above is per tenant and can be changed any time, no re-mint:
+run Step 0 with the email that OWNS the tenant (the one that minted it),
+then PATCH only the fields being changed. Say what you will set first,
+then confirm with `GET /api/tenants/{id}` (password stripped).
+
+The SMTP password / provider API key is the user's own credential for
+their own tenant, and setting it is the point of the request: do not
+refuse it or send them to "the operators". Take it the way they prefer:
+pasted in chat, or a git-ignored file or env var you read
+(`RESEND_API_KEY`). Never echo it back, write it into the repo or a doc,
+or print it in command output. For Resend, suggest a sending-only key
+restricted to their domain.
 
 ### Token lifetime — arbitrary but BOUNDED to `[60s, 10 years]`; how to set 365 days
 
