@@ -204,7 +204,7 @@ MAGICLINK = https://magiclink.effortlessapi.com
 | `POST` | `/auth/send-code` | open + `captcha_token` | Self-auth: send code to **developer's** email. Without a solved puzzle: `400 captcha_failed`. |
 | `POST` | `/auth/verify-code` | open | Self-auth: verify → JWT used to create tenants. |
 | `POST` | `/api/tenants` | self-auth Bearer | Mint a tenant. Server generates keypair. Returns `{tenant_id, public_key_pem}`. |
-| `GET`  | `/api/tenants/{id}` | open | Public info: `{tenant_id, public_key_pem, from_email, jwt_expires_in_seconds, display_name?, brand_color?, gradient_to?, smtp_config?}`. Password stripped from smtp_config in response. |
+| `GET`  | `/api/tenants/{id}` | open | Public info: `{tenant_id, public_key_pem, from_email, jwt_expires_in_seconds, display_name?, brand_color?, gradient_to?, email_label?, reply_to?}`. `smtp_config` is never returned, so this cannot confirm the SMTP settings: send a code and check the received mail. |
 | `PATCH`| `/api/tenants/{id}` | self-auth + ownership | Update any of: `from_email`, `jwt_expires_in_seconds`, `display_name`, `email_label`, `email_subject_template`, `brand_color`, `gradient_to`, `reply_to`, `smtp_config`. Send only the fields you want to change; omitted fields are left as-is. Send `null` to clear a field. |
 | `DELETE`| `/api/tenants/{id}` | self-auth + ownership | Remove tenant. |
 | `POST` | `/api/tenants/{id}/send-code` | open | `{email, additional_claims?}` → `{ok:true}`. |
@@ -365,7 +365,7 @@ templates. Do not offer either.
 Every field above is per tenant and can be changed any time, no re-mint:
 run Step 0 with the email that OWNS the tenant (the one that minted it),
 then PATCH only the fields being changed. Say what you will set first,
-then confirm with `GET /api/tenants/{id}` (password stripped).
+then confirm with `GET /api/tenants/{id}` (SMTP not shown: test with a real code).
 
 The SMTP password / provider API key is the user's own credential for
 their own tenant, and setting it is the point of the request: do not
