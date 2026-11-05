@@ -86,6 +86,9 @@ Run this checklist top-to-bottom:
    > - "Display name" — name in email subject line
    > - "Brand colors" — primary color and optional gradient
    > - "Custom SMTP" — send via your own mail server (from address is set here)
+   > - "Reply-To address" — where replies go (e.g. support@yourdomain.com);
+   >   worth it with a no-reply sender, and on platform SMTP, where a reply
+   >   would otherwise reach hello@effortlessapi.com instead of them
    >
    > Note: the tool always appends an "Other" option automatically — it
    > is irrelevant for this question and users should ignore it.
@@ -124,6 +127,14 @@ Run this checklist top-to-bottom:
    >  - Password (your SMTP or mailbox password)"
    > If they don't have their own SMTP server, tell them to skip this —
    > the platform will send from hello@effortlessapi.com instead.
+   > A transactional provider counts as their own server (Resend:
+   > `smtp.resend.com`, 587, username `resend`, password = API key; the
+   > domain must be verified there). Microsoft 365 with Security Defaults
+   > refuses password SMTP, so point those users at such a provider.
+   >
+   > **If "Reply-To address" selected:** ask in plain text "Which address
+   > should replies go to?" and send it as `reply_to` (a bad address is a
+   > 400; `null` clears it).
    >
    > Once all answers collected, proceed to Step 0 + mint + Step 1b.
 
@@ -193,7 +204,7 @@ MAGICLINK = https://magiclink.effortlessapi.com
 | `POST` | `/auth/verify-code` | open | Self-auth: verify → JWT used to create tenants. |
 | `POST` | `/api/tenants` | self-auth Bearer | Mint a tenant. Server generates keypair. Returns `{tenant_id, public_key_pem}`. |
 | `GET`  | `/api/tenants/{id}` | open | Public info: `{tenant_id, public_key_pem, from_email, jwt_expires_in_seconds, display_name?, brand_color?, gradient_to?, smtp_config?}`. Password stripped from smtp_config in response. |
-| `PATCH`| `/api/tenants/{id}` | self-auth + ownership | Update any of: `from_email`, `jwt_expires_in_seconds`, `display_name`, `brand_color`, `gradient_to`, `smtp_config`. Send only the fields you want to change; omitted fields are left as-is. Send `null` to clear a field. |
+| `PATCH`| `/api/tenants/{id}` | self-auth + ownership | Update any of: `from_email`, `jwt_expires_in_seconds`, `display_name`, `email_label`, `email_subject_template`, `brand_color`, `gradient_to`, `reply_to`, `smtp_config`. Send only the fields you want to change; omitted fields are left as-is. Send `null` to clear a field. |
 | `DELETE`| `/api/tenants/{id}` | self-auth + ownership | Remove tenant. |
 | `POST` | `/api/tenants/{id}/send-code` | open | `{email, additional_claims?}` → `{ok:true}`. |
 | `POST` | `/api/tenants/{id}/verify-code` | open | `{email, code, additional_claims?}` → `{ok, jwt, expires_in}`. |
