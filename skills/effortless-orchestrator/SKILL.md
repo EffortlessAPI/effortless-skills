@@ -1,11 +1,11 @@
 ---
 name: effortless-orchestrator
 description: >
-  Top-level entry point for Effortless Rulebook (ERB) projects — any project with
-  effortless.json or an effortless-rulebook/ directory, or any request to set up /
-  install / update Effortless tooling. Holds the mental model, axioms, guardrails, token
-  discipline, the load-gate policy for every effortless-* skill, and the routing table.
-  Load this first.
+  Load first in any Effortless Rulebook (ERB) project (effortless.json or
+  effortless-rulebook/) or to set up Effortless tooling: mental model, guardrails, token
+  discipline, routing table. Effortless skills not offered here (magic links / sign-in
+  email, bases, seeds, security, Airtable…) are still installed: read
+  ~/.claude/skills/<name>/SKILL.md.
 audience: customer
 ---
 
@@ -296,7 +296,15 @@ CRUD on records?
 
 ## When You Need More Detail
 
-Sub-skills load automatically based on what you're doing:
+Sub-skills load automatically based on what you're doing.
+
+**A skill below that you can't load is still installed: read it from disk.** Some hosts (Effortless
+Loops) offer only a short list of skills to save tokens; the rest are on disk. If the Skill tool
+refuses one, or it isn't offered, `Read ~/.claude/skills/<name>/SKILL.md` (a plugin install keeps
+them under `~/.claude/plugins/`: `Glob **/<name>/SKILL.md` there) and follow it as if loaded,
+companion files (`REFERENCE.md`) included. Match the request to the table, not the user's
+spelling ("magiclink", "magic link login" → `effortless-magic-links`). Never answer "no such
+skill" for a row in this table.
 
 | Skill | When to Use |
 |---|---|
