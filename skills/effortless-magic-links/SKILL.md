@@ -356,6 +356,10 @@ curl -sS -X PATCH "$MAGICLINK/api/tenants/$TENANT_ID" \
 
 Set `null` for any field to clear it back to platform defaults.
 
+**The email carries a 6-digit code, never a sign-in link.** Despite the
+name, the service has no click-to-sign-in link and no custom body
+templates. Do not offer either.
+
 ### Changing an existing tenant (sender, SMTP, Reply-To, branding)
 
 Every field above is per tenant and can be changed any time, no re-mint:
