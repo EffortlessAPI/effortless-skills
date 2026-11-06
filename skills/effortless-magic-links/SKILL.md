@@ -495,7 +495,10 @@ if (token && email) {
 ```
 
 Never show "link already used" or similar: people read it as being hacked.
-Open the code step for that address, silently. Claims passed at verify time
+Open the code step for that address, silently, unless the person already has
+a session (a double click): then go to their home page. Run the swap before any
+"already signed in" redirect, or the owner's test link never lands. In React, guard
+it with a ref: effects run twice in dev. Claims passed at verify time
 do not apply here; pass `additional_claims` on send-code if the app needs them.
 
 Switch it on once the app is deployed: PATCH `login_url` (the login page;
