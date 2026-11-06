@@ -205,10 +205,12 @@ MAGICLINK = https://magiclink.effortlessapi.com
 | `POST` | `/auth/verify-code` | open | Self-auth: verify → JWT used to create tenants. |
 | `POST` | `/api/tenants` | self-auth Bearer | Mint a tenant. Server generates keypair. Returns `{tenant_id, public_key_pem}`. |
 | `GET`  | `/api/tenants/{id}` | open | Public info: `{tenant_id, public_key_pem, from_email, jwt_expires_in_seconds, display_name?, brand_color?, gradient_to?, email_label?, reply_to?}`. `smtp_config` is never returned, so this cannot confirm the SMTP settings: send a code and check the received mail. |
-| `PATCH`| `/api/tenants/{id}` | self-auth + ownership | Update any of: `from_email`, `jwt_expires_in_seconds`, `display_name`, `email_label`, `email_subject_template`, `brand_color`, `gradient_to`, `reply_to`, `smtp_config`. Send only the fields you want to change; omitted fields are left as-is. Send `null` to clear a field. |
+| `PATCH`| `/api/tenants/{id}` | self-auth + ownership | Update any of: `from_email`, `jwt_expires_in_seconds`, `display_name`, `email_label`, `email_subject_template`, `brand_color`, `gradient_to`, `reply_to`, `smtp_config`, `login_url`. Send only the fields you want to change; omitted fields are left as-is. Send `null` to clear a field. |
 | `DELETE`| `/api/tenants/{id}` | self-auth + ownership | Remove tenant. |
 | `POST` | `/api/tenants/{id}/send-code` | open | `{email, additional_claims?}` → `{ok:true}`. |
 | `POST` | `/api/tenants/{id}/verify-code` | open | `{email, code, additional_claims?}` → `{ok, jwt, expires_in}`. |
+| `POST` | `/api/tenants/{id}/verify-link` | open | `{email, token}` → `{ok, jwt, expires_in}`. The Sign in button's `?ml=` token (Step 3b). |
+| `POST` | `/api/tenants/{id}/test-link` | self-auth + ownership | Emails the owner a sign-in link to `login_url`; it switches the button on (Step 3b). |
 | `POST` | `/api/tenants/{id}/refresh` | Bearer expired JWT | Multi-use within grace window → fresh JWT. (Details: [REFERENCE.md](REFERENCE.md#refresh-flow).) |
 
 **`additional_claims`** are baked into the JWT verbatim. Reserved claims
@@ -356,9 +358,9 @@ curl -sS -X PATCH "$MAGICLINK/api/tenants/$TENANT_ID" \
 
 Set `null` for any field to clear it back to platform defaults.
 
-**The email carries a 6-digit code, never a sign-in link.** Despite the
-name, the service has no click-to-sign-in link and no custom body
-templates. Do not offer either.
+**The email always carries a 6-digit code.** A Sign in button is added
+only with sign-in links on (Step 3b). There are no custom body templates:
+do not offer them.
 
 ### Changing an existing tenant (sender, SMTP, Reply-To, branding)
 
@@ -465,6 +467,43 @@ localStorage.setItem('jwt', jwt);
 ```
 
 All subsequent API calls send `Authorization: Bearer ${jwt}`.
+
+### Step 3b — sign-in links (build it into every login page)
+
+With this, the email's Sign in button signs people straight in; no screen,
+no typing. Always put the on-load handler in the login page: it does nothing
+until the link is switched on. Run it in the browser, never server-side:
+mail scanners fetch links but do not run the page's script, so doing it on
+the server lets a scanner spend the link.
+
+```js
+// On load of the login page. If the app proxies magic-links (or the seed's
+// /auth routes), call its own verify-link route instead.
+const q = new URLSearchParams(location.search);
+const email = q.get('email'), token = q.get('ml');
+if (token && email) {
+  history.replaceState(null, '', location.pathname); // keep the token out of history
+  const r = await fetch(`${MAGICLINK}/api/tenants/${TENANT_ID}/verify-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, token }),
+  });
+  const { jwt } = await r.json();
+  if (r.ok) signedIn(jwt);   // same JWT as verify-code
+  else showCodeStep(email);  // no error message: the code in that email still works
+}
+```
+
+Never show "link already used" or similar: people read it as being hacked.
+Open the code step for that address, silently. Claims passed at verify time
+do not apply here; pass `additional_claims` on send-code if the app needs them.
+
+Switch it on once the app is deployed: PATCH `login_url` (the login page;
+https, plain http only for localhost), then `POST /api/tenants/{id}/test-link`
+with the self-auth JWT and have the owner click the link in their inbox.
+`login_url_verified: true` on `GET /api/tenants/{id}` means real emails now
+carry the button. Changing `login_url` turns it off until a new test link
+works. A link works once and lasts as long as the code (5 minutes).
 
 ### Step 4 (optional) — push the verified email into Postgres
 
