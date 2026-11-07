@@ -8,6 +8,8 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **Proposal text computes its numbers** — `effortless-proposal` now says every amount in a
+  section `Title` or `Body` is a `{{...}}` figure, never a typed price, and lists the figures.
 - **Name the fields you read** — `effortless-rulebook-editor` (convention 1, contract and
   integration example), `effortless-app` (a build rule), `effortless-demo-app` (the list
   route), `effortless-sql` (new section) and `effortless-orchestrator` (guardrail 3) now all

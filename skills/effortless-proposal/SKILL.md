@@ -137,6 +137,19 @@ inside them. Ask once if it is unclear whether something is a phase or an epic.
 - Effort class by the work: G1 a list, form or view over data that exists;
   G2 a new workflow, rules or an integration; G3 something hard (payments,
   real-time, a new engine).
+- **Every amount in proposal text is a figure, never a typed number.** In any
+  `ERBProposalSections` `Title` or `Body`, write `{{total}}`, not `$4,500`: a
+  typed price goes stale the moment a tick or a price changes, and the reader
+  sees two numbers that disagree. The page and the PDF fill these in from the
+  pick: `{{total}}`, `{{one-time}}`, `{{third-party}}`, `{{monthly}}`,
+  `{{yearly}}`, `{{discount}}`, `{{picked}}`, `{{stories}}`, `{{phase 1}}`,
+  `{{epic <id>}}`, `{{story <id>}}`, `{{line <id>}}`, `{{yearly-line <id>}}`,
+  and arithmetic and percents over them: `{{total * 60%}}`,
+  `{{total - phase 1 - phase 2}}`. Use row ids, not titles. Split a payment by
+  percents, never by subtracting a fixed amount: unticking can take it below
+  zero. `{{monthly}}` and `{{yearly}}` always both show, whichever way the client
+  has set the switch. The one-line lists you propose in the chat are not
+  proposal text: they keep plain prices.
 - Never write our private estimating into the rulebook or the chat (hours,
   rates, cost, margin): the rulebook holds the final price only.
 - Totals you report: **offered** (sum of `Price` of every offered story),
