@@ -70,7 +70,7 @@ a level. Charts follow the pick: money by phase, by epic, by persona, by effort.
 
 Before the chat opens, www adds one placeholder row to each empty level: phase
 `phase-1` "The first release", epic `getting-started` "Getting started", persona
-`customer`, story `US-001` "Sign in and see my work" ($1,000), criterion
+`customer`, story `US-001` "Sign in and see my work" ($100), criterion
 `US-001-AC1`. Reword and reuse them (keep the ids) or remove them once real rows
 exist. Never leave a placeholder that does not fit the project.
 
@@ -85,10 +85,10 @@ exist. Never leave a placeholder that does not fit the project.
 
    ```
    Phase 1 · Getting started
-   + US-004 "Wish a helper happy birthday" (Client, G1, $1,000, included) - 3 criteria
-   ~ US-002 price $1,500 -> $2,000
+   + US-004 "Wish a helper happy birthday" (Client, G1, $100, included) - 3 criteria
+   ~ US-002 price $150 -> $200
    - US-003 "Export to Excel" (and its 2 criteria)
-   Totals: 6 stories, $9,500 offered; first-open pick $7,000 (was $6,000).
+   Totals: 6 stories, $950 offered; first-open pick $700 (was $600).
    ```
 3. **Ask** with AskUserQuestion: "Make these changes to the proposal?" with
    options like "Yes, make them" / "Change something first". Apply nothing
@@ -130,10 +130,13 @@ inside them. Ask once if it is unclear whether something is a phase or an epic.
 
 ## Prices and totals
 
+- **Keep prices low.** An agent builds a whole first release in about an hour,
+  and that hour's app is far from finished, so 20 stories come to about $3,000,
+  never $30,000. A story is tens or hundreds of dollars, not thousands.
 - **Use the proposal's own yardstick first**: when stories are already priced,
   price new ones like the existing ones of the same effort class.
-- With nothing to go by, start at **G1 $1,000, G2 $2,000, G3 $4,000** per story,
-  more for many criteria, and say they are starting numbers to adjust.
+- With nothing to go by, start at **G1 $100, G2 $200, G3 $400** per story,
+  less for a trivial one (a label, a line of text: $50), more for many criteria, and say they are starting numbers to adjust.
 - Effort class by the work: G1 a list, form or view over data that exists;
   G2 a new workflow, rules or an integration; G3 something hard (payments,
   real-time, a new engine).
