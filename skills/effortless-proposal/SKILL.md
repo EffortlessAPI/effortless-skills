@@ -122,17 +122,20 @@ Small project (the default unless the person names releases):
    ("A volunteer sees only their own shifts", not "works well").
 5. A price on every story (below). The core stories `IsIncludedByDefault`
    true; nice-to-haves offered but not included.
-6. Dependencies where one story truly needs another.
-7. The summaries: masthead, thesis, the phase and epic descriptions.
+6. The three versions (below): `IsRequired` on the minimal set.
+7. Dependencies where one story truly needs another.
+8. The summaries: masthead, thesis, the phase and epic descriptions.
 
 Bigger: phases are releases (timing: "Launch", "Scale"), epics are sets of value
 inside them. Ask once if it is unclear whether something is a phase or an epic.
 
 ## Prices and totals
 
-- **Keep prices low.** An agent builds a whole first release in about an hour,
-  and that hour's app is far from finished, so 20 stories come to about $3,000,
-  never $30,000. A story is tens or hundreds of dollars, not thousands.
+- **Keep prices low: a very conservative bid, priced to close.** An agent
+  builds a whole first release in about an hour, and that hour's app is far
+  from finished, so 20 stories come to about $3,000, never $30,000. A story is
+  tens or hundreds of dollars, not thousands. There is no minimum: a $100 app
+  is quoted at $100.
 - **Use the proposal's own yardstick first**: when stories are already priced,
   price new ones like the existing ones of the same effort class.
 - With nothing to go by, start at **G1 $100, G2 $200, G3 $400** per story,
@@ -166,6 +169,16 @@ inside them. Ask once if it is unclear whether something is a phase or an epic.
   (prerequisites come along).
 - `IsRequired`: the base every pick must include; locked on the page.
 - `IsOffered` false: kept, but off the menu.
+- **Three versions, always (owner, 2026-11-07).** A prospect sees three picks
+  at once: **Everything** (every offered story), **Suggested stories** (the
+  `IsIncludedByDefault` ones, what they first open on) and **Minimal stories**
+  (the `IsRequired` base). Set the flags so the three differ: offer more than
+  you include, and for the base start from the included stories and take out
+  every one the app still works without, until taking out one more would break
+  it; mark what is left `IsRequired` (sign-in and the few stories everything
+  else stands on). effortlessapi.com makes the three named picks from these
+  flags the first time the proposal has stories; from then on they are
+  ordinary picks the owner keeps up to date on the page.
 - **Saved picks are not rows.** Named picks (Save / Save as on the page, an
   owner's pick as the default a prospect opens on) live on effortlessapi.com,
   not in the rulebook. A tick cycles all-in / all-out / back to the saved pick.
