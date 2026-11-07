@@ -161,6 +161,13 @@ without explicit override:
    `postgres/apply-migration.sh` because the DB can't be dropped — see
    `effortless-bases`. Even there, schema still originates in the rulebook.
    Full statement in `effortless-workflow` "NO MIGRATIONS" section.
+7. **Watch for slow models; cache slow-changing sub-DAGs at the parent.** After every rebuild,
+   a `vw_*` view that takes more than 1-2 s to read whole on the mock data is a model problem,
+   not a hardware one (a Loops run says so in a SLOW VIEWS note; elsewhere run
+   `effortless-diagnostics/view-timings.sh`). Fix it in the rulebook with `XyzOverride` (raw) /
+   `DefaultXyz` (the expensive formula) / `Xyz = IF(ISBLANK({{XyzOverride}}), {{DefaultXyz}},
+   {{XyzOverride}})`, consumers reading `Xyz`, the override filled where the value is settled.
+   Never an index or a materialized view. Details: `effortless-diagnostics`, "Slow views".
 
 ## Token Discipline (CANONICAL — leaf skills reference this)
 
@@ -334,7 +341,7 @@ skill" for a row in this table.
 | `effortless-security` | Roles and who sees what — the `<Role>CRUD` matrix, `role_<id>` schemas, per-role `.d.ts` types, hiding columns to make a persona fast |
 | `effortless-airtable` | *(only if Airtable-connected)* Airtable REST API — scalar fields, CRUD |
 | `effortless-airtable-omni` | *(only if Airtable-connected)* OMNI via Playwright — formulas, lookups, rollups, new tables |
-| `effortless-diagnostics` | Diagnostic queries, DAG validation, legacy code migration |
+| `effortless-diagnostics` | **Slow views** (the override / default / final cache), diagnostic queries, DAG validation, legacy code migration |
 | `effortless-bases` | bases.effortlessapi.com + magic-links + RLS in 5 minutes |
 | `effortless-magic-links` | Magic-link auth on ANY Postgres-backed project |
 | `effortless-excel-export` | Adding Excel export from live Postgres data |

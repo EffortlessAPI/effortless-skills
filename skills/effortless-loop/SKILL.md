@@ -32,6 +32,9 @@ The loop is the iterative ERB development cycle — the **core workflow** that m
       - postgres/01-05*.sql (tables, functions, views, seed data)
       - ODXML schema
       - C#/Go/Python/etc. base classes, ORM context, sync services
+      - then: is any vw_* over 1-2 s on the mock data? That is a model problem:
+        cache the slow-changing sub-DAG at the parent (effortless-diagnostics,
+        "Slow views": XyzOverride / DefaultXyz / Xyz)
             |
             v
    4. APP CODE (server, client) JUST CONSUMES THE GENERATED VIEWS

@@ -8,6 +8,12 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **Slow views: cache the slow-changing sub-DAG at the parent** (owner, 2026-11-07) —
+  `effortless-orchestrator` guardrail 7, a new "Slow views" section and `view-timings.sh` in
+  `effortless-diagnostics`, and a step in `effortless-loop`: a `vw_*` view over 1-2 s on the
+  mock data is a model problem, fixed in the rulebook with `XyzOverride` / `DefaultXyz` /
+  `Xyz = IF(ISBLANK(XyzOverride), DefaultXyz, XyzOverride)`. Loops runs time every view after
+  each build and tell the agent (www `pw-view-timings.sh`, loops `slow-views.ts`).
 - **Proposal text computes its numbers** — `effortless-proposal` now says every amount in a
   section `Title` or `Body` is a `{{...}}` figure, never a typed price, and lists the figures.
 - **Name the fields you read** — `effortless-rulebook-editor` (convention 1, contract and
