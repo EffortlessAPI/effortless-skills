@@ -468,6 +468,15 @@ localStorage.setItem('jwt', jwt);
 
 All subsequent API calls send `Authorization: Bearer ${jwt}`.
 
+**The code screen must match what the app does with an unknown email.**
+magic-links mails any valid address; who gets an account is the app's choice.
+
+| The app | Unknown email | The screen says |
+|---|---|---|
+| Open sign-up (creates the account) | Gets a code | "We sent a code to …" |
+| Approved people only, does not reveal who | Gets nothing, no hint why | "If you have an account, we sent a code to …" |
+| Approved people only, says so | Told there is no account; no code screen | "We sent a code to …" |
+
 ### Step 3b — sign-in links (build it into every login page)
 
 With this, the email's Sign in button signs people straight in; no screen,
