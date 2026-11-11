@@ -72,8 +72,30 @@ it before touching a screen.
 
 ## 5. The app
 
-Build exactly the routes from step 4, over the generated API (the rulebook
-editor's API: read the `vw_*` views, write base fields).
+Build exactly the routes from step 4. **An app is two folders, always: the
+pages (`app/`, or `web/`) and its own server (`server/`, Express).** The pages
+call only `/api/...` on the server; the server answers the project's custom
+routes and passes the rest on to the generated API (the rulebook editor's API:
+read the `vw_*` views, write base fields).
+
+```
+browser -> app/ (pages) -> /api/... -> server/ -> the generated API -> Postgres
+```
+
+- **The server is the default, in Dev and when published**, served from the
+  same workload as the pages. Never build, describe or publish the app as a
+  static site that calls the generated API or the database directly, unless
+  the owner asked for a static app in so many words. No `server/` in the
+  project → note it once if relevant; do **not** scaffold `server/` in the
+  middle of another ask (content on Production, a screen change, a data
+  migration). Only add `server/` when the customer explicitly asked for the
+  project's own server in this message — a half-wired `server/` breaks Dev.
+- **Custom code goes in the server**, one file per resource under
+  `server/src/routes/`: a webhook, a call to another service with a secret
+  key, an email, who may call what. Secrets live there, never in the pages.
+- **Rules never go in the server** any more than in the pages: it passes what
+  it does not answer on to the generated API unchanged.
+
 
 - **Phones first.** Every route works at 360px wide: lists become one card
   per record, forms take the whole screen, the menu collapses. People use it
@@ -105,6 +127,10 @@ editor's API: read the `vw_*` views, write base fields).
 The template already has the parts; use them, do not write your own tables,
 forms or fetch code. `app/README.md` has the details.
 
+- The server → when `server/` is present, it is already running beside the app
+  in Dev and in every published stage (`server/README.md`). Add routes to it;
+  do not start it, replace it or remove it. If it is missing, do not invent
+  one while doing something else.
 - Personas → `app/src/personas.ts` (`PERSONAS`); the template shows the
   picker and the header switch when the list is not empty.
 - Routes → `app/src/routes.tsx` (`ROUTES`): `path` ('horses/:id'), `label`
