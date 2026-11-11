@@ -153,6 +153,8 @@ This dual marker is what tells Claude to load the project-only skills (the ones 
 
 **`effortless-rulebooks`** — The empirical demonstration: 11+ substrates (including ARM64, COBOL, OWL/SHACL, English), the conformance suite, ExplainDAG, `answer-key.json`. Pointer into [github.com/effortlessapi/effortless-rulebooks](https://github.com/effortlessapi/effortless-rulebooks). **Why?** When the response to a "does this actually work?" question needs to be "yes, here's the runnable proof" — this skill is the catalog of runnable proofs.
 
+**`effortless-rulebook-exchange`** — Two parties (agents or people) send a rulebook, evaluate it, amend it and diff the result, instead of a request plus a prose reply. Defines only the payload, the round trip and a structural diff; conventions such as rename tracking or permissions are tables inside the rulebook. Works over any transport: MCP, HTTPS, git, a file, or a spreadsheet handed to a person. **Why?** A schema fixes the shape of a message but its meaning stays in prose that each side interprets; a rulebook defines the meaning, so the receiver evaluates it instead.
+
 **`effortless-rationale`** — Skeptic-facing answers, strictly grounded in receipts (papers, repos, runnable demos). Common objections — "isn't this just MDE", "isn't this just low-code", "why Airtable", "isn't this overkill" — paired with cited responses. **Why?** When the methodology needs to be defended (to a skeptical reviewer, an architecture committee, a Hacker News thread), the responses should cite, not enthuse. This skill enforces that.
 
 **`effortless-ecosystem`** — The OSS catalog: every public repo in the [SSoTme](https://github.com/SSoTme) and [effortlessapi](https://github.com/effortlessapi) GitHub orgs, with one-liner descriptions and install snippets. **Why?** "Where is the source for X?" / "Is there a transpiler for Y?" come up constantly. Without this skill, Claude guesses; with it, the answer is cited.
@@ -300,6 +302,7 @@ effortless-skills/
 │   ├── effortless-cmcc/                ← theory: the conjecture
 │   ├── effortless-rulebooks/           ← receipts: runnable substrates
 │   ├── effortless-rationale/           ← skeptic-facing defense (receipts only)
+│   ├── effortless-rulebook-exchange/   ← two parties exchange a rulebook, not prose
 │   └── effortless-ecosystem/           ← repo catalog (SSoTme + effortlessapi orgs)
 ├── CHANGELOG.md                        ← dated entries for repo-shape changes
 ├── DEPRECATED_SKILLS.md                ← deprecation registry (parsed by installer)

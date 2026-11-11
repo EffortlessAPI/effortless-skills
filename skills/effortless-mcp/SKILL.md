@@ -1,10 +1,11 @@
 ---
 name: effortless-mcp
 description: >
-  The Effortless MCP server (transpiler catalog + skills for any MCP client) and the rulebook
-  as the message between agents. Triggers: "wire up the effortless mcp server", "configure
-  cursor", effortless_ping / effortless_build / query_rulebook / validate_dag,
-  effortless://skills/, stdio mode, "MCP is fuzzy", "send the rulebook instead".
+  The Effortless MCP server — the always-on endpoint exposing the transpiler catalog and
+  skills to any MCP client. Triggers:
+  "install/wire up the effortless mcp server", "configure cursor for effortless",
+  effortless_ping / effortless_build / query_rulebook / validate_dag,
+  effortless://skills/ URIs, stdio mode. Explicit request only.
 audience: customer
 ---
 
@@ -143,21 +144,12 @@ The previous version stays addressable at its pinned URL — existing clients ke
 
 The MCP server's transpiler tools are equivalent in effect to running the corresponding `effortless <transpiler>` CLI command, but they POST directly to Control Plane — useful when the CLI isn't installed (Cursor on a teammate's laptop, ChatGPT in the browser, etc.).
 
-## The rulebook as the message (a different use of MCP)
+## Carrying a Rulebook Exchange over MCP
 
-An MCP tool call carries shape (JSON Schema) and meaning in prose (descriptions); the receiver
-interprets the prose. The alternative: send the **rulebook** itself, which defines every
-predicate in the domain. The request becomes trivial ("evaluate this", "complete this"), the
-receiver **evaluates** the model instead of interpreting a description, amends it with what was
-missing or misread, and sends it back; the sender's **diff** of the two models is the answer,
-with every assumption visible as a changed row, field or formula. Roles, CRUD and row filters
-travel inside it (`effortless-security`); a person can join through the spreadsheet round trip.
-
-- It is about what the message carries, not about making tool calls deterministic.
-- What stays ambiguous: the meaning of raw fields (their name, description and data) and the
-  step of writing the model. Both are confined to things that can be pointed at.
-- Not built yet as an MCP tool. The pieces that exist, the worked example (the late-fee
-  rulebook) and the prior art: [RULEBOOK-AS-MESSAGE.md](RULEBOOK-AS-MESSAGE.md).
+The Rulebook Exchange (send a rulebook, evaluate it, amend it, diff it) is transport-neutral;
+MCP is one way to carry it: a resource or tool argument with a rulebook media type, or an
+extension `com.effortlessapi/rulebook-exchange`. This server does not offer it yet. See
+`effortless-rulebook-exchange`.
 
 ## See also
 
@@ -166,3 +158,4 @@ travel inside it (`effortless-security`); a person can join through the spreadsh
 - `effortless-query` — local one-liners equivalent to `query_rulebook`.
 - `effortless-diagnostics` — what `validate_dag` is checking for.
 - `effortless-claude-updates` — for editing the **skill set** that this server exposes as resources.
+- `effortless-rulebook-exchange` — the transport-neutral exchange this server could carry.

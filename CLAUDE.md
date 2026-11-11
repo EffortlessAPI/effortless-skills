@@ -21,7 +21,7 @@ This is the **SSoT repo for the effortless skill suite itself** (GitHub `Effortl
 - **`skills/<name>/SKILL.md` is the actual source of truth.** Hand-editing it directly is the normal, correct way to change a skill today — not a shortcut that gets silently overwritten.
 - **The rulebook-as-SSoT / portal-Commit-regenerates-everything model is the target design, not yet the practice.** The portal (see below) is real, working infrastructure and *can* perform that regeneration when run — but nothing in the current workflow forces every `SKILL.md` edit through it, and recent history shows edits routinely bypass it.
 - **Derived/minimized artifacts** (any `.min.md`-style condensed file, `raw_skills.zip`, `install.sh`'s output) are downstream of `SKILL.md`, not the rulebook, whenever the rulebook is stale relative to the skills. If you need the authoritative text of a skill, read `skills/<name>/SKILL.md` — not the rulebook, not a minimized derivative.
-- **Companion files** (every file under `skills/<name>/` other than `SKILL.md`: `REFERENCE.md`, `omni-send.mjs`, `effortless-rulebook-devops/reference/`, `effortless-mcp/RULEBOOK-AS-MESSAGE.md`, ...) are always hand-edited directly; the portal never regenerates them.
+- **Companion files** (every file under `skills/<name>/` other than `SKILL.md`: `REFERENCE.md`, `omni-send.mjs`, `effortless-rulebook-devops/reference/`, ...) are always hand-edited directly; the portal never regenerates them.
 
 ## The Rulebook Portal (an editing surface, not the enforced one)
 

@@ -47,7 +47,7 @@ A project is **Effortless** if and only if BOTH are true:
 | **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-proposal` (the priced proposal: rows only, never a build), `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-security`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
 | **Airtable-connected only** | Both markers AND `effortless.json` registers `airtable-to-rulebook`. | `effortless-airtable`, `effortless-airtable-omni` |
 | **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-seeds`, `effortless-seed-authoring`, `effortless-claude-updates` |
-| **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem` |
+| **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem`, `effortless-rulebook-exchange` |
 | **Explicit request only** | Only when the user asks by name/phrase. Never auto-load just because a project uses Postgres, Docker, etc. | `effortless-bases`, `effortless-magic-links`, `effortless-mcp`, `effortless-publish-tool`, `effortless-video` |
 
 If you're in a project that lacks the marker and the user hasn't explicitly invoked Effortless tooling, do **not** load these skills. If the user wants to convert an existing project into an Effortless project, route to **effortless-init**.
@@ -355,6 +355,7 @@ skill" for a row in this table.
 | `effortless-rulebooks` | Empirical demonstration — substrates, ExplainDAG, conformance |
 | `effortless-ecosystem` | Catalog of public repos in SSoTme / effortlessapi orgs |
 | `effortless-rationale` | Skeptic-facing answers grounded in receipts |
+| `effortless-rulebook-exchange` | Two parties exchanging a rulebook (evaluate, amend, diff) instead of a request plus prose; any transport |
 
 ## Quick Reference
 
