@@ -1,11 +1,10 @@
 ---
 name: effortless-mcp
 description: >
-  The Effortless MCP server — the always-on endpoint exposing the transpiler catalog and
-  skills to any MCP client (Claude Code, Cursor, Windsurf, ChatGPT). Triggers:
-  "install/wire up the effortless mcp server", "configure cursor for effortless",
-  effortless_ping / effortless_build / query_rulebook / validate_dag,
-  effortless://skills/ URIs, stdio mode. Explicit request only.
+  The Effortless MCP server (transpiler catalog + skills for any MCP client) and the rulebook
+  as the message between agents. Triggers: "wire up the effortless mcp server", "configure
+  cursor", effortless_ping / effortless_build / query_rulebook / validate_dag,
+  effortless://skills/, stdio mode, "MCP is fuzzy", "send the rulebook instead".
 audience: customer
 ---
 
@@ -143,6 +142,22 @@ The previous version stays addressable at its pinned URL — existing clients ke
 | Formula / lookup / rollup / new table (Airtable-connected projects only) | OMNI via Playwright (see `effortless-airtable-omni`) |
 
 The MCP server's transpiler tools are equivalent in effect to running the corresponding `effortless <transpiler>` CLI command, but they POST directly to Control Plane — useful when the CLI isn't installed (Cursor on a teammate's laptop, ChatGPT in the browser, etc.).
+
+## The rulebook as the message (a different use of MCP)
+
+An MCP tool call carries shape (JSON Schema) and meaning in prose (descriptions); the receiver
+interprets the prose. The alternative: send the **rulebook** itself, which defines every
+predicate in the domain. The request becomes trivial ("evaluate this", "complete this"), the
+receiver **evaluates** the model instead of interpreting a description, amends it with what was
+missing or misread, and sends it back; the sender's **diff** of the two models is the answer,
+with every assumption visible as a changed row, field or formula. Roles, CRUD and row filters
+travel inside it (`effortless-security`); a person can join through the spreadsheet round trip.
+
+- It is about what the message carries, not about making tool calls deterministic.
+- What stays ambiguous: the meaning of raw fields (their name, description and data) and the
+  step of writing the model. Both are confined to things that can be pointed at.
+- Not built yet as an MCP tool. The pieces that exist, the worked example (the late-fee
+  rulebook) and the prior art: [RULEBOOK-AS-MESSAGE.md](RULEBOOK-AS-MESSAGE.md).
 
 ## See also
 

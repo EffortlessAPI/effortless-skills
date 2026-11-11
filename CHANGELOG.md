@@ -25,6 +25,12 @@ release section is an ISO date.
   page. Pairs with `rulebook-to-node-postgres-api`'s new `?fields=` parameter (2026-11-01).
 
 ### Added
+- **The rulebook as the message** (owner, 2026-11-11) — `effortless-mcp` gains a section and a
+  companion file, `RULEBOOK-AS-MESSAGE.md`: instead of a request plus prose descriptions, two agents
+  exchange the rulebook itself, evaluate it, amend it and diff it. Covers what an MCP message carries,
+  a worked example on the late-fee rulebook, what travels inside the model (`ERBTables`/`ERBFields`,
+  roles and RLS), the spreadsheet round trip for people, what stays ambiguous (raw fields, writing
+  the model), prior art (KQML, FIPA-ACL), and which pieces exist today. Not built yet as an MCP tool.
 - **`effortless-security`** — the Security module in one skill: the `<Role>CRUD` matrix on `ERBTables`/`ERBFields` (blank inherits, empty means none, the matrix wins over permission rows), the `role_<id>` schemas, `rbac/role-types/<role>.d.ts` (per-role TypeScript types from the same cascade as the views) and the rule that a persona is made fast by hiding roll-up columns, not by caching. Pairs with `rulebook-to-rbac` (matrix + role types) and `effortless-rbac-to-postgres-policies` (2026-11-01).
 - **`effortless-seed-authoring`** — the authoring side of seeds, split from the public `effortless-seeds`:
   the add-in shape, authoring order, the four ways to verify, and the gotchas found building
