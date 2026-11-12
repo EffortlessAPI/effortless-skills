@@ -208,3 +208,4 @@ interchangeable peripherals. The rulebook is the only thing that matters.
 - `effortless-workflow` — when to use which input spoke
 - `effortless-cmcc` — the conjecture behind substrate interchangeability
 - `effortless-ecosystem` — catalog of public transpiler repos
+- `effortless-rulebook-exchange` — the same rulebook as the contract between two parties (agents or people), who evaluate it with these transpilers, amend it and diff it

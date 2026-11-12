@@ -101,6 +101,22 @@ Both sides still run something: a formula engine, SQL, generated TypeScript. Tha
 is what descriptions need on both ends. In a rulebook it is left in one place: linking the raw
 fields to the world (below).
 
+## Where ssotme:// fits
+
+ssotme:// (`effortless-ssotme-protocol`) turns one rulebook into artifacts through registered
+transpilers. The exchange sits on top of it:
+
+- **It is how a party evaluates.** Running the rulebook (Postgres, TypeScript, the formula
+  engine) is running transpilers. ssotme:// promises the same rulebook and tool version give the
+  same output, so both parties compute the same values.
+- **The spreadsheet round trip is two transpiler runs**: `rulebook-to-xlsx` out,
+  `xlsx-to-rulebook` back.
+- **One contract at two scales.** In ssotme:// the rulebook is the contract between the model and
+  every tool: each transpiler respects its shape. In the exchange the same rulebook is the
+  contract between the parties.
+- **Both are transport-neutral.** ssotme:// tools run from the `effortless` CLI, over HTTP, or as
+  tools on our MCP server; the exchange runs over any channel (below). Neither depends on MCP.
+
 ## People in the exchange
 
 A rulebook converts to a spreadsheet (`rulebook-to-xlsx`) and back (`xlsx-to-rulebook`). A party
@@ -153,5 +169,6 @@ as a defined operation on any transport, and a diff that reads rename convention
 ## See also
 
 - `effortless-schema`: the rulebook's JSON structure, the payload.
+- `effortless-ssotme-protocol`: the transpiler protocol each party evaluates with.
 - `effortless-cmcc`: why a rulebook can carry a domain's full meaning.
 - `effortless-mcp`: our MCP server, one way to carry the exchange.

@@ -33,6 +33,8 @@ release section is an ISO date.
   ambiguous, prior art, what exists today. Not built yet as an operation on any transport.
   Replaces the `RULEBOOK-AS-MESSAGE.md` companion file added to `effortless-mcp` earlier the same
   day; `effortless-mcp` is about the server again and points to it.
+  Its "Where ssotme:// fits" section ties it to the transpiler protocol (evaluating is running
+  transpilers; the spreadsheet round trip is two of them), and `effortless-ssotme-protocol` links back.
 - **`effortless-security`** — the Security module in one skill: the `<Role>CRUD` matrix on `ERBTables`/`ERBFields` (blank inherits, empty means none, the matrix wins over permission rows), the `role_<id>` schemas, `rbac/role-types/<role>.d.ts` (per-role TypeScript types from the same cascade as the views) and the rule that a persona is made fast by hiding roll-up columns, not by caching. Pairs with `rulebook-to-rbac` (matrix + role types) and `effortless-rbac-to-postgres-policies` (2026-11-01).
 - **`effortless-seed-authoring`** — the authoring side of seeds, split from the public `effortless-seeds`:
   the add-in shape, authoring order, the four ways to verify, and the gotchas found building
