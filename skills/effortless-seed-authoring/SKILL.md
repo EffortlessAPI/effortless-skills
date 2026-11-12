@@ -18,24 +18,35 @@ the person making one. The two reference seeds, both complete and tested, are th
 
 ```
 effortless.json            "ProjectTranspilers": []   (valid: the files ARE the seed)
-effortless-seed.json       seed id/kind/mountPath/requires + the questions (replacements)
-<name>.config.json         ONLY file with $key$ tokens; public values; server reads it, env overrides it
-README.md                  what you get, the questions table, the rules it keeps
-INTEGRATE.md               the wiring, for Claude: numbered steps, each ending "Works when: ..."
-rulebook/*.fragment.json   the tables it adds (+ optional hooks.mjs for starter rows from flags)
-scripts/merge-rulebook.mjs the SAME file in every seed: dry run unless --write, text-appends tables
-sql/NN-*.sql               idempotent, run on every boot (rebuilds drop views/tables: re-apply, don't remember)
-server/index.js            register<Name>(app, { pool, dir, env, ... }) for the generated API's custom.js
+effortless-seed.json       the contract (below): identity + version, EVERY setting, agent, stages, setup
+<name>.config.json         ONLY file with $key$ tokens: one "$key$" per setting; public values; env overrides
+README.md                  what you get, the Settings table PRINTED from the manifest, the rules it keeps
+INTEGRATE.md / UPGRADE.md / REMOVE.md   for the engine: numbered steps, each ending "Works when: ..."
+CHANGELOG.md               an entry per version, with what a project must do
+rulebook/*.fragment.json   tables it adds ONLY when nothing in the project maps
+scripts/install.mjs        writes the rulebook: config, fragments if asked, SQL into ERBCustomizations rows; dry run unless --write
+scripts/doctor.mjs         what is wired / missing, each with the fix (exit 1 until done)
+scripts/check-seed.mjs     the SAME file in every seed: the manifest, config, README and steps agree
+sql/*.sql                  templates the install script fills and puts in ERBCustomizations rows (02b, 04b)
+server/index.js            one middleware for the project's own server/ (app.use before its routes)
 ui/<name>-ui.js            plain custom elements, no build, no framework; --prefix-* CSS properties
-test/                      real Postgres + a stand-in for the third party; npm test
+test/                      real Postgres shaped like a stage AND like Dev + a stand-in third party; npm test
+
+effortless-seed.json beyond seed/replacements (the site and the agent read these; the CLI ignores them):
+  seed.version  provides ["sign-in"]  platform { needs: ["magiclink-tenant"] }  stages { dev, published,
+  requiresBeforePublish: [{check, says}] }  agent { integrate, upgrade, remove, map, doctor }  setup { path }
+  rulebook { addsOnlyWhenUnmapped, customizations }. Every replacement: key, label, description, default,
+  example, when ("install" | "any time"), valueType (text | number | list | map ...), affects.
 ```
 
 Rules of the line:
 
 1. **Zero runtime dependencies**; `pg` and `express` are devDependencies for tests. The host project already has them.
-2. **One registration line** in `backend/api/custom.js` (never overwritten by rebuilds). Nothing in generated files.
-3. **Everything a rebuild can undo is re-applied at boot** (grants, view options, policies). The seed
-   never asks someone to remember a step after `effortless build`.
+2. **One `app.use(...)` in the project's own `server/src/server.js`**, before its routes. Nothing in generated
+   files, nothing in the generated API's `custom.js` (a Loops project does not own the generated API).
+3. **SQL lives in the rulebook's `ERBCustomizations` rows**, written by the install script: Dev re-runs them
+   after every rebuild and every published stage on every publish, as the database owner. Never install SQL at
+   server boot: on a published stage the app's connection cannot run DDL (bases: `<db>_app`, no CREATEROLE).
 4. **Secrets: environment only** (`SEED_SECRET_<key>` for persisted ones). Never in a config file, a rulebook
    table or a log. Anything secret-bearing in the database lives in its **own schema** that no request role is granted.
 5. **State that is data goes in the rulebook** (tables, derived fields); **state that is a secret or a ledger
@@ -71,7 +82,7 @@ Rules of the line:
 |---|---|
 | `npm test` against a throwaway Postgres (`initdb` in a temp dir; short socket path, `LC_ALL=en_US.UTF-8`; `timeout` does not exist on macOS) | Logic, SQL, RLS. Keep a stand-in server for the third party that returns *real* shapes (signed tokens, paginated GraphQL, throttle errors). |
 | **Mutation check**: break the one line that matters, see the right test fail, restore | A restrictive policy made permissive failed 2 tests; a webhook route left behind `express.json()` failed 4. A test that cannot fail is decoration. |
-| The real generated API, built by the real transpiler, with the seed wired into `custom.js` and run | `pool.connect` inside a request, a `this.connect()` re-entry in `pg`'s `pool.query`, a middleware ordering bug: none visible with a hand-made fixture. |
+| The real transpiler's output: install.mjs into a rulebook, rulebook-to-postgres, then the Dev fileset as a superuser AND `update-effortless-schema.sql` as a NOCREATEROLE owner with an app role | A function only the owner may create, a role the stage cannot make, a policy a release drops: none visible with a hand-made fixture. |
 | `effortless listSeeds` / `cloneSeed <account>/<repo> <relative-dir>` / `effortless build` on the published repo; a browser look at each UI | Token replacement actually touching only the config file; the page rendering with no console errors. Use a RELATIVE clone destination. |
 
 Run **both seeds together** whenever two exist: the Shopify token being unreachable to the signed-in role

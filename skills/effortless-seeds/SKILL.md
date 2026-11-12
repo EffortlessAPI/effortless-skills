@@ -35,7 +35,7 @@ and its gotchas, and every project that uses it behaves the same way.
 | Need | Seed | Mount |
 |---|---|---|
 | A backend: Postgres, Node API, TypeScript SDK | `rulebook-backend` | `backend/` |
-| Approved-user sign-in: magic links in beta/production, **pick-your-user in dev**, row-level security the database enforces in both | `effortless-magic-links` | `magic-links/` |
+| Sign-in for the app: only approved people, each as themselves; emailed codes on published stages, **pick-your-user in Dev**; the database enforces it (free) | `effortless-magic-links` | `server/magic-links/` |
 | Shopify products, customers and orders as rulebook tables, kept current by sync and webhooks | `effortless-node-shopify` | `node-shopify/` |
 | Roles and RLS compiled from the rulebook's Security module | `rulebook-auth` | `auth/` |
 | Deploy to Control Plane; a native mobile app; reference docs | `cpln-deploy`, `mobile-app`, `rulebook-docs` | per README |
@@ -45,17 +45,32 @@ and its gotchas, and every project that uses it behaves the same way.
 ### Installing an add-in into a project
 
 ```bash
-cd <project root>                                   # has effortless.json and the Backend API add-in
-effortless cloneSeed effortlessapi/effortless-magic-links magic-links     # a RELATIVE destination
-rm -rf magic-links/.git
+cd <project root>
+effortless cloneSeed effortlessapi/effortless-magic-links server/magic-links   # a RELATIVE destination: the seed's mountPath
+rm -rf server/magic-links/.git
 ```
 
-Then **read the add-in's `INTEGRATE.md`** (the wiring, written to be followed step by step, each step
-saying how to know it worked) and its README. Typical shape: merge the seed's rulebook tables with
-`node <mount>/scripts/merge-rulebook.mjs --rulebook ... ` (dry run first; `--write` edits the project's
-source of truth, so say what it adds and get a yes), `effortless build`, one registration line in the
-generated API's `custom.js` (the file rebuilds never overwrite), load the seed's web component in the app.
-Ask the person only what the seed's questions need (an email, a store address); do the rest.
+On Effortless the platform does the first part when someone adds the seed (the Publish tab or the
+seed library) and sends you a message naming the seed, its folder and its instructions.
+
+Then **follow the add-in's `INTEGRATE.md`** (its manifest's `agent.integrate`): numbered steps, each
+ending "Works when". Every setting is declared in its `effortless-seed.json` with a default, a
+description and an example, and the README's Settings table is printed from it: you fill them in, not
+a form. The common shape:
+
+- **Map onto the project, add only when nothing maps.** A seed's `agent.map` script (if any) answers
+  narrow questions about the rulebook (which tables could hold the people) with reasons and doubts; you
+  decide, and ask the person when two are close. Its `rulebook.addsOnlyWhenUnmapped` names what it
+  would add otherwise; say so before adding.
+- **Its install script writes the rulebook** (dry run first, then `--write`): the mapping into the
+  seed's config, and any SQL into `ERBCustomizations` rows (never loose `.sql` files), so the SQL
+  reaches every published stage.
+- **Its server half goes in the project's own `server/`** (one `app.use(...)` before the project's
+  routes), its UI in the app, then rebuild.
+- **Its `agent.doctor`** says what is wired and what is missing, each with the fix. Run it last.
+- `UPGRADE.md` / `REMOVE.md` (manifest `agent.upgrade` / `agent.remove`) when moving versions or taking it out.
+
+Ask the person only what the seed cannot work out; do the rest.
 
 ## What a seed is / is not
 

@@ -8,11 +8,24 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **Seeds: the server/ layout and the tightened manifest** (owner, 2026-11-11) — `effortless-seeds` says
+  an add-in's server half goes in the project's own `server/`, its SQL in `ERBCustomizations` rows (written
+  by the seed's install script), that it maps onto the project's tables and adds its own only when nothing
+  maps, and that its `agent.integrate` / `agent.doctor` are the steps; `effortless-magic-links` mounts at
+  `server/magic-links`. `effortless-seed-authoring` documents the manifest keys (`seed.version`,
+  `provides`, `platform.needs`, `stages`, `agent`, `setup`, `rulebook`, every setting with default and
+  example), `check-seed.mjs`, and testing against the real transpiler as Dev AND as a bases-shaped stage.
 - **A proposal priced at any level, and a description on every story** — `effortless-proposal` now
   writes `ERBUserStories.Description` (what the story gives, in plain words: the Proposal page prints
   it as a paragraph), and knows `PriceAdjustment` on `ERBBuildPhases` and `ERBEpics`: the amount a
   phase or an epic carries itself, counted once when any of its stories is picked, for a phase or an
   epic priced as a whole (its stories at 0 read "included"). `ImageUrl` is the person's to add.
+- **Every app has its own server** (owner, 2026-11-09) — `effortless-app` step 5 now says an app
+  is the pages (`app/`) AND an Express `server/` between them and the generated API, in Dev and
+  when published, from the same workload; static-only is by explicit request. Before this the
+  skill described only "pages over the generated API", so agents built and described published
+  apps as static sites with an open API. Loops' project template ships the `server/`
+  (loops repo CLAUDE.md, "Every project has a `server/`").
 - **Slow views: cache the slow-changing sub-DAG at the parent** (owner, 2026-11-07) —
   `effortless-orchestrator` guardrail 7, a new "Slow views" section and `view-timings.sh` in
   `effortless-diagnostics`, and a step in `effortless-loop`: a `vw_*` view over 1-2 s on the
