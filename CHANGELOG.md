@@ -8,6 +8,11 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **A proposal priced at any level, and a description on every story** — `effortless-proposal` now
+  writes `ERBUserStories.Description` (what the story gives, in plain words: the Proposal page prints
+  it as a paragraph), and knows `PriceAdjustment` on `ERBBuildPhases` and `ERBEpics`: the amount a
+  phase or an epic carries itself, counted once when any of its stories is picked, for a phase or an
+  epic priced as a whole (its stories at 0 read "included"). `ImageUrl` is the person's to add.
 - **Slow views: cache the slow-changing sub-DAG at the parent** (owner, 2026-11-07) —
   `effortless-orchestrator` guardrail 7, a new "Slow views" section and `view-timings.sh` in
   `effortless-diagnostics`, and a step in `effortless-loop`: a `vw_*` view over 1-2 s on the

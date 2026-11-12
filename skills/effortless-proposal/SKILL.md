@@ -35,8 +35,8 @@ the proposal:
 
 | Table | One row is | Key fields |
 |---|---|---|
-| `ERBBuildPhases` | a release on the roadmap (timing) | `ERBBuildPhaseId` (`phase-1`), `PhaseNumber` 1,2,3, `Title`, `Description` (1-2 sentences under its title) |
-| `ERBEpics` | a set of value inside a phase | `ERBEpicId` (kebab-case, `getting-started`), `Title`, `Description` (one line), `SortOrder` |
+| `ERBBuildPhases` | a release on the roadmap (timing) | `ERBBuildPhaseId` (`phase-1`), `PhaseNumber` 1,2,3, `Title`, `Description` (a paragraph or two: what the phase delivers), `PriceAdjustment` (see "Pricing a phase or an epic as a whole") |
+| `ERBEpics` | a set of value inside a phase | `ERBEpicId` (kebab-case, `getting-started`), `Title`, `Description` (a sentence or two: the value it gives), `PriceAdjustment`, `SortOrder` |
 | `ERBRoles` | a persona: who does the stories | `ERBRoleId` (kebab, `customer`), `Title`, `Description`, `SortOrder`; new ones `DefaultCRUD` `"CRUD"`, `IsAdminEquivalent` false, `IsTenantExempt` false |
 | `ERBUserStories` | what is priced and picked | see below |
 | `ERBAcceptanceCriteria` | one checkable sentence that says the story is done | `ERBAcceptanceCriterionId` (`<story>-AC1`), `ERBUserStory`, `Criterion`, `SortOrder`, `IsAccepted` false |
@@ -51,6 +51,10 @@ the proposal:
 - `ERBUserStoryId` and `ReqId`: `US-001`, `US-002`... (same value, next free number).
 - `ShortTitle`: what the person GETS, 2-5 words ("My shifts this week"). The page leads with it.
 - `StoryText`: "As a <persona title>, I can <do something>, so that <outcome>."
+- `Description`: what the story gives, in plain words, one or two sentences
+  ("The first thing a volunteer sees: today, tomorrow, the rest of the week.").
+  The page prints it under the title, like a paragraph in a document: write it
+  for every story. Not the "As a..." sentence again, and no table names.
 - `ERBRole`: one persona id (a plain id, must exist in `ERBRoles`). Prefer a real
   persona over the admin.
 - `ERBBuildPhase`, `ERBEpic` (row ids that exist), `ERBFeature` (optional), `ERBEffortClass` (`G1`/`G2`/`G3`).
@@ -156,11 +160,26 @@ inside them. Ask once if it is unclear whether something is a phase or an epic.
   zero. `{{monthly}}` and `{{yearly}}` always both show, whichever way the client
   has set the switch. The one-line lists you propose in the chat are not
   proposal text: they keep plain prices.
+- **Pricing a phase or an epic as a whole.** `ERBBuildPhases.PriceAdjustment`
+  and `ERBEpics.PriceAdjustment` are an amount the phase or epic carries itself,
+  in dollars, plus or minus, counted ONCE whenever any of its stories is picked.
+  A level's price is its picked stories plus that amount. Use it when the person
+  asks for one price for a phase or an epic ("Discovery is $1,500 flat"): put the
+  price in `PriceAdjustment` and set its stories' `Price` to 0; the page then
+  shows them as "included", never "$0". Use a minus amount for something taken
+  off a set ("$200 off when you take all of Accounts"). Leave it blank otherwise:
+  story by story is the default. Do not put the same money in both places. A
+  price for the whole proposal that is not a story is a line (REFERENCE.md).
+- `ImageUrl` on a phase, an epic or a story is a picture the person adds on the
+  page (they upload it there). Do not invent one or point at a web address you
+  have not been given.
 - Never write our private estimating into the rulebook or the chat (hours,
   rates, cost, margin): the rulebook holds the final price only.
-- Totals you report: **offered** (sum of `Price` of every offered story),
+- Totals you report: **offered** (sum of `Price` of every offered story, plus
+  every `PriceAdjustment` of a phase or an epic),
   **first-open pick** (stories `IsIncludedByDefault` or `IsRequired`, plus every
-  prerequisite of those, counted once), and per phase / epic when useful. Lines
+  prerequisite of those, counted once, plus the `PriceAdjustment` of each phase
+  and epic that has a story in it), and per phase / epic when useful. Lines
   and discounts follow the arithmetic in REFERENCE.md.
 
 ## Included, base, saved picks
@@ -190,8 +209,9 @@ inside them. Ask once if it is unclear whether something is a phase or an epic.
 |---|---|
 | the whole proposal: who it is for | `ERBProposalSections` row `SectionKey` `masthead`: `Title` (eyebrow, e.g. "Common Table Community Kitchen") |
 | the one line it argues + 2-3 sentences | row `SectionKey` `thesis`: `Title` (the page's headline), `Body` (the lede) |
-| a phase | `ERBBuildPhases.Description` (1-2 sentences) |
-| an epic | `ERBEpics.Description` (one line) |
+| a phase | `ERBBuildPhases.Description` (a paragraph or two; Markdown works) |
+| an epic | `ERBEpics.Description` (a sentence or two) |
+| a story | `ERBUserStories.Description` (one or two sentences) |
 | an argument section | another `ERBProposalSections` row: `SectionKey` (kebab), `Title`, `Body` (`**bold**` works), `SortOrder`, `ClientVisible` true |
 
 Section rows: `ERBProposalSectionId` = the key (`masthead`, `thesis`, ...);
@@ -214,7 +234,7 @@ rows back if in doubt.
 
 ## What happens after
 
-The owner publishes a version from the page (Owner tools); the prospect sees
+The owner publishes a version from the page (Publish, in the bar at its top); the prospect sees
 only published versions, picks and agrees in principle. Building starts after
 that, in the project's own chat. Publishing, lines, discounts and estimates are
 also editable in the page's Owner tools.
