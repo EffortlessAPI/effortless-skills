@@ -329,7 +329,7 @@ skill" for a row in this table.
 | `effortless-rulebook-devops` | Dev/staging/beta/production promotion model, migration ledger, Deployment Management console (heavy, once per project) |
 | `effortless-mcp` | The Effortless MCP server — wiring any MCP client to the transpiler catalog |
 | `effortless-publish-tool` | Publishing a new version of a transpiler tool from `Versioned-Stable-SSoTme-Tools` |
-| `effortless-video` | Explainer videos in the `effortless-vid-01-full-name` producer repo |
+| `effortless-video` | Explainer videos in the `effortless-videos` producer repo; **in a customer project, "make a video" means writing its next video brief, `videos/brief.md`** (Effortless Studio and the Walkthrough video tab open on it) |
 | `effortless-loop` | The iterative dev cycle — "the loop", "do a turn", "rebuild the rulebook" |
 | `effortless-query` | Querying the rulebook JSON — listing tables, extracting schema, finding relationships |
 | `effortless-schema` | Understanding the JSON structure — field types, datatypes, formula syntax, `_meta` |

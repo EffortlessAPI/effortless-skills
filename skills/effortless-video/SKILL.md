@@ -17,6 +17,25 @@ at `series/<series>/<video>/` and its slug is compound (`15-cli-tour/06-effortle
 That repo's `CLAUDE.md` is long and binding. Read it. This skill is the method; **`REFERENCE.md`
 beside it is the cookbook** (stage API, commands, traps, thumbnail recipe).
 
+## 🟦 In a customer project: write `videos/brief.md`, the Studio makes the video
+
+Outside the producer repo (a customer's Effortless project, a Loops chat) you cannot record,
+film or render: there is no producer, no browser recorder and no voice key, and you never hold
+one. "Make a video" there means **write the project's next video brief** and hand off:
+
+- Write it to **`videos/brief.md`** at the project root (Markdown). Loops pushes it to the
+  project's repo after your turn. effortlessapi.com's **Effortless Studio** tab and the
+  **Walkthrough video** tab (Scope & Stack) both open on that file as the starting point for
+  the next video, and save their edits back to it, so pull before you change it again.
+- Say in it: who the video is for, how long (minutes), what it must make clear, the scenes in
+  order with what the viewer watches in each, and anything it must not say. Context before
+  detail. A full scene-by-scene script or a production plan you already wrote goes in too, or
+  sits beside it in `videos/` and the brief names it: the video engineer gets the whole repo.
+- Then tell the person the brief is saved and that **they** start the video: open Effortless
+  Studio (or Walkthrough video) and press Make this video. A take is charged to the project's
+  credit, so it is always the person's click, never yours.
+- One file, one next video. Writing a new brief replaces the last one (git keeps it).
+
 ## The reference cut
 
 **`series/15-cli-tour/06-effortless-init` (take 5) is the bar.** The owner's verdict: "every

@@ -8,6 +8,11 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **A video asked for in a customer project is a brief, `videos/brief.md`** (owner, 2026-11-14) —
+  `effortless-video` says that outside the producer repo the agent writes the project's next video
+  brief to `videos/brief.md`, which effortlessapi.com's Effortless Studio and Walkthrough video tabs
+  open on (and save back to), and the person presses Make this video; `effortless-orchestrator`'s
+  routing row says the same.
 - **Seeds: the server/ layout and the tightened manifest** (owner, 2026-11-11) — `effortless-seeds` says
   an add-in's server half goes in the project's own `server/`, its SQL in `ERBCustomizations` rows (written
   by the seed's install script), that it maps onto the project's tables and adds its own only when nothing
