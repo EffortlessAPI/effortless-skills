@@ -8,6 +8,12 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **The video catalog that counts is prod** (owner, 2026-10-31) — `effortless-video` says the producer
+  catalog's real database is `effortless-vid-prod`: new series and videos do not reach it by themselves
+  (`selfHealSeeding()` seeds `local` only), so create them there (env picker on `prod`, or
+  `server/catalog-push-missing.mjs`), never load `05-insert-data.sql` into prod without diffing, and
+  read the change back from prod before calling it done. Adding/updating rows needs no extra yes;
+  deleting always does.
 - **A video asked for in a customer project is a brief, `videos/brief.md`** (owner, 2026-11-14) —
   `effortless-video` says that outside the producer repo the agent writes the project's next video
   brief to `videos/brief.md`, which effortlessapi.com's Effortless Studio and Walkthrough video tabs

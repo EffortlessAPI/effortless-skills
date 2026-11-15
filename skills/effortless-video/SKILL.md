@@ -197,6 +197,34 @@ proper noun or acronym before calling it final.
 9. Report plainly: real length, what was verified by eye, what was not (you cannot hear audio,
    so say so), and every judgement call the owner should check. Never publish without a yes.
 
+## 🟥 The catalog you manage is PROD
+
+The producer catalog (Series, Videos, Thumbnails, Publications, access policies, codes) that
+counts is the **prod** database, `effortless-vid-prod` (owner, 2026-10-31). The public site,
+the deployed workload and the admin portal's Video Studio (env picker on `prod`) all read it.
+The `local` env, the catalog rulebook file on disk, is effectively mock data. **A catalog
+change is not done until it is in prod.**
+
+- New folders do not reach prod by themselves. `selfHealSeeding()` seeds disk-only
+  series/videos into the `local` env only, so a video can show in `./start.sh list` and the
+  local picker while prod, and every screen that reads it, has never heard of it. That is why
+  series 24 and 25 were missing from the Video Studio on 2026-10-31.
+- Create series and videos, and change access, thumbnails and releases, in prod: through the
+  producer (or the portal's Video Studio) with the env picker on `prod`, signed in, or with
+  `node server/catalog-push-missing.mjs [env] [--apply]`, which inserts the Series and Videos
+  rows the local file has and prod lacks (insert only, a diff without `--apply`; it does not
+  copy Thumbnails). Keep the catalog rulebook file in step, since `effortless build` generates the
+  SQL from it.
+- Adding and updating video rows in prod is part of video work and needs no extra yes
+  (owner, 2026-10-31). **Deleting anything from prod always does.**
+- **Never load the generated `05-insert-data.sql` into prod without diffing first.** Its
+  upserts overwrite every prod row with the file's copy, so anything written only in prod
+  (YouTube sync state, site releases, codes minted there) is lost. Add only the missing rows.
+- Never write DDL by hand (repo `CLAUDE.md`). If a generated SQL build fails, fix that; do
+  not skip to hand-written statements.
+- Before reporting done, read it back from prod: the Video Studio on `prod`, or the catalog
+  API with `X-Catalog-Env: prod`. Confirm the new series or video is there.
+
 ## Guardrails
 
 - Never fabricate a substrate result. A video is a claim in public.
@@ -204,5 +232,5 @@ proper noun or acronym before calling it final.
 - Re-recording VO is three steps; a stale word map or an unmatched cue fails silently elsewhere
   (the stage makes it a hard failure, keep it that way).
 - Never `ffprobe` the final MP4 while `render-cli` is running. Never add caching. Never write
-  DDL against the catalog Postgres. Check `TinyLinks` before shortening a URL.
+  DDL against the catalog Postgres. Catalog changes land in prod, not only `local`. Check `TinyLinks` before shortening a URL.
 - Demo apps and screenshots are colourful and phone-shaped, except the rulebook editor.
