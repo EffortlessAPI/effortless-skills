@@ -8,6 +8,11 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **Multiple choice: every common form, as equals** (owner, 2026-11-15) — `effortless-schema` shows
+  nested IF, IFS, SWITCH, CHOOSE and SQL's searched and simple `CASE` side by side, none preferred,
+  with the shared semantics (first match wins, no default is blank, text compare);
+  `effortless-xlsx-to-rulebook` says they port as they are. Needs the tools that parse formulas
+  published with the same change (Versioned-Stable-SSoTme-Tools `docs/ERB-MULTIPLE-CHOICE.md`).
 - **The video catalog that counts is prod** (owner, 2026-10-31) — `effortless-video` says the producer
   catalog's real database is `effortless-vid-prod`: new series and videos do not reach it by themselves
   (`selfHealSeeding()` seeds `local` only), so create them there (env picker on `prod`, or

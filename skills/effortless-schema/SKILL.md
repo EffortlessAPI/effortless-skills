@@ -103,7 +103,22 @@ full escalation ladder.
 =SUBSTITUTE(LOWER({{CompanyName}}), " ", "-")
 ```
 
-**Functions:** IF, AND, OR, NOT, TRUE, FALSE, CONCAT, SUBSTITUTE, LOWER, UPPER, LEFT, RIGHT, MID, LEN, TRIM, FIND, SEARCH, TEXT, VALUE, SUM, COUNT, COUNTIFS, SUMIFS, AVERAGEIFS, MIN, MAX, INDEX, MATCH, POWER, LOG, LOG10, ABS, ROUND, COALESCE/IFERROR.
+**Functions:** IF, IFS, SWITCH, CHOOSE, AND, OR, NOT, TRUE, FALSE, CONCAT, SUBSTITUTE, LOWER, UPPER, LEFT, RIGHT, MID, LEN, TRIM, FIND, SEARCH, TEXT, VALUE, SUM, COUNT, COUNTIFS, SUMIFS, AVERAGEIFS, MIN, MAX, INDEX, MATCH, POWER, LOG, LOG10, ABS, ROUND, COALESCE/IFERROR.
+
+### Multiple choice: any common form
+
+There is no one way to write a multiple choice. Every tool accepts all of these as equals; use whichever reads best:
+
+```
+=IF({{Score}} >= 90, "A", IF({{Score}} >= 80, "B", "C"))                        nested IF
+=IFS({{Score}} >= 90, "A", {{Score}} >= 80, "B", TRUE(), "C")                    IFS
+=CASE WHEN {{Score}} >= 90 THEN "A" WHEN {{Score}} >= 80 THEN "B" ELSE "C" END   searched CASE
+=SWITCH({{Plan}}, "free", 0, "pro", 20, 99)                                      SWITCH
+=CASE {{Plan}} WHEN "free" THEN 0 WHEN "pro" THEN 20 ELSE 99 END                 simple CASE
+=CHOOSE({{Tier}}, "gold", "silver", "bronze")                                    CHOOSE (Tier counts from 1)
+```
+
+The first match wins, and only the branch taken is computed. With no `ELSE` / default, a choice that matches nothing is blank (NULL). SWITCH, simple CASE and CHOOSE compare as text, and a blank value never matches. CASE keywords are case-insensitive. Each tool emits the form its target supports (a `CASE` in SQL, a conditional in code, `IF`/`SWITCH` in a workbook).
 
 ## Hard limit: 1 hop only. No 2-hop / chained joins — ever.
 

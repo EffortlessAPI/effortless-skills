@@ -19,6 +19,10 @@ But the resemblance stops at the substrate boundary, and the gaps are exactly
 where a straight copy-paste from a real spreadsheet breaks. This skill is the
 gap list — know these before porting a sheet, not after a failed build.
 
+Multiple-choice formulas are not a gap: nested `IF`, `IFS`, `SWITCH` and
+`CHOOSE` port as they are, and SQL's `CASE WHEN … END` is accepted too (all
+equals; see `effortless-schema`, "Multiple choice").
+
 ## The gap that will actually bite you: 1 hop only
 
 **A spreadsheet can chain lookups indefinitely.** `VLOOKUP` into a sheet that
