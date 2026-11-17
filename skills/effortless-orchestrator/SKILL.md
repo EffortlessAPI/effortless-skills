@@ -198,7 +198,9 @@ demand only — never the default first read). These exist specifically so you
 never have to read the full rulebook to query it. The schema is the map: use it to
 pick the table and fields, then run a `python3`/`jq` query on the original
 `effortless-rulebook.json` that returns only that slice (JSON can be queried, prose
-cannot) — see `effortless-query`, "The schema tells you what to ask". If the project doesn't have this
+cannot) — see `effortless-query`, "The schema tells you what to ask". A rulebook
+in the context (a `Read`, or a `@path` import in `CLAUDE.md`) is the usual cause of
+"Autocompact is thrashing" on a large project; see `effortless-query`, "Symptom". If the project doesn't have this
 transpiler yet, ask the user whether to install it — see `effortless-query` for
 the full discipline and `effortless-workflow` for writing via code instead of
 tokens.

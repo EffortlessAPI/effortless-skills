@@ -13,6 +13,8 @@ release section is an ISO date.
   and fields from `derived-schema.min.json`, then run a filtered, projected `python3`/`jq` query on
   the original JSON for just that slice (JSON can be queried, prose cannot). Large rulebooks are
   unwieldy for smaller models, and a full read can fill the whole context.
+  Also names the symptom (100k+ tokens before the first message, "Autocompact is thrashing", a
+  `@`-import of the rulebook in `CLAUDE.md`) so a session that sees it reaches for `minimize-rulebook`.
 - **Multiple choice: every common form, as equals** (owner, 2026-11-15) — `effortless-schema` shows
   nested IF, IFS, SWITCH, CHOOSE and SQL's searched and simple `CASE` side by side, none preferred,
   with the shared semantics (first match wins, no default is blank, text compare);

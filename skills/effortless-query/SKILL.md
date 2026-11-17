@@ -3,7 +3,8 @@ name: effortless-query
 description: >
   Query effortless-rulebook.json without reading it whole — list tables, extract schema,
   find FK relationships, inspect calculated fields and formulas; the derived
-  minimize-rulebook ladder. ERB projects only.
+  minimize-rulebook ladder. Also: a big rulebook filling the context (autocompact
+  thrashing, 100k+ tokens per step). ERB projects only.
 audience: customer
 ---
 
@@ -14,6 +15,17 @@ audience: customer
 **The rulebook is the single source of truth. NEVER read generated files (SQL, Go,
 Python, etc.) to understand the schema.** Those files are projections — the rulebook
 is the source. Query it with targeted one-liners that produce minimal output.
+
+### Symptom: the rulebook is riding along in the context
+
+A rulebook of a few hundred KB is 100k+ tokens. If it is in the context, every step re-reads it
+and every compaction reloads it, so an agent shows: 100k+ tokens before the first message,
+"Autocompact is thrashing", a compaction on every step, or small models failing outright, and
+switching to another model does not help. It gets there by a `Read`/`cat` of the file, a
+`@effortless-rulebook/...` import in `CLAUDE.md` (a space then `@path` loads that file with the
+instructions, on every step), or a tool that returns it whole. The cure is this skill: never put
+the rulebook in the context; give the agent `minimize-rulebook`'s small derived files as the map
+and a filtered query on the original for the slice it needs. Never `@`-import the rulebook.
 
 ### Check for derived rulebooks first — climb the ladder, don't jump to the bottom
 
