@@ -8,6 +8,11 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **Query the original, guided by the schema** (owner, 2026-11-17) — `effortless-query` and
+  `effortless-orchestrator` say the derived schema files are a map, not the answer: pick the table
+  and fields from `derived-schema.min.json`, then run a filtered, projected `python3`/`jq` query on
+  the original JSON for just that slice (JSON can be queried, prose cannot). Large rulebooks are
+  unwieldy for smaller models, and a full read can fill the whole context.
 - **Multiple choice: every common form, as equals** (owner, 2026-11-15) — `effortless-schema` shows
   nested IF, IFS, SWITCH, CHOOSE and SQL's searched and simple `CASE` side by side, none preferred,
   with the shared semantics (first match wins, no default is blank, text compare);

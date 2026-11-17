@@ -50,6 +50,34 @@ in, sanity-checking a relationship — all of that can be reasoned about from
 Only implementation/debugging work that needs to see actual row values
 requires climbing further down the ladder to real data.
 
+### The schema tells you what to ask; then query the original for just that slice
+
+You can query JSON; you cannot query markdown or prose. That is the point of the ladder: the
+small schema files (`*.derived-read-me-1st.txt`, `*.derived-schema.min.json`) are a MAP, not the
+answer. Read the map, work out which table and fields hold what the question needs, then write
+a query against the ORIGINAL `effortless-rulebook.json` that returns only those rows and
+columns. Do not read `derived-data.json`, and do not load the table whole.
+
+1. Map: from the schema, the table (`Routes`), the columns (`Section`, `Title`, `PathPattern`),
+   and any link to follow (a `relationship` field points at another table; `derived-schema.json`
+   says which, if the min file does not).
+2. Slice: a `python3`/`jq` one-liner on the original that filters, projects and caps:
+
+```bash
+python3 -c "
+import json; d=json.load(open('effortless-rulebook/effortless-rulebook.json'))
+for r in d['Routes']['data']:
+  if r.get('Section')=='Admin': print(r['Title'], '|', r['PathPattern'])
+" | head -40
+```
+
+3. A derived field (`calculated`, `lookup`, `aggregation`) is answered from its `formula` in the
+   schema; you only need rows to see the values it produces.
+
+Always filter, project to the columns you need, and `| head`. A question about 3 routes costs
+3 lines, not the table. The answer is in the schema's names; the original is only a store to
+pull from.
+
 ### Token Discipline
 
 > The canonical Token Discipline statement lives in `effortless-orchestrator`.

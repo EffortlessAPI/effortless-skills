@@ -195,7 +195,10 @@ You already knew the schema before the build because you queried it. Trust the p
 (table/field names, read first, always) → `*.derived-schema.min.json` →
 `*.derived-schema.json` → full rulebook → `*.derived-data.json` (data rows, on
 demand only — never the default first read). These exist specifically so you
-never have to read the full rulebook to query it. If the project doesn't have this
+never have to read the full rulebook to query it. The schema is the map: use it to
+pick the table and fields, then run a `python3`/`jq` query on the original
+`effortless-rulebook.json` that returns only that slice (JSON can be queried, prose
+cannot) — see `effortless-query`, "The schema tells you what to ask". If the project doesn't have this
 transpiler yet, ask the user whether to install it — see `effortless-query` for
 the full discipline and `effortless-workflow` for writing via code instead of
 tokens.
