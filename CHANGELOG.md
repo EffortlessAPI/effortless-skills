@@ -7,6 +7,12 @@ release section is an ISO date.
 
 ## [Unreleased]
 
+### Added
+- **`effortless-go-live`** (owner, 2026-11-18, after enable-u-demo's Production failed) — the checklist before a stage
+  publish and for any login, token or secret: sign-in is the sign-in seed (never a token of your own), a secret is the
+  app's own (`generate_secret`), from outside (the customer), or the platform's, read with no fallback; `check_secrets`;
+  what a stage's database refuses. Routed from `effortless-orchestrator`; `effortless-magic-links` points at it.
+
 ### Changed
 - **What an ERBCustomizations row may do on a published stage** (owner, 2026-11-18) — `effortless-sql`: Beta and
   Production run the rows as the database's owner on a shared server, so a row makes no table or column (rulebook),

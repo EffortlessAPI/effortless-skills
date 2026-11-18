@@ -26,6 +26,9 @@ the feature belongs in your app — not in magic-links. See
 > `INTEGRATE.md`; see `effortless-seeds`). It does steps 2-5 below, adds approved-users-only sign-in with
 > no registration, a pick-your-user dev mode, and database-enforced row-level security in dev and live alike.
 > This skill stays the reference for any other stack and for the tenant API.
+>
+> **In an ERB project never add a token of your own on top of this** (a "pass" or session signed with a secret you keep, a
+> signing secret copied into a table, a database login): the seed makes the session and its key. See `effortless-go-live`.
 
 This skill is the **generic** flow: any project, any Postgres database. For
 the bases-specific flow (auto-RLS templates, `auth.trusted_tenants`,

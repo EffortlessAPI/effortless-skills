@@ -44,7 +44,7 @@ A project is **Effortless** if and only if BOTH are true:
 
 | Class | Loads when | Skills |
 |---|---|---|
-| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-proposal` (the priced proposal: rows only, never a build), `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-security`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
+| **Project-only** ("ERB projects only") | Both markers present. Never otherwise. | `effortless-conventions`, `effortless-go-live` (sign-in, secrets and what a stage refuses, before any publish), `effortless-diagnostics`, `effortless-excel-export`, `effortless-loop`, `effortless-meta-table`, `effortless-pipeline`, `effortless-progress-report`, `effortless-proposal` (the priced proposal: rows only, never a build), `effortless-query`, `effortless-rulebook-devops`, `effortless-rulebook-editor`, `effortless-schema`, `effortless-security`, `effortless-sql`, `effortless-workflow`, `effortless-xlsx-to-rulebook`, `effortless-ssotme-protocol`, `effortless-explainer-dag` (on demand within a project), `effortless-app` (whenever someone describes the app they want or asks for screens) |
 | **Airtable-connected only** | Both markers AND `effortless.json` registers `airtable-to-rulebook`. | `effortless-airtable`, `effortless-airtable-omni` |
 | **Entry points** | Both markers, OR the user explicitly asks to set up / install / update Effortless tooling or create a rulebook. Their job is to *create* the marker. | `effortless-orchestrator`, `effortless-init`, `effortless-bootstrap`, `effortless-setup-postgres`, `effortless-setup-sql-server`, `effortless-demo-app`, `effortless-rulespeak`, `effortless-cli`, `effortless-seeds`, `effortless-seed-authoring`, `effortless-claude-updates` |
 | **Theory / receipts** | Any evaluative or "why" question about Effortless / ERB / CMCC, regardless of project. | `effortless-cmcc`, `effortless-rationale`, `effortless-rulebooks`, `effortless-ecosystem`, `effortless-rulebook-exchange` |
@@ -343,6 +343,7 @@ skill" for a row in this table.
 | `effortless-workflow` | Editing the hub — directly, via Airtable, or via reverse-sync; permission checkpoints |
 | `effortless-pipeline` | `effortless.json`, transpilers, build mechanics |
 | `effortless-sql` | Generated SQL — views vs tables, `00`-`05` files, `ERBCustomizations` rows (the `*b-customize-*` files are legacy) |
+| `effortless-go-live` | Before a Beta/Production publish, or any login / token / secret / API key: sign-in is the seed, secrets are the stage's Secrets, `check_secrets`, what a stage's database refuses |
 | `effortless-security` | Roles and who sees what — the `<Role>CRUD` matrix, `role_<id>` schemas, per-role `.d.ts` types, hiding columns to make a persona fast |
 | `effortless-airtable` | *(only if Airtable-connected)* Airtable REST API — scalar fields, CRUD |
 | `effortless-airtable-omni` | *(only if Airtable-connected)* OMNI via Playwright — formulas, lookups, rollups, new tables |
@@ -393,5 +394,6 @@ skill" for a row in this table.
 
 Routing for magic-links work:
 - Anything touching `bases.effortlessapi.com` → route to `effortless-bases` (read its hard-gate block first).
+- In an ERB project, any login, token, key or publish to a stage → read `effortless-go-live` FIRST (the project's sign-in seed carries the chain; never hand-roll a token or keep a signing secret in a table).
 - Auth / RLS / tenant / `auth.trusted_tenants` / `app.jwt_email` / JWT-verify → `effortless-magic-links`.
 - Postgres bootstrap (init-db.sh / install / `effortless build` / schema changes) → `effortless-setup-postgres` AND ensure §1's canonical install step is part of the bootstrap.
