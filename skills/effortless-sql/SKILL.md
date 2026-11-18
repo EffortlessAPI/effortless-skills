@@ -258,6 +258,27 @@ loose `.sql` files beside it. The rulebook then holds 100% of the model: the
 declarative part (tables, formulas) **and** the Postgres-specific part
 (hand-tuned functions, materialized views, RLS, grants).
 
+**What a row may do on a published stage (owner, 2026-11-18).** Dev runs the
+rows as a superuser in its own Postgres; Beta and Production run them as the
+stage database's OWNER role on a shared server. So a row may change the
+project's own views, functions, policies and grants, and NOTHING else:
+
+- **No table or column.** A table or field is a rulebook edit; the build makes
+  it in every database.
+- **No role or login** (`CREATE ROLE`, `... LOGIN PASSWORD ...`, `GRANT role TO
+  role`): roles are shared by every customer on the server, and the stage
+  refuses them.
+- **Nothing in the platform's schemas** (`app`, `auth`).
+- **No secret.** A key, token, password or signing secret is one of the
+  stage's Secrets, read by the app as `process.env.<NAME>`. In Loops the agent
+  makes one the app needs itself with `generate_secret`; a key from outside is
+  typed by a person on the Secrets page.
+
+A row that breaks this works in Dev and fails at Publish (enable-u-demo's
+Production, 2026-11-18: `CREATE TABLE app.pass_secret`, then `CREATE ROLE
+wallet_explorer LOGIN PASSWORD 'explore'`). The Publish tab then offers "Ask
+the agent to fix it".
+
 ```json
 "ERBCustomizations": {
   "schema": [
