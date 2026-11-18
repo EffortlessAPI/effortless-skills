@@ -8,6 +8,9 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **What an ERBCustomizations row may do on a published stage** (owner, 2026-11-18) — `effortless-sql`: Beta and
+  Production run the rows as the database's owner on a shared server, so a row makes no table or column (rulebook),
+  no role or login, nothing in `app`/`auth`, and keeps no secret (the stage's Secrets; Loops' `generate_secret`).
 - **Query the original, guided by the schema** (owner, 2026-11-17) — `effortless-query` and
   `effortless-orchestrator` say the derived schema files are a map, not the answer: pick the table
   and fields from `derived-schema.min.json`, then run a filtered, projected `python3`/`jq` query on
