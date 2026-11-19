@@ -171,9 +171,9 @@ inside them. Ask once if it is unclear whether something is a phase or an epic.
   story by story is the default. Do not put the same money in both places. A
   price for the whole proposal that is not a story is a line (REFERENCE.md).
 - **Sold as one package (`SinglePackage`, 2026-11-19).** `ERBBuildPhases.SinglePackage`
-  or `ERBEpics.SinglePackage` true: the level is always included, nothing in it
-  can be picked on its own (no tick on it or its stories, no price on its stories),
-  and the prospect sees only its total. The stories keep their
+  or `ERBEpics.SinglePackage` true: the level is one on/off switch, all of its
+  stories in or none (no tick and no price on its stories; a phase's epics are
+  just listed), and the prospect sees only its total. The stories keep their
   `Price` as our bookkeeping and the level's price is still their sum plus its
   `PriceAdjustment`; or leave the story prices blank and put one price in
   `PriceAdjustment`. The whole proposal is one package when its `ERBProposalSections`
