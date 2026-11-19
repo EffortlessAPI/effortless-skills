@@ -170,6 +170,17 @@ inside them. Ask once if it is unclear whether something is a phase or an epic.
   off a set ("$200 off when you take all of Accounts"). Leave it blank otherwise:
   story by story is the default. Do not put the same money in both places. A
   price for the whole proposal that is not a story is a line (REFERENCE.md).
+- **Sold as one package (`SinglePackage`, 2026-11-19).** `ERBBuildPhases.SinglePackage`
+  or `ERBEpics.SinglePackage` true: the prospect sees only that level's total and
+  takes all of it or none of it (no tick, no price on its stories; ticking into it,
+  or a prerequisite inside it, brings the whole package). The stories keep their
+  `Price` as our bookkeeping and the level's price is still their sum plus its
+  `PriceAdjustment`; or leave the story prices blank and put one price in
+  `PriceAdjustment`. The whole proposal is one package when its `ERBProposalSections`
+  row with `SectionKey` `single-package` has `Body` `true`: everything is in, one
+  price; to set that price yourself, leave the story prices blank and add a
+  non-optional one-time line. Use it when the person says a phase, an epic or the
+  whole thing is "one package", "all or nothing", "not pick and choose".
 - `ImageUrl` on a phase, an epic or a story is a picture the person adds on the
   page (they upload it there). Do not invent one or point at a web address you
   have not been given.

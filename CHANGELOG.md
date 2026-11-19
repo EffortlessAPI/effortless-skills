@@ -8,6 +8,8 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **`effortless-proposal`: sold as one package** (owner, 2026-11-19) — `SinglePackage` on a phase or an epic, and a
+  `single-package` section for the whole proposal: one total, picked all or nothing, the story prices ours alone.
 - **`effortless-go-live`** (owner, 2026-11-18, after enable-u-demo's Production failed) — the checklist before a stage
   publish and for any login, token or secret: sign-in is the sign-in seed (never a token of your own), a secret is the
   app's own (`generate_secret`), from outside (the customer), or the platform's, read with no fallback; `check_secrets`;
