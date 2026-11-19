@@ -8,6 +8,11 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **The clone installs itself** (owner, 2026-11-19) — `.githooks/post-commit` / `post-merge` run `install.sh --yes` when `skills/`
+  changed (`git config core.hooksPath .githooks`), and `scripts/skills-in-sync.sh` names every MISSING or STALE installed
+  skill (tested by `scripts/test-skills-in-sync.sh`). Until now nothing installed a commit.
+
+### Added
 - **`effortless-proposal`: sold as one package** (owner, 2026-11-19) — `SinglePackage` on a phase or an epic, and a
   `single-package` section for the whole proposal: one total, picked all or nothing, the story prices ours alone.
 - **`effortless-go-live`** (owner, 2026-11-18, after enable-u-demo's Production failed) — the checklist before a stage
