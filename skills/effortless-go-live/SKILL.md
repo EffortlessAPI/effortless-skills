@@ -16,6 +16,11 @@ stage's is a shared server's. Everything below was learned from a real failed Pr
 (enable-u-demo, 2026-11-18: a signing key kept in a table, a literal fallback for it in code, `CREATE ROLE ... PASSWORD
 'explore'`, and an app that read `WALLET_PASS_SECRET` while the stage held `PASS_SECRET`).
 
+**A published stage is one workload: the stage's database, the project's own server and the app.** The same three
+things as Dev, and nothing else: no rulebook editor, no "platform" behind it. So whatever the app needs when live
+(sign-in, a secret, a route, the rulebook's API itself) is in the project's server. A project that has no server
+yet gets one first, on the owner's yes (`effortless-app`, section 5).
+
 ## 1. Sign-in is the sign-in seed. Never roll your own.
 
 The chain (`effortless-seeds/SIGN-IN.md` in effortlessapi-www, section 2):
@@ -37,7 +42,7 @@ sign-in seed runs real sign-in on every published stage, so a stage left `open` 
 
 | Kind | Examples | Who makes it |
 |---|---|---|
-| Platform | `DATABASE_URL`, `MAGICLINK_TENANT_ID`, `STAGE`, `PW_*` | Nobody: the platform sets it. Never name a secret like these. |
+| Set for the stage | `DATABASE_URL`, `MAGICLINK_TENANT_ID`, `STAGE`, `PW_*` | Nobody: the stage is started with it. Never name a secret like these. |
 | The app's own | a signing key, pass or session secret, an HMAC key | **You**, with `generate_secret` on each stage. Nobody sees the value. |
 | From outside | `STRIPE_SECRET_KEY`, an SMTP password | The customer, by name, under Settings > Secrets (or the stage's card on the Publish tab). Never in the chat. |
 
@@ -49,7 +54,7 @@ The stage is told by `STAGE` (`dev` or none = Dev), never `NODE_ENV`.
 ## 3. What a stage's database refuses
 
 Beta and Production run your SQL as the database's owner on a shared server: no table or column of your own (a
-rulebook edit makes it), no `CREATE ROLE` or login, nothing in the platform's `app`/`auth` schemas. A row that does
+rulebook edit makes it), no `CREATE ROLE` or login, nothing in Effortless's own `app`/`auth` schemas. A row that does
 works in Dev and fails at Publish. `effortless-sql` has the full rule for `ERBCustomizations` rows.
 
 ## 4. Before every publish

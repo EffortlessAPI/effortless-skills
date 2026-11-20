@@ -50,7 +50,7 @@ effortless cloneSeed effortlessapi/effortless-magic-links server/magic-links   #
 rm -rf server/magic-links/.git
 ```
 
-On Effortless the platform does the first part when someone adds the seed (the Publish tab or the
+On effortlessapi.com the site does the first part when someone adds the seed (the Publish tab or the
 seed library) and sends you a message naming the seed, its folder and its instructions.
 
 Then **follow the add-in's `INTEGRATE.md`** (its manifest's `agent.integrate`): numbered steps, each

@@ -76,6 +76,16 @@ rulebook JSON directly (or via Airtable when convenient), and `effortless build`
 projects it into an ACID-compliant Postgres substrate. Airtable is great as a
 human-friendly editing surface but is no longer the SSoT — the JSON file is.
 
+**What runs is always three things: the database, the project's own server,
+and the app** — in a dev environment and in every published stage alike. The
+server is the project's API (the rulebook's generated REST API installed in
+its own folder, plus sign-in and custom routes) on its own database
+connection. The rulebook editor is the dev tool that builds the database from
+the hub and shows it: nothing depends on it in production, and there is no
+"platform" behind a project. Edits made in a dev database are saved back to
+the hub (the editor's Save); every rebuild starts from the hub.
+(`effortless-app` section 5, `effortless-rulebook-editor`.)
+
 ## My Posture
 
 Inside an ERB project, the transpilers are the code authors. I'm a **rulebook

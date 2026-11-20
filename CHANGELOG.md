@@ -21,6 +21,14 @@ release section is an ISO date.
   what a stage's database refuses. Routed from `effortless-orchestrator`; `effortless-magic-links` points at it.
 
 ### Changed
+- **A project is a database, its OWN server and the app; there is no "platform"** (owner, 2026-11-20, after a build
+  agent told a customer "There is a server, but it's the platform's") — `effortless-app`, `effortless-go-live`,
+  `effortless-rulebook-editor`, `effortless-orchestrator`: the same three things in Dev and in every published stage.
+  The server is the project's API (the rulebook's REST API installed in its own `server/api/`, on its own database
+  connection); the rulebook editor is the tool that builds Dev's database and shows it, never the app's backend; what
+  an app changes in Dev is saved back to the rulebook (Save); a project that has no server yet keeps running and gets
+  one on the owner's ask (Loops `add_server`, or Settings > Effortless setup). `effortless-seed-authoring`,
+  `effortless-seeds`, `effortless-sql`: the same words.
 - **What an ERBCustomizations row may do on a published stage** (owner, 2026-11-18) — `effortless-sql`: Beta and
   Production run the rows as the database's owner on a shared server, so a row makes no table or column (rulebook),
   no role or login, nothing in `app`/`auth`, and keeps no secret (the stage's Secrets; Loops' `generate_secret`).

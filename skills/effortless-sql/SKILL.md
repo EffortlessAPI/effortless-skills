@@ -268,7 +268,7 @@ project's own views, functions, policies and grants, and NOTHING else:
 - **No role or login** (`CREATE ROLE`, `... LOGIN PASSWORD ...`, `GRANT role TO
   role`): roles are shared by every customer on the server, and the stage
   refuses them.
-- **Nothing in the platform's schemas** (`app`, `auth`).
+- **Nothing in Effortless's own schemas** (`app`, `auth`).
 - **No secret.** A key, token, password or signing secret is one of the
   stage's Secrets, read by the app as `process.env.<NAME>`. In Loops the agent
   makes one the app needs itself with `generate_secret`; a key from outside is

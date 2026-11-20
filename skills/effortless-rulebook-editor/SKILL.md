@@ -11,7 +11,9 @@ audience: customer
 # effortless-rulebook-editor
 
 A one-command, browser-based viewer/editor for `effortless-rulebook.json`,
-backed by a real live stack — and the fastest backend to build an app against.
+backed by a real live stack: the tool that builds a project's dev database from
+the rulebook, shows the rules and the data, and generates the REST API every
+project's own server answers.
 
 ## What it is
 
@@ -126,8 +128,18 @@ fresh. It is cheap and idempotent.
 
 ## Building an app against the API
 
-The container's API is the backend. Don't write an ORM, don't duplicate the
-schema, don't reimplement any rule client-side.
+**The editor is a tool, not the app's backend.** A project is a database, its
+own server and the app, in Dev and in every published stage alike
+(`effortless-app`, section 5). The project's server carries this same API in
+its own `server/api/` folder and answers it on its own database connection, so
+an app calls `/api/...` on ITS OWN address and gets the contract below, in Dev
+and when published. The editor's address (`:42441`) is for looking, debugging,
+the docs and the Postgres connection; a published stage has no editor. Only a
+quick prototype, or a project that has no server yet, calls the editor's API
+directly (same contract).
+
+Don't write an ORM, don't duplicate the schema, don't reimplement any rule
+client-side.
 
 ### 1. Discover, don't guess
 
@@ -224,8 +236,9 @@ related table to resolve names in the app.
 
 ### 5. CORS is already open
 
-`Access-Control-Allow-Origin: *`. A Vite dev server on :5173 calls :42441
-directly — **no `server.proxy` block needed.**
+`Access-Control-Allow-Origin: *`. A prototype's Vite dev server on :5173 calls
+:42441 directly — **no `server.proxy` block needed.** (An app on its own
+server calls a relative `/api` and needs none either.)
 
 ### 6. Refresh after a rebuild
 
@@ -237,7 +250,7 @@ itself changes when the rulebook changes.
 ### Minimal integration
 
 ```jsx
-const API = 'http://localhost:42441'
+const API = 'http://localhost:42441'   // a prototype against the editor; in a project the app calls '' (its own server)
 
 const { fields, rows, pkField } =
   await (await fetch(`${API}/api/tables/Customers?fields=Name,TotalSales,IsVIP`)).json()
@@ -297,7 +310,10 @@ until written back to `effortless-rulebook.json`:
 | `POST /api/admin/run-build` | Trigger a rebuild |
 
 Because writes reach the rulebook, they are still rulebook-first — see
-`effortless-workflow`. Structural changes (new formulas, DAG edits) are usually
+`effortless-workflow`. An edit an APP makes through the project's own server
+in Dev lands in the same log, so Save folds it into the rulebook too; the
+database is rebuilt from the rulebook, never the other way. In a published
+stage nothing is logged: a write is the stage's own data. Structural changes (new formulas, DAG edits) are usually
 still clearest hand-edited in the JSON.
 
 ## Troubleshooting

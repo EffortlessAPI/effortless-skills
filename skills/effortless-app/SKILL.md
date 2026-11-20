@@ -2,7 +2,7 @@
 name: effortless-app
 description: >
   Build the app people use on top of a rulebook: personas, user stories per persona,
-  routes, then a phone-first app over the generated API, with provenance on derived
+  routes, then a phone-first app on the project's own server, with provenance on derived
   values and a persona picker. Triggers: "build an app for …", "make this an app",
   "build the screens", "who uses this", "add a page for …". ERB projects.
 audience: customer
@@ -12,8 +12,8 @@ audience: customer
 
 A rulebook alone is a model. This skill turns it into the app the people
 named in the description actually open: who they are, what each of them does,
-which screens that takes, and those screens, built over the rulebook's
-generated API so every number can explain itself.
+which screens that takes, and those screens, built on the project's own API
+(the rulebook's REST API, in its own server) so every number can explain itself.
 
 Use it whenever someone describes what they want, asks for an app or new
 screens, or a new kind of user appears. Run the steps in order; each writes
@@ -72,29 +72,42 @@ it before touching a screen.
 
 ## 5. The app
 
-Build exactly the routes from step 4. **An app is two folders, always: the
-pages (`app/`, or `web/`) and its own server (`server/`, Express).** The pages
-call only `/api/...` on the server; the server answers the project's custom
-routes and passes the rest on to the generated API (the rulebook editor's API:
-read the `vw_*` views, write base fields).
+Build exactly the routes from step 4. **A project is three things, in Dev and
+in every published stage alike: the database, its own server (`server/`,
+Express) and the pages (`app/`, or `web/`).** The pages call only `/api/...`
+on the server. The server IS the project's API: its own routes, sign-in, and
+the rulebook's REST API (read the `vw_*` views, write base fields), installed
+in its own `server/api/` folder and run in its process on its own database
+connection.
 
 ```
-browser -> app/ (pages) -> /api/... -> server/ -> the generated API -> Postgres
+browser -> app/ (pages) -> /api/... -> server/ (the project's API) -> Postgres
 ```
 
-- **The server is the default, in Dev and when published**, served from the
-  same workload as the pages. Never build, describe or publish the app as a
-  static site that calls the generated API or the database directly, unless
-  the owner asked for a static app in so many words. No `server/` in the
-  project → note it once if relevant; do **not** scaffold `server/` in the
-  middle of another ask (content on Production, a screen change, a data
-  migration). Only add `server/` when the customer explicitly asked for the
-  project's own server in this message — a half-wired `server/` breaks Dev.
+- **Nothing else is behind a project.** The rulebook editor is the tool that
+  builds Dev's database from the rulebook and shows the rules and the data:
+  the app never calls it, and a published stage has none. Never say a thing
+  is done by "the platform" or "the platform's server".
+- **The rulebook stays the source.** In Dev a change the app makes goes to the
+  database and is noted beside the rulebook like an edit made in the editor;
+  Save folds it into the rulebook, and every rebuild starts from the rulebook.
+  In a published stage a write is the stage's own data.
+- **`server/api/` is installed, never edited** (not in git): in Dev the server
+  takes it from the editor at every start and rebuild; a release carries its
+  own build. What a table answers changes in the rulebook.
 - **Custom code goes in the server**, one file per resource under
   `server/src/routes/`: a webhook, a call to another service with a secret
   key, an email, who may call what. Secrets live there, never in the pages.
-- **Rules never go in the server** any more than in the pages: it passes what
-  it does not answer on to the generated API unchanged.
+- **Rules never go in the server** any more than in the pages.
+- **A project with no server yet** (an older one, or a repository brought in
+  with its own app) calls the rulebook's API directly and keeps running that
+  way. Never build a NEW app like that, and never add a server in the middle
+  of another ask. Add it when the owner asks, or agrees because what they
+  want needs one (sign-in, a secret, a route of its own): in Loops
+  `mcp__rulebook__add_server`; on effortlessapi.com, Settings > Effortless
+  setup > Add the project's server. Then point the app at it
+  (`effortless-app.json` `env`: the app's API variable =
+  `http://127.0.0.1:$SERVER_PORT`; a built app calls `/api` on its own address).
 
 
 - **Phones first.** Every route works at 360px wide: lists become one card
@@ -127,10 +140,9 @@ browser -> app/ (pages) -> /api/... -> server/ -> the generated API -> Postgres
 The template already has the parts; use them, do not write your own tables,
 forms or fetch code. `app/README.md` has the details.
 
-- The server → when `server/` is present, it is already running beside the app
-  in Dev and in every published stage (`server/README.md`). Add routes to it;
-  do not start it, replace it or remove it. If it is missing, do not invent
-  one while doing something else.
+- The server → `server/` runs beside the app in Dev and in every published
+  stage (`server/README.md`). Add routes to it; do not start it, replace it
+  or remove it. A project without one: section 5's last point.
 - Personas → `app/src/personas.ts` (`PERSONAS`); the template shows the
   picker and the header switch when the list is not empty.
 - Routes → `app/src/routes.tsx` (`ROUTES`): `path` ('horses/:id'), `label`

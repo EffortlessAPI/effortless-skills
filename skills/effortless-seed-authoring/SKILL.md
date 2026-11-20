@@ -43,7 +43,7 @@ Rules of the line:
 
 1. **Zero runtime dependencies**; `pg` and `express` are devDependencies for tests. The host project already has them.
 2. **One `app.use(...)` in the project's own `server/src/server.js`**, before its routes. Nothing in generated
-   files, nothing in the generated API's `custom.js` (a Loops project does not own the generated API).
+   files: not `server/api/` (the rulebook's API, installed there on every build, never edited), not its `custom.js`.
 3. **SQL lives in the rulebook's `ERBCustomizations` rows**, written by the install script: Dev re-runs them
    after every rebuild and every published stage on every publish, as the database owner. Never install SQL at
    server boot: on a published stage the app's connection cannot run DDL (bases: `<db>_app`, no CREATEROLE).
