@@ -8,6 +8,10 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **`effortless-explainer-dag`: the witness** (owner, 2026-11-22: "explain the details down to ground truth") — §10: with
+  `rulebook-to-typescript`'s output served and named (`init({ typescript })`) and cells marked `data-er-row`, the hover card
+  and the field's page show one row's value, the rule step that applied, and every value it came from down to the stored
+  ones, computed in the page by the generated TypeScript; `setRows` for an app's live rows. Never a hand-written "proof" page.
 - **The clone installs itself** (owner, 2026-11-19) — `.githooks/post-commit` / `post-merge` run `install.sh --yes` when `skills/`
   changed (`git config core.hooksPath .githooks`), and `scripts/skills-in-sync.sh` names every MISSING or STALE installed
   skill (tested by `scripts/test-skills-in-sync.sh`). Until now nothing installed a commit.

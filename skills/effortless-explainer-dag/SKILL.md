@@ -124,6 +124,7 @@ Verify output exists, e.g. `web/public/rulebook-explainer-dag/`.
 | `dag-resolver.js` | DAG resolution (`EffortlessDagResolver`) |
 | `routing.js` | hash / path / modal / callback routing |
 | `explainer-dag.js` | Init, cell enhancement, page renderers |
+| `witness.js`, `ts-strip.js` | The witness (§10); fetched by the page on first use, no script tag |
 | `dag.css` | Styles (cells, hover cards, pages, modal) |
 | `graph.json` | Raw rulebook export (debug) |
 | `pages/*.html` | Standalone shells (optional; SPAs use JS API) |
@@ -321,8 +322,10 @@ Replace old `<DagCell table="…" field="…">` with a plain wrapper:
 - `Field` = PascalCase rulebook field name (not snake_case view column)
 - Wrong casing → badge silently skipped; verify against rulebook JSON
 
-**Interaction:** hover ƒ badge → RuleSpeak® hover card; double-click cell
-→ full DAG page; badge links respect `callback`/`path`/`hash` routing.
+**Interaction:** hover ƒ badge → RuleSpeak® hover card (a priority rule is a
+numbered outline; the card always links to its own field's page); double-click
+cell → full DAG page; badge links respect `callback`/`path`/`hash` routing.
+Add `data-er-row` for the witness (§10).
 
 ---
 
@@ -423,6 +426,66 @@ After build + web restart:
 
 ---
 
+## 10. The witness (optional): one row, down to ground truth
+
+With two additions the hover card and the field's page show a cell **for one
+row**: its value, the step of a priority rule that applied, and every value it
+came from, each line opening onto what it came from until the lines are stored
+values ("ground truth"). Every value is computed in the page by the project's
+own generated TypeScript; the explainer evaluates nothing itself.
+
+1. **The project runs `rulebook-to-typescript`** (the full form, never
+   `-p simpleSyntax=true`), writing where the site serves static files:
+
+   ```json
+   {
+     "IsSSoTTranspiler": false,
+     "Name": "rulebooktotypescript",
+     "RelativePath": "/web/public/rulebook-typescript",
+     "CommandLine": "rulebook-to-typescript -i ../../../effortless-rulebook/effortless-rulebook.json",
+     "IsDisabled": false
+   }
+   ```
+
+   (`effortless -install rulebook-to-typescript`; adjust `-i` and `RelativePath`
+   like the explainer's own entry.) The page reads `erb_runtime.ts` and
+   `erb_sdk.ts` from that folder.
+
+2. **Name the folder and mark the row:**
+
+   ```js
+   EffortlessExplainer.init({ /* as before */, typescript: "/rulebook-typescript" });
+   ```
+
+   ```html
+   <span data-er-dag="Invoices.TotalDue" data-er-row="{{ invoice.invoice_id }}">…</span>
+   ```
+
+   `data-er-row` is the row's key: the value of the table's `...Id` field. In
+   React: `<span data-er-dag="Invoices.TotalDue" data-er-row={i.invoice_id}>`.
+
+**Whose rows:** the rulebook's own (`data`) by default. An app whose rows live
+in the database hands them over once they are loaded, raw values only, keys as
+the rulebook or the database spells them; tables left out keep the rulebook's:
+
+```js
+EffortlessExplainer.setRows({ Invoices: invoices, LineItems: lineItems });
+```
+
+A `data-er-row` that names no row in those rows says so in the card. Without
+`typescript` nothing changes: no witness, no extra request.
+
+**Do not** write a formula evaluator, a "proof" page or a "see proof" link of
+your own to show where a value came from: mark the cell, name the folder, and
+the explainer shows it. After a rulebook edit both outputs are stale until the
+next build.
+
+Verify: hover a marked cell → "Witnessed, down to ground truth" with the row's
+value and its inputs; open a line → what that value came from; on the field's
+page, the Row picker changes every value.
+
+---
+
 ## Minimal checklist
 
 - [ ] `effortless -install rulebook-to-explainer-dag`
@@ -434,3 +497,4 @@ After build + web restart:
 - [ ] All derived displays use `data-er-dag="Table.Field"`
 - [ ] `enhanceCells()` after dynamic renders
 - [ ] Smoke test passes (§8)
+- [ ] (witness, optional) `rulebook-to-typescript` output served; `init({ typescript })`; `data-er-row` on cells (§10)
