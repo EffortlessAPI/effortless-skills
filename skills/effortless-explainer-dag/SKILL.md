@@ -20,9 +20,29 @@ Users hover a derived cell for RuleSpeak® + upstream chips, double-click
 (or follow a link) for the full field DAG page. **Purely additive** — mark
 cells with `data-er-dag`, mount scripts + routes, done.
 
-> **Deprecated:** `rulebook-to-react-explainer-dag` and `<DagCell>` are
-> superseded. Remove that transpiler from `effortless.json` if present.
-> Use `rulebook-to-explainer-dag` + `data-er-dag` instead.
+> **`rulebook-to-react-explainer-dag` is retired (2026-11-22).** It is now one call to
+> `rulebook-to-explainer-dag` with `-p react=true`, so an app that still names it keeps
+> working. A React app names the new tool itself:
+> `rulebook-to-explainer-dag -i <rulebook> -p react=true` writes `explainer-dag/` (the one
+> explainer plus `shim.tsx`, exporting `DagCell`, `DagToggle`, `FieldDag`, `TablesIndex`,
+> `TablePage`, `RoutingContext`, `mergeRouting`). Delete the old package's `lib/`,
+> `components/`, `pages/` and `embedded-*.ts`. A table link is answered inside the page, so the
+> app needs no `/dag/:table` route. Any other host uses `data-er-dag` (below).
+
+> **Where a link goes (a bug fixed 2026-11-22).** Every link lands on an explainer page. With
+> `mode: "modal"` (the default for an app) a field opens in an overlay and a table opens the
+> explainer's own page (`/rulebook-explainer-dag/pages/index.html#/dag/<Table>`), a real
+> file: the app routes nothing. Choose `mode: "path"` ONLY if the host really serves `/dag`,
+> `/dag/:table` and `/dag/:table/:field`; otherwise the app's own router answers those
+> addresses (usually with its home page).
+
+> **The control and the defaults.** `init({ corner: "bottom-right" })` (or `top-left`,
+> `top-right`, `bottom-left`) pins the control to a corner of the window; or
+> `mountToggle: "#el"` puts it in the app's own element. It is two icons (download the
+> workbook; provenance on/off) that open to their words on hover. `xlsx: "/x.xlsx"` adds the
+> download (the file `rulebook-to-xlsx` wrote). `provenance: "off"` is where the badges START
+> (the person's choice then wins). The explainer's own pages have a left nav, grouped tables,
+> a filter, field tabs and a graph view.
 
 ## Agent hard rules — do NOT roll your own
 

@@ -11,6 +11,13 @@ audience: customer
 
 # Effortless RuleSpeak® — rulebook → plain English
 
+> **Renamed (2026-11-22): use `rulebook-to-documentation`.** `rulebook-to-rulespeak` is now one
+> call to it with `rulespeak=true` and still writes `rulespeak/rulespeak.html` + `.md`. RuleSpeak®
+> itself is not rendered yet: the documents are the regular documentation in the language chosen
+> (every label says "Docs" / "Dokumentation" / ...), and a request for RuleSpeak® gets a note at
+> the foot saying it is coming soon, and what it is. A new project names `rulebook-to-documentation`
+> (files `documentation.html`, `documentation.md`, `documentation.<code>.md`).
+
 `rulebook-to-rulespeak` renders `effortless-rulebook.json` into **RuleSpeak®** —
 a declarative, business-readable document of the same rules the formulas encode.
 Every calculated, lookup, and aggregation field becomes a definitional rule;
