@@ -363,7 +363,7 @@ skill" for a row in this table.
 | `effortless-excel-export` | Adding Excel export from live Postgres data |
 | `effortless-rulebook-editor` | **Recommended default on rulebook creation** — instant DB + API + admin UI + plain-English rule docs from a bare rulebook, zero app code. Not required, but the fastest way to have something real to look at |
 | `effortless-rulespeak` | No-Docker alternative to `effortless-rulebook-editor` — `rulebook-to-rulespeak` → static `rulespeak/rulespeak.html` + `.md` |
-| `effortless-explainer-dag` | **Explainer DAG (on demand)** — in-app `rulebook-to-explainer-dag`, `data-er-dag`, hover + full field pages. Load only when user asks; not default for POCs |
+| `effortless-explainer-dag` | **Explainer DAG (on demand)** — in-app `rulebook-to-explainer-dag`, `data-er-dag`, hover + full field pages; **the witness** (§10: `data-er-row`, one row's actual values down to ground truth, "show the proof / where did this number come from"). Load only when user asks; not default for POCs |
 | `effortless-app` | **Building the app people use** on a rulebook: personas, user stories per persona, routes, then a phone-first app with provenance and a persona picker |
 | `effortless-demo-app` | Spin up a complete demo POC from a one-line domain description |
 | `effortless-claude-updates` | Anything about the **skill set** — check, update, author skills |

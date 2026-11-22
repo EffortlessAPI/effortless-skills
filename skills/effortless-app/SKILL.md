@@ -124,7 +124,8 @@ browser -> app/ (pages) -> /api/... -> server/ (the project's API) -> Postgres
 - **Provenance on the derived values.** Every calculated, lookup or
   aggregation value on the landing pages and the main pages is marked with
   the explainer (`data-er-dag="Table.Field"`, the rulebook's PascalCase
-  names) so people can hover it for the rule behind it. Install the explainer
+  names, plus `data-er-row` = the row's key) so people can hover it for the rule
+  behind it and that row's actual values down to the stored ones. Install the explainer
   with `effortless-explainer-dag` where the app does not already load it.
 - **A persona picker.** With more than one persona, the app opens on "Who are
   you?" and each persona then sees only its routes; a switch in the header
@@ -153,8 +154,10 @@ forms or fetch code. `app/README.md` has the details.
   (Add links the new record to the parent by itself).
 - Filter and order with `where` and `sortBy` on view columns (`IsToday`, `ScheduledDate`).
 - `RecordList` (and so `TablePage` and `ChildList`) puts provenance on derived columns by itself; anywhere else,
-  wrap the value in `<span data-er-dag="Table.Field">`.
-- The explainer is already loaded; do not install it again.
+  wrap the value in `<span data-er-dag="Table.Field" data-er-row={rowKey}>`. `data-er-row` (the row's key, its
+  `...Id` value) is what lets the hover card show THAT row's actual values down to the stored ones (the witness).
+- The explainer is already loaded; do not install it again. For the witness, live rows, or replacing a hand-made
+  "proof" page: read `~/.claude/skills/effortless-explainer-dag/SKILL.md`, §10, and do only what it says.
 
 ## 6. Tell them
 

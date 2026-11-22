@@ -1,11 +1,11 @@
 ---
 name: effortless-explainer-dag
 description: >
-  Add the in-app Explainer DAG (rulebook-to-explainer-dag, data-er-dag) — click any
-  field to see how it was derived; any web stack. Triggers: "add the explainer dag",
-  "show the DAG in the UI", "make calculated fields clickable". On demand only, not part
-  of the default POC; the only skill for this (effortless-react-explainer-dag is
-  deprecated).
+  The in-app Explainer DAG (rulebook-to-explainer-dag, data-er-dag): hover a derived
+  value for its rule, and its witness (data-er-row): that row's actual values down to
+  ground truth. Triggers: "add the explainer dag", "make calculated fields clickable",
+  "show the witness / the proof / where this number came from". On demand; the only
+  skill for this.
 audience: customer
 ---
 
@@ -426,63 +426,77 @@ After build + web restart:
 
 ---
 
-## 10. The witness (optional): one row, down to ground truth
+## 10. The witness: one row, down to ground truth
 
-With two additions the hover card and the field's page show a cell **for one
-row**: its value, the step of a priority rule that applied, and every value it
-came from, each line opening onto what it came from until the lines are stored
-values ("ground truth"). Every value is computed in the page by the project's
-own generated TypeScript; the explainer evaluates nothing itself.
+The hover card and the field's page can show a cell **for one row**: its value,
+the step of a priority rule that applied, and every value it came from, each
+line opening onto what it came from until the lines are stored values ("ground
+truth"). Every value is computed in the page by the project's generated
+TypeScript (`rulebook-to-typescript`); the explainer evaluates nothing itself.
 
-1. **The project runs `rulebook-to-typescript`** (the full form, never
-   `-p simpleSyntax=true`), writing where the site serves static files:
+The explainer turns the witness on **by itself** when that TypeScript is in its
+own folder, `rulebook-explainer-dag/typescript/`. No option, no forwarding rule.
+What is left for the app is one thing: **say which row a cell shows.**
 
-   ```json
-   {
-     "IsSSoTTranspiler": false,
-     "Name": "rulebooktotypescript",
-     "RelativePath": "/web/public/rulebook-typescript",
-     "CommandLine": "rulebook-to-typescript -i ../../../effortless-rulebook/effortless-rulebook.json",
-     "IsDisabled": false
-   }
+### A project on effortlessapi.com (the app loads the explainer from the editor)
+
+The engine's build writes the TypeScript there on every build. Do **not** add a
+build step, an `init` option, a proxy rule or a copy of anything. Do this:
+
+1. **Mark the row on every derived cell**, beside `data-er-dag`:
+
+   ```tsx
+   <span data-er-dag="Invoices.TotalDue" data-er-row={String(val(invoice, 'InvoiceId'))}>…</span>
    ```
 
-   (`effortless -install rulebook-to-typescript`; adjust `-i` and `RelativePath`
-   like the explainer's own entry.) The page reads `erb_runtime.ts` and
-   `erb_sdk.ts` from that folder.
+   `data-er-row` is the row's key: the value of the table's `...Id` field (the
+   rulebook's primary key, e.g. `info.pkField`). A cell with no row still shows
+   its rule, never a witness. Put it in the one helper that wraps derived values
+   (the template's `display` in `RecordList.tsx`, or the app's own), so every
+   page gets it.
+2. **Only if people add or change rows in the app** (so the database holds rows
+   the rulebook does not): hand the explainer the live rows once they are loaded
+   and again after a save. Raw values are enough; keys as the API returns them:
 
-2. **Name the folder and mark the row:**
-
-   ```js
-   EffortlessExplainer.init({ /* as before */, typescript: "/rulebook-typescript" });
+   ```ts
+   (window as any).EffortlessExplainer?.setRows({ Invoices: invoices, LineItems: lineItems });
    ```
 
-   ```html
-   <span data-er-dag="Invoices.TotalDue" data-er-row="{{ invoice.invoice_id }}">…</span>
-   ```
+   Every table the witnessed values read from must be in it (a lookup's parent,
+   an aggregation's children); tables left out keep the rulebook's rows. Without
+   this the witness uses the rulebook's own rows, and a row that is only in the
+   database says so.
+3. **Take out any drill-down of your own** ("See proof", an `#/explain/...`
+   page, a server route that recomputes a value): the explainer replaces it.
+   Never write a formula evaluator or a proof page.
 
-   `data-er-row` is the row's key: the value of the table's `...Id` field. In
-   React: `<span data-er-dag="Invoices.TotalDue" data-er-row={i.invoice_id}>`.
+Then check: hover a marked cell → under the rule, "Witnessed, down to ground
+truth" with this row's value and inputs; open a line → what that value came
+from; the field's page has a Row picker. If the card shows the rule but no
+witness, the cell has no `data-er-row`, or the engine has not rebuilt since the
+witness shipped (2026-11-22): ask for a rebuild (`mcp__rulebook__restart_app` /
+Rebuild), never run a build yourself.
 
-**Whose rows:** the rulebook's own (`data`) by default. An app whose rows live
-in the database hands them over once they are loaded, raw values only, keys as
-the rulebook or the database spells them; tables left out keep the rulebook's:
+### Any other project (you run `effortless build` yourself)
 
-```js
-EffortlessExplainer.setRows({ Invoices: invoices, LineItems: lineItems });
+Add `rulebook-to-typescript` (the full form, never `-p simpleSyntax=true`)
+**after** the explainer's own step, writing into the explainer's folder:
+
+```json
+{
+  "IsSSoTTranspiler": false,
+  "Name": "rulebooktotypescript",
+  "RelativePath": "/web/public/rulebook-explainer-dag/typescript",
+  "CommandLine": "rulebook-to-typescript -i ../../../../effortless-rulebook/effortless-rulebook.json",
+  "IsDisabled": false
+}
 ```
 
-A `data-er-row` that names no row in those rows says so in the card. Without
-`typescript` nothing changes: no witness, no extra request.
-
-**Do not** write a formula evaluator, a "proof" page or a "see proof" link of
-your own to show where a value came from: mark the cell, name the folder, and
-the explainer shows it. After a rulebook edit both outputs are stale until the
-next build.
-
-Verify: hover a marked cell → "Witnessed, down to ground truth" with the row's
-value and its inputs; open a line → what that value came from; on the field's
-page, the Row picker changes every value.
+(`RelativePath` = the explainer step's own `RelativePath` + `/rulebook-explainer-dag/typescript`;
+count the `../` in `-i` from there.) Then mark rows and hand over live rows as
+above. Only if the TypeScript must live somewhere else, name it:
+`EffortlessExplainer.init({ …, typescript: "/that-folder" })`;
+`typescript: false` turns the witness off.
 
 ---
 
@@ -497,4 +511,4 @@ page, the Row picker changes every value.
 - [ ] All derived displays use `data-er-dag="Table.Field"`
 - [ ] `enhanceCells()` after dynamic renders
 - [ ] Smoke test passes (§8)
-- [ ] (witness, optional) `rulebook-to-typescript` output served; `init({ typescript })`; `data-er-row` on cells (§10)
+- [ ] (witness) `data-er-row` on every derived cell; live rows handed over if the app edits rows; off effortlessapi.com, `rulebook-to-typescript` writes into `rulebook-explainer-dag/typescript` (§10)
