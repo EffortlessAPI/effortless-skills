@@ -8,6 +8,8 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Added
+- **`effortless-explainer-dag`: languages** (owner, 2026-11-22) — the skill now says how to build every language
+  (`-p languages=all`, sixteen) and how a host picks one (`init({ lang })`), and what is not translated.
 - **`effortless-explainer-dag`: the witness** (owner, 2026-11-22: "explain the details down to ground truth") — §10: the
   hover card and the field's page show one row's value, the rule step that applied, and every value it came from down to
   the stored ones, computed in the page by the generated TypeScript. On effortlessapi.com the engine's build supplies the

@@ -116,6 +116,15 @@ where the web server serves static files:
 
 Verify output exists, e.g. `web/public/rulebook-explainer-dag/`.
 
+**Languages.** The command line above builds English only. Add `-p languages=all` to the
+`CommandLine` for every language (sixteen: `en de es fr it nl pt ru ja zh hi ar id ko tr vi`), or a
+list such as `-p languages=en,de,ja`; a typo fails the build and lists the valid codes. The page then
+speaks the one the host names, `EffortlessExplainer.init({ lang: "de" })`: the rule sentences, the formula's
+plain reading, every button and title and all of the witness's wording, with Arabic drawn right to left. A
+host that offers a language picker should list `EffortlessExplainer.languages()`. Table and field names,
+descriptions and data are the rulebook's own text and are not translated. A project on effortlessapi.com
+already builds with `languages=all`.
+
 ### Generated output (`rulebook-explainer-dag/`)
 
 | File | Purpose |
