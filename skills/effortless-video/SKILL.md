@@ -197,24 +197,21 @@ proper noun or acronym before calling it final.
 9. Report plainly: real length, what was verified by eye, what was not (you cannot hear audio,
    so say so), and every judgement call the owner should check. Never publish without a yes.
 
-## 🟥 The catalog you manage is PROD
+## 🟥 The catalog you manage is PROD, and it is the only one
 
-The producer catalog (Series, Videos, Thumbnails, Publications, access policies, codes) that
-counts is the **prod** database, `effortless-vid-prod` (owner, 2026-10-31). The public site,
-the deployed workload and the admin portal's Video Studio (env picker on `prod`) all read it.
-The `local` env, the catalog rulebook file on disk, is effectively mock data. **A catalog
-change is not done until it is in prod.**
+The producer catalog (Series, Videos, Thumbnails, Publications, access policies, codes) lives
+in ONE place: the **prod** base, `effortless-vid-prod`. The portal's Video Studio, every CLI,
+the deployed workload and the public site read and write that one store (owner, 2026-11-22:
+"Why are there 2 different sets of videos ... fix that by construction"). The catalog rulebook
+file on disk holds the schema, `__meta__`, Routes and reference rows, and NO series, videos or
+releases: there is no local copy to keep in step. The repo's CLAUDE.md, "ONE catalog", has the rules.
 
-- New folders do not reach prod by themselves. `selfHealSeeding()` seeds disk-only
-  series/videos into the `local` env only, so a video can show in `./start.sh list` and the
-  local picker while prod, and every screen that reads it, has never heard of it. That is why
-  series 24 and 25 were missing from the Video Studio on 2026-10-31.
-- Create series and videos, and change access, thumbnails and releases, in prod: through the
-  producer (or the portal's Video Studio) with the env picker on `prod`, signed in, or with
-  `node server/catalog-push-missing.mjs [env] [--apply]`, which inserts the Series and Videos
-  rows the local file has and prod lacks (insert only, a diff without `--apply`; it does not
-  copy Thumbnails). Keep the catalog rulebook file in step, since `effortless build` generates the
-  SQL from it.
+- Read and write through `server/catalog-dag.mjs` (`catalogModel`, `insertRow`, `patchRow`):
+  a house process is on prod by default. Never write rows into the rulebook file
+  (`node --test server/catalog-integrity.test.mjs` fails if one appears).
+- A folder made by hand is not in the catalog until it is adopted: the portal's banner
+  ("Add them to the catalog") or `POST /api/catalog/reconcile`. The app's own **+ Video**
+  writes the row itself. Confirm the video shows in the portal before calling it done.
 - Adding and updating video rows in prod is part of video work and needs no extra yes
   (owner, 2026-10-31). **Deleting anything from prod always does.**
 - **Never load the generated `05-insert-data.sql` into prod without diffing first.** Its

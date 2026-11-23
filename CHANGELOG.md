@@ -7,6 +7,11 @@ release section is an ISO date.
 
 ## [Unreleased]
 
+### Changed
+- **`effortless-video`: one catalog** (owner, 2026-11-22) — the producer catalog lives only in the prod base; the rulebook
+  file holds no series, videos or releases, `catalog-push-missing.mjs` is gone, and a hand-made folder is adopted from the
+  portal's banner or `POST /api/catalog/reconcile`.
+
 ### Added
 - **`effortless-explainer-dag`: languages** (owner, 2026-11-22) — the skill now says how to build every language
   (`-p languages=all`, sixteen) and how a host picks one (`init({ lang })`), and what is not translated.
