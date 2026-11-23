@@ -513,6 +513,12 @@ next time a popup opens). Do not add a rebuild, a reload or a refresh button
 for it. What it shows is the RULEBOOK's rows: a row changed only in the app
 (not saved to the rulebook) is the app's to hand over with `setRows` (step 2).
 
+**A published stage (Beta, Production) gets the explainer from its release**:
+the publish builds it, and the witness's TypeScript, from the rules being
+released and puts it where the app loads it. Never copy or commit
+`rulebook-explainer-dag/` into the app's `public/` folder to make a stage show
+it: a copy there is old the day after it is made.
+
 Then check: hover a marked cell → under the rule, "Witnessed, down to ground
 truth" with this row's value and inputs; open a line → what that value came
 from; the field's page has a Row picker. If the card shows the rule but no
