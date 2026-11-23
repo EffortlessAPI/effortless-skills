@@ -8,6 +8,8 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **`effortless-explainer-dag`: an open page follows the next build** (2026-11-23) — `stamp.json`, `EffortlessExplainer.refresh()`;
+  a value saved in the rulebook editor reaches the witness by itself, so an agent adds no rebuild, reload or refresh for it.
 - **`effortless-video`: one catalog** (owner, 2026-11-22) — the producer catalog lives only in the prod base; the rulebook
   file holds no series, videos or releases, `catalog-push-missing.mjs` is gone, and a hand-made folder is adopted from the
   portal's banner or `POST /api/catalog/reconcile`.

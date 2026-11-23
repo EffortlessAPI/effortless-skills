@@ -149,7 +149,8 @@ already builds with `languages=all`.
 
 | File | Purpose |
 |------|---------|
-| `embedded-graph.js` | Baked rulebook + RuleSpeak® fields/obligations |
+| `embedded-graph.js` | Baked rulebook (rules AND rows) + RuleSpeak® fields/obligations, with the build's stamp |
+| `stamp.json` | The build's stamp, alone: a page that is already open asks for it and loads the newer build (no script tag) |
 | `dag-resolver.js` | DAG resolution (`EffortlessDagResolver`) |
 | `routing.js` | hash / path / modal / callback routing |
 | `explainer-dag.js` | Init, cell enhancement, page renderers |
@@ -160,7 +161,11 @@ already builds with `languages=all`.
 | `integrate/snippet.html` | Copy-paste reference |
 
 After **any** rulebook edit, re-run build — `embedded-graph.js` is
-baked at transpile time; dev-server HMR will **not** refresh it.
+baked at transpile time; dev-server HMR will **not** refresh it. A page
+that is already open needs no reload: whenever a popup or a page of the
+explainer opens it asks for `stamp.json` and loads the newer build
+(`EffortlessExplainer.refresh()` asks at once). Serve the whole folder,
+`stamp.json` included.
 
 ---
 
@@ -433,7 +438,10 @@ After build + web restart:
 ## 9. Pitfalls
 
 1. **Stale embedded graph** — must `./start.sh build` after rulebook
-   edits; restarting Vite alone is not enough.
+   edits; restarting Vite alone is not enough. (A project on
+   effortlessapi.com: the rulebook editor rebuilds it on every Save and
+   every build; if a popup shows an old rule or an old row, ask for a
+   Rebuild, never add a reload or a copy step.)
 
 2. **PascalCase mismatch** — `data-er-dag="invoices.totalDue"` silently
    does nothing.
@@ -498,6 +506,12 @@ build step, an `init` option, a proxy rule or a copy of anything. Do this:
 3. **Take out any drill-down of your own** ("See proof", an `#/explain/...`
    page, a server route that recomputes a value): the explainer replaces it.
    Never write a formula evaluator or a proof page.
+
+**A value saved in the rulebook editor reaches the witness by itself** (the
+editor rebuilds the explainer's files on Save, and the open page loads them the
+next time a popup opens). Do not add a rebuild, a reload or a refresh button
+for it. What it shows is the RULEBOOK's rows: a row changed only in the app
+(not saved to the rulebook) is the app's to hand over with `setRows` (step 2).
 
 Then check: hover a marked cell → under the rule, "Witnessed, down to ground
 truth" with this row's value and inputs; open a line → what that value came
