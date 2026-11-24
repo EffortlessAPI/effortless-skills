@@ -504,8 +504,11 @@ build step, an `init` option, a proxy rule or a copy of anything. Do this:
    this the witness uses the rulebook's own rows, and a row that is only in the
    database says so.
 3. **Take out any drill-down of your own** ("See proof", an `#/explain/...`
-   page, a server route that recomputes a value): the explainer replaces it.
-   Never write a formula evaluator or a proof page.
+   page, a click handler that opens one, a server route that recomputes a value
+   or a `provenance.js`): the explainer replaces it. Never write a formula
+   evaluator or a proof page. An app built before 2026-11-22 may have one (the
+   witness did not exist yet): finding it is the cue to remove it and do steps 1
+   and 2, not to keep it beside the explainer.
 
 **A value saved in the rulebook editor reaches the witness by itself** (the
 editor rebuilds the explainer's files on Save, and the open page loads them the
@@ -524,7 +527,11 @@ truth" with this row's value and inputs; open a line → what that value came
 from; the field's page has a Row picker. If the card shows the rule but no
 witness, the cell has no `data-er-row`, or the engine has not rebuilt since the
 witness shipped (2026-11-22): ask for a rebuild (`mcp__rulebook__restart_app` /
-Rebuild), never run a build yourself.
+Rebuild), never run a build yourself. If it says a `typescript/...` file
+"answered a web page", the app's dev server is forwarding `/rulebook-explainer-dag`
+to an editor that does not have it: compare `$LOOPS_APP_URL/rulebook-explainer-dag/typescript/erb_sdk.ts`
+with `$LOOPS_EDITOR_URL/...` and point the app at the project's own editor
+(`LOOPS_EDITOR_TARGET`). That is yours to fix; do not stop at "the platform".
 
 ### Any other project (you run `effortless build` yourself)
 
