@@ -177,7 +177,9 @@ without explicit override:
    `effortless-diagnostics/view-timings.sh`). Fix it in the rulebook with `XyzOverride` (raw) /
    `DefaultXyz` (the expensive formula) / `Xyz = IF(ISBLANK({{XyzOverride}}), {{DefaultXyz}},
    {{XyzOverride}})`, consumers reading `Xyz`, the override filled where the value is settled.
-   Never an index or a materialized view. Details: `effortless-diagnostics`, "Slow views".
+   Never an index or a materialized view. rulebook-to-postgres already rewrites slow function bodies
+   (`optimize_reads`, on by default) and has an opt-in cache, `-p memo_fields=Table.Field`, OFF by
+   default and added only on request. Details: `effortless-diagnostics`, "Slow views".
 
 ## Token Discipline (CANONICAL — leaf skills reference this)
 

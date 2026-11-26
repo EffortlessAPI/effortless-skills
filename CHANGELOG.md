@@ -8,6 +8,10 @@ release section is an ISO date.
 ## [Unreleased]
 
 ### Changed
+- **Slow views: what rulebook-to-postgres does by itself, and the cache you can ask for** (owner, 2026-11-26) —
+  `effortless-diagnostics`, `effortless-sql` and the orchestrator now say that `optimize_reads` rewrites slow
+  `calc_*` bodies by default (never a view), and that `-p memo_fields=Table.Field` keeps a field in an
+  `erb_memo_*` cache table: OFF by default, added only on request, for shapes a per-row function cannot share.
 - **`effortless-explainer-dag`: a published stage gets the explainer from its release** (2026-11-23) — the publish builds it
   from the rules being released; an agent never commits a copy into the app's `public/` folder.
 - **`effortless-explainer-dag`: an open page follows the next build** (2026-11-23) — `stamp.json`, `EffortlessExplainer.refresh()`;

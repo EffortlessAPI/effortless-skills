@@ -328,6 +328,12 @@ to carry one (an additive migration, or an idempotent `CREATE INDEX IF NOT
 EXISTS` in the `05b` row) before relying on it in production. FK constraints
 come from rulebook relationships (`99-fk-constraints.sql`), not from a row.
 
+**Before hand-writing a fast function, know what the tool does.** rulebook-to-postgres
+rewrites slow `calc_*` bodies itself (`optimize_reads`, on by default, never touching a view),
+and has an opt-in per-field cache table for shapes a per-row function cannot share
+(`-p memo_fields=Table.Field`, OFF by default, only on request). See `effortless-diagnostics`,
+"What rulebook-to-postgres already does".
+
 **Hard-coding a function = one `FunctionOverride` row.** When a generated
 `calc_*`/`get_*` function (or a `vw_*` view) is too slow or needs a hand-written
 form, add a row: `CustomizationType` `FunctionOverride`, `Name` the object it

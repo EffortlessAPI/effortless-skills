@@ -55,6 +55,25 @@ work for this turn, after what the customer asked.
 - Never an index, a materialized view or a hand-written SQL function for this: the rule would then
   live outside the rulebook. Rebuild and time the view again; say what you cached and why.
 
+### What rulebook-to-postgres already does, and the cache you can turn on
+
+- **`optimize_reads` is ON by default** (`dag_depth_over:1`). The tool rewrites only the BODY of a
+  slow `calc_*` function, never a view: a COUNTIFS/SUMIFS/MINIFS/MAXIFS that scans a child and
+  filters or sums one of the child's computed fields reads that field's own body inline instead of
+  calling its `calc_*` once per scanned row, and the owner's own operand is evaluated once. A field
+  with a `FunctionOverride` is never inlined. `-p optimize_reads=none` turns it off. Measured: PKO
+  `vw_role_schema_views` 28.6 s -> 7.4 s, South Park `vw_statements` 9.5 s -> 1.75 s, same rows.
+- **`memo_fields` is OFF by default; turn it on only when asked for** (owner, 2026-11-26). Some
+  shapes cannot share work inside a per-row function: a parent value read by every child, a deep
+  stratified chain (South Park's Statements -> Firings -> Statements). For those,
+  `-p memo_fields=Table.Field,Table.Field` in the `rulebooktopostgres` CommandLine keeps each named
+  field's values in an UNLOGGED `erb_memo_<t>_<f>` table: the function keeps its name and answers
+  from the cache, a statement trigger on every table the value can reach empties and refills it on a
+  write, and `06-refresh-memos.sql` fills it after the seed. The views are unchanged. It is an extra
+  object per field and every write pays a refill, so offer it, say the cost, and add it only on a yes.
+- **A view is always `SELECT t.<col>, …, calc_<table>_<field>(t.<pk>) AS <field> FROM <table> t`.**
+  Never put a join, LATERAL, CTE or subquery into a `vw_*`, not even to make it fast.
+
 ## Diagnostic Queries Against the Rulebook (start here — cheapest)
 
 ### Validate DAG (check for missing FK targets)
